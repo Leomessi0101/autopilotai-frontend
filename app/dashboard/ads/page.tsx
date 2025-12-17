@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdsPage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function AdsPage() {
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
     if (!token) router.push("/login");
-  }, []);
+  }, [router]);
 
   const handleGenerate = async () => {
     setError("");
@@ -38,11 +38,10 @@ export default function AdsPage() {
     try {
       setLoading(true);
 
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/ads/generate",
-        { product, audience },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post("/api/ads/generate", {
+        product,
+        audience,
+      });
 
       setResult(res.data.output || "");
     } catch (e: any) {

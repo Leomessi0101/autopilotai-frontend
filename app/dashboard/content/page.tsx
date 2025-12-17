@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 const PLATFORMS = [
   { key: "instagram", label: "Instagram" },
@@ -25,7 +25,7 @@ export default function ContentPage() {
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
     if (!token) router.push("/login");
-  }, []);
+  }, [router]);
 
   const handleGenerate = async () => {
     setError("");
@@ -45,16 +45,10 @@ export default function ContentPage() {
     try {
       setLoading(true);
 
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/content/generate",
-        {
-          topic,
-          platform,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await api.post("/api/content/generate", {
+        topic,
+        platform,
+      });
 
       setResult(res.data.output || "");
     } catch (e: any) {

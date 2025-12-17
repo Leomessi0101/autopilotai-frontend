@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,14 +16,13 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/auth/register", {
+      await api.post("/api/auth/register", {
         name,
         email,
         password,
       });
 
       router.push("/login");
-
     } catch (err: any) {
       const backendError = err.response?.data?.detail;
 
@@ -38,7 +37,9 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md p-10 border border-gray-200 rounded-3xl shadow-sm bg-white">
-        <h1 className="text-3xl font-bold text-center mb-8">Create Your Account</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">
+          Create Your Account
+        </h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800">

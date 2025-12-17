@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 /* =========================
    QUOTES
@@ -92,6 +92,9 @@ export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
+  const [used, setUsed] = useState<number | null>(null);
+  const [limit, setLimit] = useState<number | null>(null);
+
   const quote = getDailyItem(QUOTES);
   const aiFocus = getDailyItem(AI_DAILY_FOCUS);
   const greeting = getGreeting();
@@ -103,18 +106,26 @@ export default function Dashboard() {
       return;
     }
 
-    axios
-      .get("http://127.0.0.1:8000/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setSubscriptionPlan(res.data.subscription));
+    api
+      .get("/api/auth/me")
+      .then((res) => setSubscriptionPlan(res.data.subscription))
+      .catch(() => {
+        localStorage.removeItem("autopilot_token");
+        router.push("/login");
+      });
+
+    api.get("/api/auth/usage").then((res) => {
+      setUsed(res.data.used);
+      setLimit(res.data.limit);
+    });
   }, [router]);
 
-  const isSubscriber = subscriptionPlan && subscriptionPlan !== "free";
+  const isSubscriber = !!subscriptionPlan;
+  const progress =
+    limit !== null && used !== null ? Math.min(100, (used / limit) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-white px-14 py-12 text-black overflow-hidden">
-
       {/* ================= TOP BAR ================= */}
       <div className="flex justify-between items-center relative z-20">
         <motion.h1
@@ -198,11 +209,49 @@ export default function Dashboard() {
         </div>
       </motion.section>
 
+      {/* ================= USAGE ================= */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-36 max-w-3xl"
+      >
+        <h3 className="text-2xl font-semibold mb-4">Your usage</h3>
+
+        {limit === null ? (
+          <div className="rounded-3xl p-6 border border-amber-300 bg-amber-50">
+            <p className="text-lg font-semibold text-amber-600">
+              Unlimited generations
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              You’re on a premium plan.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-3xl p-6 border border-gray-200 bg-white">
+            <div className="flex justify-between text-sm mb-2">
+              <span>
+                {used} / {limit} used
+              </span>
+              <span className="text-gray-500">
+                {limit - (used ?? 0)} remaining
+              </span>
+            </div>
+
+            <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.6 }}
+                className="h-full bg-amber-500"
+              />
+            </div>
+          </div>
+        )}
+      </motion.section>
+
       {/* ================= AI FOCUS ================= */}
       <motion.section className="mt-40 max-w-3xl">
-        <h3 className="text-3xl font-semibold mb-6">
-          AI Focus for Today
-        </h3>
+        <h3 className="text-3xl font-semibold mb-6">AI Focus for Today</h3>
 
         <div
           className={`rounded-3xl p-10 border shadow-sm ${

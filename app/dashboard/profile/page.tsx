@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -35,8 +35,8 @@ export default function ProfilePage() {
       return;
     }
 
-    axios
-      .get("http://127.0.0.1:8000/api/profile/me", {
+    api
+      .get("/api/profile/me", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -57,8 +57,8 @@ export default function ProfilePage() {
     setSaving(true);
 
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/api/profile/update",
+      await api.post(
+        "/api/profile/update",
         form,
         {
           headers: { Authorization: `Bearer ${token}` },

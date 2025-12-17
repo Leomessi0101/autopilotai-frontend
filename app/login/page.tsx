@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/auth/login", {
+      const res = await api.post("/api/auth/login", {
         email,
         password,
       });
@@ -27,7 +27,6 @@ export default function LoginPage() {
       localStorage.setItem("autopilot_subscription", subscription);
 
       router.push("/dashboard");
-
     } catch (err: any) {
       const backendError = err.response?.data?.detail;
 

@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 type User = {
-  subscription_plan: "basic" | "growth" | "pro";
+  subscription: "basic" | "growth" | "pro";
 };
 
 export default function PricingPage() {
@@ -17,10 +17,8 @@ export default function PricingPage() {
     setIsLoggedIn(!!token);
 
     if (token) {
-      axios
-        .get("http://127.0.0.1:8000/api/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      api
+        .get("/api/auth/me")
         .then((res) => setUser(res.data))
         .catch(() => setUser(null));
     }
@@ -33,17 +31,11 @@ export default function PricingPage() {
       return;
     }
 
-    if (user?.subscription_plan === plan) return;
+    if (user?.subscription === plan) return;
 
     try {
-      const res = await axios.post(
-        `http://127.0.0.1:8000/api/stripe/create-checkout-session?plan=${plan}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await api.post(
+        `/api/stripe/create-checkout-session?plan=${plan}`
       );
 
       window.location.href = res.data.checkout_url;
@@ -94,7 +86,7 @@ export default function PricingPage() {
             "Ad & campaign generator",
             "Save last 5 projects",
           ]}
-          current={user?.subscription_plan === "basic"}
+          current={user?.subscription === "basic"}
           onChoose={() => handleSubscribe("basic")}
         />
 
@@ -111,7 +103,7 @@ export default function PricingPage() {
             "AI scheduling suggestions",
             "Faster generation",
           ]}
-          current={user?.subscription_plan === "growth"}
+          current={user?.subscription === "growth"}
           onChoose={() => handleSubscribe("growth")}
         />
 
@@ -126,7 +118,7 @@ export default function PricingPage() {
             "Campaign bundles",
             "Priority queue",
           ]}
-          current={user?.subscription_plan === "pro"}
+          current={user?.subscription === "pro"}
           onChoose={() => handleSubscribe("pro")}
         />
       </section>
