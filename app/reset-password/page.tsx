@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const token = searchParams.get("token");
 
   const [password, setPassword] = useState("");
@@ -16,9 +17,9 @@ export default function ResetPasswordPage() {
     setMessage("");
 
     try {
-      const res = await api.post("/api/auth/reset-password", {
+      await api.post("/api/auth/reset-password", {
         token: token,
-        new_password: password
+        new_password: password,
       });
 
       setMessage("Password reset successfully! Redirecting...");
@@ -67,5 +68,13 @@ export default function ResetPasswordPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
