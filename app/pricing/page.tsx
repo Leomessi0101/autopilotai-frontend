@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 
 type User = {
-  subscription: "basic" | "growth" | "pro";
+  subscription_plan: "basic" | "growth" | "pro";
 };
 
 export default function PricingPage() {
@@ -31,7 +31,7 @@ export default function PricingPage() {
       return;
     }
 
-    if (user?.subscription === plan) return;
+    if (user?.subscription_plan === plan) return;
 
     try {
       const res = await api.post(
@@ -86,7 +86,7 @@ export default function PricingPage() {
             "Ad & campaign generator",
             "Save last 5 projects",
           ]}
-          current={user?.subscription === "basic"}
+          current={user?.subscription_plan === "basic"}
           onChoose={() => handleSubscribe("basic")}
         />
 
@@ -103,7 +103,7 @@ export default function PricingPage() {
             "AI scheduling suggestions",
             "Faster generation",
           ]}
-          current={user?.subscription === "growth"}
+          current={user?.subscription_plan === "growth"}
           onChoose={() => handleSubscribe("growth")}
         />
 
@@ -118,7 +118,7 @@ export default function PricingPage() {
             "Campaign bundles",
             "Priority queue",
           ]}
-          current={user?.subscription === "pro"}
+          current={user?.subscription_plan === "pro"}
           onChoose={() => handleSubscribe("pro")}
         />
       </section>

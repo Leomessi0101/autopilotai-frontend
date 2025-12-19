@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { motion } from "framer-motion";
+import api from "@/lib/api";   // ✅ USE GLOBAL API CLIENT
 
 type WorkItem = {
   id: number;
@@ -25,10 +25,8 @@ export default function MyWorkPage() {
       return;
     }
 
-    axios
-      .get("http://127.0.0.1:8000/api/work", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    api
+      .get("/api/work")   // ✅ NO LOCALHOST — NOW USES RENDER BACKEND
       .then((res) => setItems(res.data))
       .finally(() => setLoading(false));
   }, []);
