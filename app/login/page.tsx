@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
@@ -9,46 +9,26 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  /* Redirect if already logged in */
-  useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("autopilot_token")
-        : null;
-
-    if (token) router.push("/dashboard");
-  }, [router]);
+  const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
     setError("");
+    setMessage("");
 
-    if (!email.includes("@")) {
-      setError("Please enter a valid email.");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (!email || !password) {
+      setError("Please enter both email and password.");
       return;
     }
 
     try {
-      setLoading(true);
-
-      const res = await api.post("/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await api.post("/api/auth/login", { email, password });
 
       const token = res.data.token;
-      const subscription = res.data.subscription_plan || res.data.subscription;
+      const subscription = res.data.subscription_plan;
 
       localStorage.setItem("autopilot_token", token);
-      if (subscription) localStorage.setItem("autopilot_subscription", subscription);
+      localStorage.setItem("autopilot_subscription", subscription);
 
       router.push("/dashboard");
     } catch (err: any) {
@@ -60,39 +40,49 @@ export default function LoginPage() {
         setError("Login failed. Please try again.");
       }
     }
+  };
 
-    setLoading(false);
+  const handleForgotPassword = () => {
+    setError("");
+    setMessage(
+      "Password reset feature is being added soon. For now, contact support if you need help."
+    );
+  };
+
+  const handleResendVerification = () => {
+    setError("");
+    setMessage(
+      "If your email requires verification, it will be supported soon."
+    );
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md p-10 border border-gray-200 rounded-3xl shadow-sm bg-white">
-
-        {/* Branding */}
-        <h1 className="text-3xl font-bold text-center mb-2">
+        <h1 className="text-3xl font-bold text-center mb-8">
           Welcome Back
         </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Log back into AutopilotAI and continue building.
-        </p>
 
-        {/* Error */}
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800">
             {error}
           </div>
         )}
 
-        {/* Form */}
+        {message && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-xl text-green-800">
+            {message}
+          </div>
+        )}
+
         <div className="space-y-6">
           <div>
             <label className="block text-gray-700 mb-1">Email</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               type="email"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black bg-gray-50"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black"
               placeholder="you@example.com"
             />
           </div>
@@ -102,31 +92,41 @@ export default function LoginPage() {
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               type="password"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black bg-gray-50"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black"
               placeholder="••••••••"
             />
           </div>
 
           <button
             onClick={handleLogin}
-            disabled={loading}
-            className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-900 transition disabled:opacity-60"
+            className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-900 transition"
           >
-            {loading ? "Logging in…" : "Login"}
+            Login
           </button>
         </div>
 
-        {/* Footer */}
+        <div className="flex justify-between text-sm mt-5">
+          <button
+            onClick={handleForgotPassword}
+            className="text-gray-600 hover:underline"
+          >
+            Forgot password?
+          </button>
+
+          <button
+            onClick={handleResendVerification}
+            className="text-gray-600 hover:underline"
+          >
+            Resend verification
+          </button>
+        </div>
+
         <div className="text-center text-gray-600 mt-6">
           Don’t have an account?{" "}
-          <span
-            onClick={() => router.push("/register")}
-            className="text-black hover:underline cursor-pointer"
-          >
+          <a href="/register" className="text-black hover:underline">
             Register
-          </span>
+          </a>
         </div>
       </div>
     </div>
