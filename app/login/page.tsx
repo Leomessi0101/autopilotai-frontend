@@ -10,22 +10,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
     setError("");
-    setMessage("");
-
-    if (!email || !password) {
-      setError("Please enter both email and password.");
-      return;
-    }
 
     try {
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await api.post("/api/auth/login", {
+        email,
+        password,
+      });
 
       const token = res.data.token;
-      const subscription = res.data.subscription_plan;
+      const subscription = res.data.subscription;
 
       localStorage.setItem("autopilot_token", token);
       localStorage.setItem("autopilot_subscription", subscription);
@@ -42,20 +38,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleForgotPassword = () => {
-    setError("");
-    setMessage(
-      "Password reset feature is being added soon. For now, contact support if you need help."
-    );
-  };
-
-  const handleResendVerification = () => {
-    setError("");
-    setMessage(
-      "If your email requires verification, it will be supported soon."
-    );
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md p-10 border border-gray-200 rounded-3xl shadow-sm bg-white">
@@ -66,12 +48,6 @@ export default function LoginPage() {
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800">
             {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-xl text-green-800">
-            {message}
           </div>
         )}
 
@@ -106,20 +82,21 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="flex justify-between text-sm mt-5">
-          <button
-            onClick={handleForgotPassword}
-            className="text-gray-600 hover:underline"
-          >
-            Forgot password?
-          </button>
+        {/* Extra Actions */}
+        <div className="text-center text-gray-600 mt-6 space-y-2">
+          <div>
+            Forgot password?{" "}
+            <a href="/forgot-password" className="text-black hover:underline">
+              Reset it here
+            </a>
+          </div>
 
-          <button
-            onClick={handleResendVerification}
-            className="text-gray-600 hover:underline"
-          >
-            Resend verification
-          </button>
+          <div className="text-sm">
+            Already have reset token?{" "}
+            <a href="/reset-password" className="text-black hover:underline">
+              Enter token
+            </a>
+          </div>
         </div>
 
         <div className="text-center text-gray-600 mt-6">
