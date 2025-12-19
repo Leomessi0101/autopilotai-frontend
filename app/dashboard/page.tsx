@@ -9,64 +9,21 @@ import api from "@/lib/api";
    QUOTES
    ========================= */
 const QUOTES = [
-  {
-    text: "You have power over your mind — not outside events. Realize this, and you will find strength.",
-    author: "Marcus Aurelius",
-  },
-  {
-    text: "He who controls the narrative controls the people.",
-    author: "Niccolò Machiavelli",
-  },
-  {
-    text: "Waste no more time arguing what a good man should be. Be one.",
-    author: "Marcus Aurelius",
-  },
-  {
-    text: "Fortune favors the bold.",
-    author: "Latin Proverb",
-  },
-  {
-    text: "A man who does not plan long ahead will find trouble at his door.",
-    author: "Confucius",
-  },
+  { text: "You have power over your mind — not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
+  { text: "He who controls the narrative controls the people.", author: "Niccolò Machiavelli" },
+  { text: "Waste no more time arguing what a good man should be. Be one.", author: "Marcus Aurelius" },
+  { text: "Fortune favors the bold.", author: "Latin Proverb" },
+  { text: "A man who does not plan long ahead will find trouble at his door.", author: "Confucius" },
 ];
 
 /* =========================
-   AI DAILY FOCUS
+   AI FOCUS
    ========================= */
 const AI_DAILY_FOCUS = [
-  {
-    title: "Increase outbound visibility",
-    tasks: [
-      "Publish one short-form post",
-      "Draft a follow-up email",
-      "Review yesterday’s engagement",
-    ],
-  },
-  {
-    title: "Improve lead conversion",
-    tasks: [
-      "Refine your email CTA",
-      "Create one new ad variation",
-      "Audit landing page clarity",
-    ],
-  },
-  {
-    title: "Build long-term authority",
-    tasks: [
-      "Outline a blog post",
-      "Repurpose older content",
-      "Plan next week’s topics",
-    ],
-  },
-  {
-    title: "Strengthen brand consistency",
-    tasks: [
-      "Review tone across emails",
-      "Update one ad headline",
-      "Align content with brand promise",
-    ],
-  },
+  { title: "Increase outbound visibility", tasks: ["Publish one short-form post", "Draft a follow-up email", "Review yesterday’s engagement"] },
+  { title: "Improve lead conversion", tasks: ["Refine your email CTA", "Create one new ad variation", "Audit landing page clarity"] },
+  { title: "Build long-term authority", tasks: ["Outline a blog post", "Repurpose older content", "Plan next week’s topics"] },
+  { title: "Strengthen brand consistency", tasks: ["Review tone across emails", "Update one ad headline", "Align content with brand promise"] },
 ];
 
 /* =========================
@@ -91,6 +48,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
+  const [name, setName] = useState<string>("U");
 
   const [used, setUsed] = useState<number | null>(null);
   const [limit, setLimit] = useState<number | null>(null);
@@ -106,75 +64,93 @@ export default function Dashboard() {
       return;
     }
 
-    api
-      .get("/api/auth/me")
-      .then((res) => setSubscriptionPlan(res.data.subscription))
+    api.get("/api/auth/me")
+      .then(res => {
+        setSubscriptionPlan(res.data.subscription);
+        if (res.data.name) setName(res.data.name.charAt(0).toUpperCase());
+      })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
       });
 
-    api.get("/api/auth/usage").then((res) => {
+    api.get("/api/auth/usage").then(res => {
       setUsed(res.data.used);
       setLimit(res.data.limit);
     });
   }, [router]);
 
   const isSubscriber = !!subscriptionPlan;
-  const progress =
-    limit !== null && used !== null ? Math.min(100, (used / limit) * 100) : 0;
+  const progress = limit !== null && used !== null ? Math.min(100, (used / limit) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-white px-14 py-12 text-black overflow-hidden">
+
       {/* ================= TOP BAR ================= */}
       <div className="flex justify-between items-center relative z-20">
         <motion.h1
+          onClick={() => router.push("/")}
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-semibold tracking-tight"
+          className="text-2xl font-semibold tracking-tight cursor-pointer hover:opacity-75 transition"
         >
           AutopilotAI<span className="text-amber-500">.</span>
         </motion.h1>
 
+        {/* Profile */}
         <div className="relative">
           <motion.button
             whileHover={{ scale: 1.05 }}
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => setMenuOpen(true)}
             className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-200 to-gray-300
-                       flex items-center justify-center text-sm font-semibold text-gray-700"
+                       flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
           >
-            U
+            {name}
             <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 animate-pulse opacity-40" />
           </motion.button>
 
+          {/* DARK BACKDROP CLICK TO CLOSE */}
           <AnimatePresence>
             {menuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                className="absolute right-0 mt-4 w-64 rounded-3xl
-                           bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl"
-              >
-                <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-white">
-                  <p className="text-xs uppercase text-gray-500">Current plan</p>
-                  <p className="text-lg font-semibold capitalize text-amber-600">
-                    {subscriptionPlan}
-                  </p>
-                </div>
-
-                <MenuItem label="Profile" onClick={() => router.push("/dashboard/profile")} />
-                <MenuItem label="My Work" onClick={() => router.push("/dashboard/work")} />
-                <MenuItem label="Subscription" onClick={() => router.push("/pricing")} />
-                <MenuItem
-                  label="Log out"
-                  danger
-                  onClick={() => {
-                    localStorage.removeItem("autopilot_token");
-                    router.push("/login");
-                  }}
+              <>
+                <motion.div
+                  className="fixed inset-0 bg-black/10"
+                  onClick={() => setMenuOpen(false)}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 />
-              </motion.div>
+
+                {/* MENU PANEL */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  className="absolute right-0 mt-4 w-72 rounded-3xl
+                           bg-white/90 backdrop-blur-xl border border-gray-200 shadow-2xl overflow-hidden"
+                >
+                  <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-white">
+                    <p className="text-xs uppercase text-gray-500">Current plan</p>
+                    <p className="text-lg font-bold capitalize text-amber-600">
+                      {subscriptionPlan ?? "Free"}
+                    </p>
+                  </div>
+
+                  <MenuItem label="Profile" onClick={() => router.push("/dashboard/profile")} />
+                  <MenuItem label="My Work" onClick={() => router.push("/dashboard/work")} />
+                  <MenuItem label="Billing" onClick={() => router.push("/billing")} />
+                  <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+
+                  <MenuItem
+                    label="Log out"
+                    danger
+                    onClick={() => {
+                      localStorage.removeItem("autopilot_token");
+                      router.push("/login");
+                    }}
+                  />
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
         </div>
@@ -210,31 +186,19 @@ export default function Dashboard() {
       </motion.section>
 
       {/* ================= USAGE ================= */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-36 max-w-3xl"
-      >
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-36 max-w-3xl">
         <h3 className="text-2xl font-semibold mb-4">Your usage</h3>
 
         {limit === null ? (
           <div className="rounded-3xl p-6 border border-amber-300 bg-amber-50">
-            <p className="text-lg font-semibold text-amber-600">
-              Unlimited generations
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              You’re on a premium plan.
-            </p>
+            <p className="text-lg font-semibold text-amber-600">Unlimited generations</p>
+            <p className="text-sm text-gray-600 mt-1">You’re on a premium plan.</p>
           </div>
         ) : (
           <div className="rounded-3xl p-6 border border-gray-200 bg-white">
             <div className="flex justify-between text-sm mb-2">
-              <span>
-                {used} / {limit} used
-              </span>
-              <span className="text-gray-500">
-                {limit - (used ?? 0)} remaining
-              </span>
+              <span>{used} / {limit} used</span>
+              <span className="text-gray-500">{limit - (used ?? 0)} remaining</span>
             </div>
 
             <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
@@ -253,13 +217,9 @@ export default function Dashboard() {
       <motion.section className="mt-40 max-w-3xl">
         <h3 className="text-3xl font-semibold mb-6">AI Focus for Today</h3>
 
-        <div
-          className={`rounded-3xl p-10 border shadow-sm ${
-            isSubscriber
-              ? "border-amber-300 bg-amber-50"
-              : "border-gray-200 bg-gray-100 opacity-60"
-          }`}
-        >
+        <div className={`rounded-3xl p-10 border shadow-sm ${
+          isSubscriber ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-gray-100 opacity-60"
+        }`}>
           <p className="text-2xl font-semibold mb-4">
             {isSubscriber ? aiFocus.title : "Upgrade required"}
           </p>
@@ -274,14 +234,10 @@ export default function Dashboard() {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">
-              Daily AI guidance is available on paid plans.
-            </p>
+            <p className="text-gray-500">Daily AI guidance is available on paid plans.</p>
           )}
 
-          <p className="mt-6 text-xs text-gray-500">
-            Updated daily · Calm guidance, not noise
-          </p>
+          <p className="mt-6 text-xs text-gray-500">Updated daily · Calm guidance, not noise</p>
         </div>
       </motion.section>
     </div>
