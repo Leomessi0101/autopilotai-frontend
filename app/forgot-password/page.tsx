@@ -1,81 +1,93 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [token, setToken] = useState("");
+export default function ForgotPasswordPage() {
+  const router = useRouter();
 
-  const handleReset = async () => {
-    setMessage("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setMessage(null);
 
     try {
-      const res = await api.post("/api/auth/request-password-reset", {
-        email,
-      });
+      const res = await api.post("/api/auth/forgot-password", { email });
 
-      setMessage(res.data.message);
+      setMessage(
+        "We generated a secure reset link. Since email isn’t active yet, we’ll redirect you now."
+      );
 
-      // TEMP: show token so we can test reset without email service
-      if (res.data.reset_token) {
-        setToken(res.data.reset_token);
-      }
+      setTimeout(() => {
+        router.push(`/reset-password?token=${res.data.token}`);
+      }, 2000);
     } catch (err: any) {
-      setMessage("Something went wrong.");
+      const backend = err.response?.data?.detail;
+      setError(backend || "Something went wrong");
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md p-10 border border-gray-200 rounded-3xl shadow-sm bg-white">
         <h1 className="text-3xl font-bold text-center mb-6">
-          Reset Password
+          Reset Your Password
         </h1>
 
         <p className="text-gray-600 text-center mb-6">
-          Enter your email. If your account exists,
-          we’ll prepare a reset link for you.
+          Enter your email and we’ll help you recover your account.
         </p>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800">
+            {error}
+          </div>
+        )}
+
         {message && (
-          <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-xl text-amber-800 text-sm">
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-xl text-green-800">
             {message}
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <label className="block text-gray-700 mb-1">Email</label>
             <input
+              type="email"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              type="email"
               className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black"
-              placeholder="you@example.com"
             />
           </div>
 
           <button
-            onClick={handleReset}
-            className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-900 transition"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-900 transition disabled:opacity-50"
           >
-            Send Reset Request
+            {loading ? "Generating reset link..." : "Send reset link"}
           </button>
         </div>
 
-        {token && (
-          <div className="mt-6 text-xs break-all p-3 border rounded-xl bg-gray-50">
-            <p className="font-semibold mb-1">DEV Token (temporary)</p>
-            {token}
-          </div>
-        )}
-
         <div className="text-center text-gray-600 mt-6">
-          Remember now?{" "}
-          <a href="/login" className="text-black hover:underline">
-            Go back to login
+          Remembered your password?{" "}
+          <a href="/login" className="text-black font-semibold">
+            Back to login
           </a>
         </div>
       </div>
