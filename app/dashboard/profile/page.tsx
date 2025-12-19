@@ -28,7 +28,6 @@ export default function ProfilePage() {
     writing_style: "",
   });
 
-  // Get saved profile on load
   useEffect(() => {
     if (!token) {
       router.push("/login");
@@ -127,6 +126,28 @@ export default function ProfilePage() {
           Personalize AutopilotAI so all your emails and content match your
           brand.
         </p>
+
+        {/* ⭐ BILLING CARD ADDED HERE ⭐ */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="mt-8 p-6 border border-gray-200 rounded-2xl shadow-sm bg-white flex items-center justify-between"
+        >
+          <div>
+            <h3 className="text-xl font-semibold">Billing & Subscription</h3>
+            <p className="text-gray-600 mt-1">
+              View your current plan, manage payment, cancel or upgrade.
+            </p>
+          </div>
+
+          <button
+            onClick={() => router.push("/billing")}
+            className="px-6 py-3 bg-black text-white rounded-full hover:bg-gray-900 transition"
+          >
+            Open Billing
+          </button>
+        </motion.div>
 
         {/* FORM CARD */}
         <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6">
