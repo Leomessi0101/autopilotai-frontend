@@ -64,7 +64,7 @@ export default function ProfilePage() {
         }
       );
 
-      alert("Profile saved!");
+      alert("Profile saved successfully!");
     } catch (err) {
       alert("Failed to save profile.");
       console.error(err);
@@ -87,9 +87,9 @@ export default function ProfilePage() {
       <nav className="w-full py-6 px-10 flex justify-between items-center border-b border-gray-200">
         <h1
           onClick={() => router.push("/dashboard")}
-          className="text-2xl font-bold tracking-tight cursor-pointer"
+          className="text-2xl font-bold tracking-tight cursor-pointer hover:opacity-75 transition"
         >
-          AutopilotAI
+          AutopilotAI<span className="text-amber-500">.</span>
         </h1>
 
         <div className="space-x-6 text-gray-800 flex items-center">
@@ -115,7 +115,7 @@ export default function ProfilePage() {
         </div>
       </nav>
 
-      {/* PAGE HEADER */}
+      {/* HEADER */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -123,11 +123,11 @@ export default function ProfilePage() {
       >
         <h2 className="text-4xl font-bold tracking-tight">Your Profile</h2>
         <p className="text-gray-600 mt-3 text-lg">
-          Personalize AutopilotAI so all your emails and content match your
-          brand.
+          Tell AutopilotAI who you are. Everything created — emails, ads, content —
+          will use this information automatically.
         </p>
 
-        {/* ⭐ BILLING CARD ADDED HERE ⭐ */}
+        {/* BILLING CARD */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ export default function ProfilePage() {
           <div>
             <h3 className="text-xl font-semibold">Billing & Subscription</h3>
             <p className="text-gray-600 mt-1">
-              View your current plan, manage payment, cancel or upgrade.
+              View your current plan, manage payment, cancel or upgrade anytime.
             </p>
           </div>
 
@@ -149,22 +149,25 @@ export default function ProfilePage() {
           </button>
         </motion.div>
 
-        {/* FORM CARD */}
-        <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6">
+        {/* FORM */}
+        <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6 mb-20">
+          {/* PERSONAL INFO */}
           <SectionTitle title="Personal Info" />
 
           <Input label="Full Name" field="full_name" value={form.full_name} onChange={updateField} />
           <Input label="Company Name" field="company_name" value={form.company_name} onChange={updateField} />
           <Input label="Company Website" field="company_website" value={form.company_website} onChange={updateField} />
-          <Input label="Your Title" field="title" value={form.title} onChange={updateField} />
+          <Input label="Your Title (CEO, Founder, Marketing Lead…)" field="title" value={form.title} onChange={updateField} />
 
+          {/* BRAND */}
           <SectionTitle title="Brand Voice" />
 
-          <Input label="Brand Tone" field="brand_tone" value={form.brand_tone} onChange={updateField} />
+          <Input label="Brand Tone (Friendly, Professional, Aggressive…)" field="brand_tone" value={form.brand_tone} onChange={updateField} />
           <Input label="Industry" field="industry" value={form.industry} onChange={updateField} />
 
           <Textarea
             label="Brand Description"
+            placeholder="Explain what your business does, your mission, values, and how you want people to feel…"
             field="brand_description"
             value={form.brand_description}
             onChange={updateField}
@@ -172,22 +175,26 @@ export default function ProfilePage() {
 
           <Input
             label="Target Audience"
+            placeholder="Small business owners, gym members, tech professionals, students…"
             field="target_audience"
             value={form.target_audience}
             onChange={updateField}
           />
 
+          {/* EMAIL */}
           <SectionTitle title="Email Defaults" />
 
           <Textarea
-            label="Signature"
+            label="Email Signature"
             field="signature"
             value={form.signature}
+            placeholder={`Best regards,\nYour Name\nCompany`}
             onChange={updateField}
           />
 
           <Input
             label="Writing Style"
+            placeholder="Short & punchy, storytelling, corporate, persuasive…"
             field="writing_style"
             value={form.writing_style}
             onChange={updateField}
@@ -212,27 +219,29 @@ function SectionTitle({ title }: any) {
   return <h3 className="text-2xl font-semibold mb-4 mt-8">{title}</h3>;
 }
 
-function Input({ label, field, value, onChange }: any) {
+function Input({ label, field, value, onChange, placeholder }: any) {
   return (
     <div>
       <label className="font-medium">{label}</label>
       <input
-        value={value}
+        value={value || ""}
+        placeholder={placeholder || ""}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full p-3 border bg-gray-50 rounded-xl mt-1"
+        className="w-full p-3 border bg-gray-50 rounded-xl mt-1 focus:outline-none focus:border-black"
       />
     </div>
   );
 }
 
-function Textarea({ label, field, value, onChange }: any) {
+function Textarea({ label, field, value, onChange, placeholder }: any) {
   return (
     <div>
       <label className="font-medium">{label}</label>
       <textarea
-        value={value}
+        value={value || ""}
+        placeholder={placeholder || ""}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full p-4 border bg-gray-50 rounded-xl mt-1 resize-none h-28"
+        className="w-full p-4 border bg-gray-50 rounded-xl mt-1 resize-none h-28 focus:outline-none focus:border-black"
       />
     </div>
   );

@@ -44,8 +44,7 @@ export default function BillingPage() {
   const usageText = (d: MeResponse) => {
     if (d.monthly_limit === null) return "Unlimited generations";
     const used = d.used_generations ?? 0;
-    const limit = d.monthly_limit;
-    return `${used} used / ${limit} total`;
+    return `${used} used / ${d.monthly_limit} total`;
   };
 
   const openStripePortal = async () => {
@@ -62,6 +61,7 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
+
       {/* TOP BAR */}
       <div className="w-full py-6 px-10 border-b border-gray-200 flex items-center justify-between">
         <h1
@@ -79,7 +79,7 @@ export default function BillingPage() {
         </button>
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div className="px-10 pt-16 pb-20 max-w-5xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 8 }}
@@ -97,6 +97,7 @@ export default function BillingPage() {
           View your current plan, usage, and manage your subscription.
         </motion.p>
 
+        {/* LOADING */}
         {loading ? (
           <div className="border border-gray-200 rounded-3xl p-10 bg-white">
             <p className="text-gray-500">Loading your billing details…</p>
@@ -132,16 +133,18 @@ export default function BillingPage() {
                 )}
               </div>
 
+              {/* PLAN DESCRIPTION */}
               <p className="text-gray-600 mb-8">
                 {data.subscription === "free"
-                  ? "Start your journey with limited generation access."
+                  ? "Start your journey with limited access. Upgrade when you’re ready."
                   : data.subscription === "basic"
                   ? "Basic — perfect for small businesses getting started with automation."
                   : data.subscription === "growth"
                   ? "Growth — unlimited automation & content for scaling businesses."
-                  : "Pro — full power, AI images & priority processing."}
+                  : "Pro — full power, AI images, campaigns & priority queue."}
               </p>
 
+              {/* CTA */}
               {data.subscription?.toLowerCase() === "free" ? (
                 <button
                   onClick={() => router.push("/pricing")}
@@ -175,6 +178,7 @@ export default function BillingPage() {
                 {usageText(data)}
               </p>
 
+              {/* Progress Bar */}
               {data.monthly_limit !== null && (
                 <>
                   <div className="w-full h-2 rounded-full bg-gray-100 mt-4 mb-4 overflow-hidden">

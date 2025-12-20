@@ -66,8 +66,8 @@ export default function ContentPage() {
           <h1 className="text-4xl font-bold tracking-tight">
             Content Generator
           </h1>
-          <p className="text-gray-600 mt-2">
-            Generate ready-to-post content — no advice, no fluff.
+          <p className="text-gray-600 mt-2 text-lg">
+            Ready-to-post content for your brand — fast, clear, and on-brand.
           </p>
         </div>
 
@@ -79,6 +79,7 @@ export default function ContentPage() {
           >
             ← Dashboard
           </button>
+
           <button
             onClick={() => router.push("/dashboard/work")}
             className="px-5 py-2 rounded-full bg-black text-white
@@ -97,10 +98,11 @@ export default function ContentPage() {
         className="max-w-3xl rounded-3xl border border-gray-200 p-8 bg-white shadow-sm"
       >
         {/* PLATFORM SELECTOR */}
-        <div className="mb-6">
+        <div className="mb-7">
           <p className="text-sm uppercase tracking-wide text-gray-500 mb-3">
             Platform
           </p>
+
           <div className="flex gap-2 flex-wrap">
             {PLATFORMS.map((p) => (
               <button
@@ -121,8 +123,9 @@ export default function ContentPage() {
 
         {/* TOPIC INPUT */}
         <label className="text-sm uppercase tracking-wide text-gray-500">
-          What are you showcasing?
+          What are we posting about?
         </label>
+
         <input
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
@@ -138,7 +141,7 @@ export default function ContentPage() {
           className="mt-6 px-7 py-3 rounded-full bg-black text-white
                      hover:bg-gray-900 transition disabled:opacity-60"
         >
-          {loading ? "Generating..." : "Generate content"}
+          {loading ? "Generating…" : "Generate Content"}
         </button>
 
         {error && (
@@ -152,15 +155,17 @@ export default function ContentPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="mt-10 max-w-3xl rounded-3xl border border-amber-200 bg-amber-50 p-8"
+          className="mt-10 max-w-3xl rounded-3xl border border-amber-200 bg-amber-50 p-8 shadow-sm"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">
-              Result ·{" "}
+              Generated Content
+              {" "}
               <span className="text-amber-600 capitalize">
-                {platform}
+                · {platform}
               </span>
             </h3>
+
             <button
               onClick={() => navigator.clipboard.writeText(result)}
               className="px-4 py-2 rounded-full border border-amber-300
@@ -170,7 +175,7 @@ export default function ContentPage() {
             </button>
           </div>
 
-          <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+          <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-[15px]">
             {result}
           </pre>
         </motion.div>
