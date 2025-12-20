@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
@@ -14,6 +14,10 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [name, setName] = useState("U");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -35,6 +39,19 @@ export default function ProfilePage() {
     }
 
     api
+      .get("/api/auth/me")
+      .then((res) => {
+        if (res.data?.name)
+          setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription)
+          setSubscriptionPlan(res.data.subscription);
+      })
+      .catch(() => {
+        localStorage.removeItem("autopilot_token");
+        router.push("/login");
+      });
+
+    api
       .get("/api/profile/me", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -46,7 +63,7 @@ export default function ProfilePage() {
         console.error(err);
         setLoading(false);
       });
-  }, []);
+  }, [router, token]);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -82,57 +99,124 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      {/* NAVBAR */}
-      <nav className="w-full py-6 px-10 flex justify-between items-center border-b border-gray-200">
+    <div className="min-h-screen bg-white text-black flex">
+
+      {/* SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white px-6 py-8">
         <h1
-          onClick={() => router.push("/dashboard")}
-          className="text-2xl font-bold tracking-tight cursor-pointer hover:opacity-75 transition"
+          onClick={() => router.push("/")}
+          className="text-2xl font-semibold tracking-tight cursor-pointer"
         >
           AutopilotAI<span className="text-amber-500">.</span>
         </h1>
 
-        <div className="space-x-6 text-gray-800 flex items-center">
-          <a href="/features" className="hover:text-black">
-            Features
-          </a>
-          <a href="/pricing" className="hover:text-black">
-            Pricing
-          </a>
-          <a href="/dashboard" className="hover:text-black font-semibold">
-            Dashboard
-          </a>
+        <nav className="mt-12 space-y-4 text-sm">
+          <SidebarItem label="Dashboard" onClick={() => router.push("/dashboard")} />
+          <SidebarItem label="Generate Content" onClick={() => router.push("/dashboard/content")} />
+          <SidebarItem label="Write Emails" onClick={() => router.push("/dashboard/email")} />
+          <SidebarItem label="Create Ads" onClick={() => router.push("/dashboard/ads")} />
+          <SidebarItem label="My Work" onClick={() => router.push("/dashboard/work")} />
+          <SidebarItem label="Profile" active />
+          <SidebarItem label="Billing" onClick={() => router.push("/billing")} />
+          <SidebarItem label="Pricing" onClick={() => router.push("/pricing")} />
+        </nav>
 
-          <button
-            onClick={() => {
-              localStorage.removeItem("autopilot_token");
-              router.push("/login");
-            }}
-            className="px-4 py-2 bg-black text-white rounded-full hover:bg-gray-900 transition"
-          >
-            Logout
-          </button>
+        <div className="mt-auto pt-6 text-xs text-gray-500">
+          Your AI adapts to who you are.
         </div>
-      </nav>
+      </aside>
 
-      {/* HEADER */}
-      <motion.section
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-10 mt-16 max-w-4xl"
-      >
-        <h2 className="text-4xl font-bold tracking-tight">Your Profile</h2>
-        <p className="text-gray-600 mt-3 text-lg">
-          Tell AutopilotAI who you are. Everything created — emails, ads, content —
-          will use this information automatically.
-        </p>
+      {/* MAIN */}
+      <div className="flex-1 px-6 md:px-16 py-10 overflow-y-auto">
+
+        {/* TOP BAR */}
+        <div className="flex justify-between items-center relative">
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight">
+              Your Profile
+            </h2>
+            <p className="text-gray-600 mt-2 text-lg">
+              Tell AutopilotAI who you are — every email, ad & post adapts automatically.
+            </p>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setMenuOpen(true)}
+            className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
+          >
+            {name}
+            <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
+          </motion.button>
+
+          {/* PROFILE PANEL */}
+          <AnimatePresence>
+            {menuOpen && (
+              <>
+                <motion.div
+                  className="fixed inset-0 bg-black/20"
+                  onClick={() => setMenuOpen(false)}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                />
+
+                <motion.aside
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 40 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 26 }}
+                  className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
+                >
+                  <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
+                    <button
+                      onClick={() => setMenuOpen(false)}
+                      className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
+                    >
+                      ✕
+                    </button>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
+                        {name}
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">Plan</p>
+                        <p className="font-bold capitalize">
+                          {subscriptionPlan ?? "Free"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="py-2">
+                    <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
+                    <MenuItem label="Billing" onClick={() => router.push("/billing")} />
+                    <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+
+                    <div className="border-t mt-2 pt-2">
+                      <MenuItem
+                        label="Log out"
+                        danger
+                        onClick={() => {
+                          localStorage.removeItem("autopilot_token");
+                          router.push("/login");
+                        }}
+                      />
+                    </div>
+                  </div>
+                </motion.aside>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* BILLING CARD */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="mt-8 p-6 border border-gray-200 rounded-2xl shadow-sm bg-white flex items-center justify-between"
+          className="mt-12 p-6 border border-gray-200 rounded-2xl shadow-sm bg-white flex items-center justify-between"
         >
           <div>
             <h3 className="text-xl font-semibold">Billing & Subscription</h3>
@@ -150,8 +234,7 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* FORM */}
-        <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6 mb-20">
-          {/* PERSONAL INFO */}
+        <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6 mb-20 max-w-4xl">
           <SectionTitle title="Personal Info" />
 
           <Input label="Full Name" field="full_name" value={form.full_name} onChange={updateField} />
@@ -159,7 +242,6 @@ export default function ProfilePage() {
           <Input label="Company Website" field="company_website" value={form.company_website} onChange={updateField} />
           <Input label="Your Title (CEO, Founder, Marketing Lead…)" field="title" value={form.title} onChange={updateField} />
 
-          {/* BRAND */}
           <SectionTitle title="Brand Voice" />
 
           <Input label="Brand Tone (Friendly, Professional, Aggressive…)" field="brand_tone" value={form.brand_tone} onChange={updateField} />
@@ -181,7 +263,6 @@ export default function ProfilePage() {
             onChange={updateField}
           />
 
-          {/* EMAIL */}
           <SectionTitle title="Email Defaults" />
 
           <Textarea
@@ -208,15 +289,30 @@ export default function ProfilePage() {
             {saving ? "Saving..." : "Save Profile"}
           </button>
         </div>
-      </motion.section>
+      </div>
     </div>
   );
 }
 
-/* COMPONENTS */
+/* ======================
+   COMPONENTS
+======================= */
+
+function SidebarItem({ label, onClick, active = false }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left py-2 transition text-sm ${
+        active ? "text-black font-semibold" : "hover:translate-x-1"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 function SectionTitle({ title }: any) {
-  return <h3 className="text-2xl font-semibold mb-4 mt-8">{title}</h3>;
+  return <h3 className="text-2xl font-semibold mb-4 mt-6">{title}</h3>;
 }
 
 function Input({ label, field, value, onChange, placeholder }: any) {
@@ -244,5 +340,19 @@ function Textarea({ label, field, value, onChange, placeholder }: any) {
         className="w-full p-4 border bg-gray-50 rounded-xl mt-1 resize-none h-28 focus:outline-none focus:border-black"
       />
     </div>
+  );
+}
+
+function MenuItem({ label, onClick, danger = false }: any) {
+  return (
+    <motion.button
+      whileHover={{ x: 6 }}
+      onClick={onClick}
+      className={`w-full px-6 py-3 text-left text-sm ${
+        danger ? "text-red-500" : "text-gray-700"
+      } hover:bg-gray-100`}
+    >
+      {label}
+    </motion.button>
   );
 }
