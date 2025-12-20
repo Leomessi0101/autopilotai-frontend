@@ -89,15 +89,6 @@ const ACTIVITY_FEED = [
   },
 ];
 
-/* =========================
-   TEAM (DUMMY UI)
-   ========================= */
-const TEAM = [
-  { name: "Alex", role: "Founder", initials: "A" },
-  { name: "Mia", role: "Marketing", initials: "M" },
-  { name: "Leo", role: "Sales", initials: "L" },
-];
-
 function getDailyItem<T>(list: T[]) {
   const today = new Date().toISOString().slice(0, 10);
   let hash = 0;
@@ -158,8 +149,7 @@ export default function Dashboard() {
     limit !== null && used !== null ? Math.min(100, (used / limit) * 100) : 0;
 
   const bgClass = darkMode ? "bg-black text-white" : "bg-white text-black";
-  const cardBase =
-    "rounded-3xl border shadow-sm transition";
+  const cardBase = "rounded-3xl border shadow-sm transition";
   const cardLight = "border-gray-200 bg-white";
   const cardDark = "border-white/10 bg-white/5";
 
@@ -269,7 +259,9 @@ export default function Dashboard() {
                   <button
                     onClick={() => setMenuOpen(false)}
                     className={`absolute right-4 top-4 text-sm ${
-                      darkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-400 hover:text-gray-700"
+                      darkMode
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-400 hover:text-gray-700"
                     }`}
                   >
                     ✕
@@ -487,61 +479,33 @@ export default function Dashboard() {
           )}
         </motion.section>
 
-        {/* ACTIVITY FEED + TEAM */}
+        {/* ACTIVITY FEED – FULL WIDTH NOW */}
         <motion.section
-          className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl"
+          className="mt-32 max-w-5xl"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* Activity feed */}
-          <div className="md:col-span-2">
-            <h3 className="text-2xl font-semibold mb-4">Recent activity</h3>
-            <div
-              className={`${cardBase} ${
-                darkMode ? cardDark : cardLight
-              } p-5`}
-            >
-              <ul className="space-y-3 text-sm">
-                {ACTIVITY_FEED.map((item, idx) => (
-                  <li key={idx} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      <div>
-                        <p className="font-medium">{item.label}</p>
-                        <p className="text-xs text-gray-500">{item.type}</p>
-                      </div>
+          <h3 className="text-2xl font-semibold mb-4">Recent activity</h3>
+          <div
+            className={`${cardBase} ${
+              darkMode ? cardDark : cardLight
+            } p-5`}
+          >
+            <ul className="space-y-3 text-sm">
+              {ACTIVITY_FEED.map((item, idx) => (
+                <li key={idx} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <div>
+                      <p className="font-medium">{item.label}</p>
+                      <p className="text-xs text-gray-500">{item.type}</p>
                     </div>
-                    <span className="text-xs text-gray-500">{item.time}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Team */}
-          <div>
-            <h3 className="text-2xl font-semibold mb-4">Your team</h3>
-            <div
-              className={`${cardBase} ${
-                darkMode ? cardDark : cardLight
-              } p-5 space-y-4`}
-            >
-              {TEAM.map((member, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-semibold">
-                    {member.initials}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold">{member.name}</p>
-                    <p className="text-xs text-gray-500">{member.role}</p>
-                  </div>
-                </div>
+                  <span className="text-xs text-gray-500">{item.time}</span>
+                </li>
               ))}
-              <p className="text-xs text-gray-500 pt-2 border-t border-gray-200 mt-2">
-                Team features are visual only for now. You can wire this to real users later.
-              </p>
-            </div>
+            </ul>
           </div>
         </motion.section>
 
