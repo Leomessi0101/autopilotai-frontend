@@ -36,7 +36,7 @@ export default function MyWorkPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = items.filter(item => {
+  const filtered = items.filter((item) => {
     const matchType = filter === "all" || item.content_type === filter;
     const matchSearch =
       item.result.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,7 +46,6 @@ export default function MyWorkPage() {
 
   return (
     <div className="min-h-screen bg-white px-14 py-12 text-black">
-
       {/* HEADER */}
       <div className="flex items-center justify-between mb-16">
         <div>
@@ -68,7 +67,6 @@ export default function MyWorkPage() {
       {/* TOOLS */}
       {items.length > 0 && (
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
-
           {/* Search */}
           <input
             value={search}
@@ -110,7 +108,10 @@ export default function MyWorkPage() {
         </div>
       )}
 
-      <WorkModal item={selected} onClose={() => setSelected(null)} />
+      {/* MODAL */}
+      {selected && (
+        <WorkModal item={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }
@@ -130,8 +131,10 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
     >
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
-          <span className="inline-block mb-2 text-xs uppercase tracking-wide
-                           text-amber-600 font-medium">
+          <span
+            className="inline-block mb-2 text-xs uppercase tracking-wide
+                           text-amber-600 font-medium"
+          >
             {labelForType(item.content_type)}
           </span>
 
@@ -183,9 +186,13 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
    MODAL
    ========================= */
 
-function WorkModal({ item, onClose }: { item: WorkItem | null; onClose: () => void }) {
-  if (!item) return null;
-
+function WorkModal({
+  item,
+  onClose,
+}: {
+  item: WorkItem;
+  onClose: () => void;
+}) {
   function copy() {
     navigator.clipboard.writeText(item.result);
   }
@@ -207,9 +214,7 @@ function WorkModal({ item, onClose }: { item: WorkItem | null; onClose: () => vo
           className="bg-white rounded-3xl max-w-3xl w-full p-10 shadow-xl border border-gray-200"
         >
           <div className="flex justify-between mb-6">
-            <h3 className="text-xl font-bold">
-              {labelForType(item.content_type)}
-            </h3>
+            <h3 className="text-xl font-bold">{labelForType(item.content_type)}</h3>
 
             <button onClick={onClose} className="text-gray-500 hover:text-black">
               ✕
