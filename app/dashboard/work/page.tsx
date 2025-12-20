@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import api from "@/lib/api";   // ✅ USE GLOBAL API CLIENT
+import { motion, AnimatePresence } from "framer-motion";
+import api from "@/lib/api";
 
 type WorkItem = {
   id: number;
@@ -18,6 +18,11 @@ export default function MyWorkPage() {
   const [items, setItems] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "content" | "email" | "ad">("all");
+
+  const [selected, setSelected] = useState<WorkItem | null>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
@@ -26,10 +31,18 @@ export default function MyWorkPage() {
     }
 
     api
-      .get("/api/work")   // ✅ NO LOCALHOST — NOW USES RENDER BACKEND
-      .then((res) => setItems(res.data))
+      .get("/api/work")
+      .then((res) => setItems(res.data.reverse()))
       .finally(() => setLoading(false));
   }, []);
+
+  const filtered = items.filter(item => {
+    const matchType = filter === "all" || item.content_type === filter;
+    const matchSearch =
+      item.result.toLowerCase().includes(search.toLowerCase()) ||
+      item.prompt.toLowerCase().includes(search.toLowerCase());
+    return matchType && matchSearch;
+  });
 
   return (
     <div className="min-h-screen bg-white px-14 py-12 text-black">
@@ -37,11 +50,9 @@ export default function MyWorkPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between mb-16">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            My Work
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight">My Work</h1>
           <p className="text-gray-600 mt-2">
-            Everything AI has created for you.
+            Everything AI has created for you — saved automatically.
           </p>
         </div>
 
@@ -54,27 +65,61 @@ export default function MyWorkPage() {
         </button>
       </div>
 
+      {/* TOOLS */}
+      {items.length > 0 && (
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+
+          {/* Search */}
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search your work..."
+            className="px-4 py-3 rounded-xl border border-gray-300 w-full md:w-96
+                       focus:outline-none focus:border-black"
+          />
+
+          {/* Filters */}
+          <div className="flex gap-3">
+            {["all", "content", "email", "ad"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setFilter(t as any)}
+                className={`px-4 py-2 rounded-full border transition ${
+                  filter === t
+                    ? "border-black bg-black text-white"
+                    : "border-gray-300 hover:border-black"
+                }`}
+              >
+                {t === "all" ? "All" : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* CONTENT */}
       {loading ? (
         <p className="text-gray-500">Loading your work…</p>
-      ) : items.length === 0 ? (
-        <EmptyState />
+      ) : filtered.length === 0 ? (
+        <EmptyState hasItems={items.length > 0} />
       ) : (
         <div className="space-y-6 max-w-4xl">
-          {items.map((item) => (
-            <WorkRow key={item.id} item={item} />
+          {filtered.map((item) => (
+            <WorkRow key={item.id} item={item} onOpen={() => setSelected(item)} />
           ))}
         </div>
       )}
+
+      <WorkModal item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
 
 /* =========================
-   COMPONENTS
+   ROW COMPONENT
    ========================= */
 
-function WorkRow({ item }: { item: WorkItem }) {
+function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -90,14 +135,12 @@ function WorkRow({ item }: { item: WorkItem }) {
             {labelForType(item.content_type)}
           </span>
 
-          <p className="text-gray-800 line-clamp-2">
-            {item.result}
-          </p>
+          <p className="text-gray-800 line-clamp-2">{item.result}</p>
         </div>
 
         <button
           className="text-sm text-gray-400 hover:text-amber-600 transition"
-          onClick={() => alert("View full coming next")}
+          onClick={onOpen}
         >
           View →
         </button>
@@ -106,25 +149,101 @@ function WorkRow({ item }: { item: WorkItem }) {
   );
 }
 
-function EmptyState() {
+/* =========================
+   EMPTY
+   ========================= */
+
+function EmptyState({ hasItems }: { hasItems: boolean }) {
   return (
     <div className="max-w-xl mt-24 text-center mx-auto">
       <h3 className="text-2xl font-semibold mb-4">
-        Nothing here yet
+        {hasItems ? "No matches found" : "Nothing here yet"}
       </h3>
+
       <p className="text-gray-600 mb-8">
-        Everything you generate with AI will appear here.
+        {hasItems
+          ? "Try another filter or search phrase."
+          : "Everything you generate with AI will appear here."}
       </p>
-      <a
-        href="/dashboard"
-        className="inline-block px-6 py-3 rounded-full
-                   bg-black text-white hover:bg-gray-900 transition"
-      >
-        Generate your first work
-      </a>
+
+      {!hasItems && (
+        <a
+          href="/dashboard"
+          className="inline-block px-6 py-3 rounded-full
+                     bg-black text-white hover:bg-gray-900 transition"
+        >
+          Generate your first work
+        </a>
+      )}
     </div>
   );
 }
+
+/* =========================
+   MODAL
+   ========================= */
+
+function WorkModal({ item, onClose }: { item: WorkItem | null; onClose: () => void }) {
+  if (!item) return null;
+
+  function copy() {
+    navigator.clipboard.writeText(item.result);
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={{ scale: 0.96, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.96, opacity: 0 }}
+          className="bg-white rounded-3xl max-w-3xl w-full p-10 shadow-xl border border-gray-200"
+        >
+          <div className="flex justify-between mb-6">
+            <h3 className="text-xl font-bold">
+              {labelForType(item.content_type)}
+            </h3>
+
+            <button onClick={onClose} className="text-gray-500 hover:text-black">
+              ✕
+            </button>
+          </div>
+
+          <p className="text-gray-800 whitespace-pre-line leading-relaxed">
+            {item.result}
+          </p>
+
+          <div className="flex justify-end gap-4 mt-10">
+            <button
+              onClick={copy}
+              className="px-5 py-2 rounded-full border border-gray-300 hover:border-black transition"
+            >
+              Copy
+            </button>
+
+            <button
+              onClick={onClose}
+              className="px-6 py-2 rounded-full bg-black text-white hover:bg-gray-900 transition"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/* =========================
+   HELPERS
+   ========================= */
 
 function labelForType(type: WorkItem["content_type"]) {
   if (type === "content") return "Content";

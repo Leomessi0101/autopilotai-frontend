@@ -48,7 +48,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
-  const [name, setName] = useState<string>("U");
+  const [name, setName] = useState("U");
 
   const [used, setUsed] = useState<number | null>(null);
   const [limit, setLimit] = useState<number | null>(null);
@@ -81,10 +81,12 @@ export default function Dashboard() {
   }, [router]);
 
   const isSubscriber = !!subscriptionPlan;
-  const progress = limit !== null && used !== null ? Math.min(100, (used / limit) * 100) : 0;
+  const progress = limit !== null && used !== null
+    ? Math.min(100, (used / limit) * 100)
+    : 0;
 
   return (
-    <div className="min-h-screen bg-white px-14 py-12 text-black overflow-hidden">
+    <div className="min-h-screen bg-white px-12 py-10 text-black overflow-hidden">
 
       {/* ================= TOP BAR ================= */}
       <div className="flex justify-between items-center relative z-20">
@@ -92,7 +94,7 @@ export default function Dashboard() {
           onClick={() => router.push("/")}
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-semibold tracking-tight cursor-pointer hover:opacity-75 transition"
+          className="text-2xl font-semibold tracking-tight cursor-pointer hover:opacity-70 transition"
         >
           AutopilotAI<span className="text-amber-500">.</span>
         </motion.h1>
@@ -103,13 +105,13 @@ export default function Dashboard() {
             whileHover={{ scale: 1.05 }}
             onClick={() => setMenuOpen(true)}
             className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-200 to-gray-300
-                       flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
+              flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
           >
             {name}
             <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 animate-pulse opacity-40" />
           </motion.button>
 
-          {/* DARK BACKDROP CLICK TO CLOSE */}
+          {/* BACKDROP */}
           <AnimatePresence>
             {menuOpen && (
               <>
@@ -121,13 +123,13 @@ export default function Dashboard() {
                   exit={{ opacity: 0 }}
                 />
 
-                {/* MENU PANEL */}
+                {/* DROPDOWN */}
                 <motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  className="absolute right-0 mt-4 w-72 rounded-3xl
-                           bg-white/90 backdrop-blur-xl border border-gray-200 shadow-2xl overflow-hidden"
+                  className="absolute right-0 mt-4 w-72 rounded-3xl bg-white/90 backdrop-blur-xl
+                    border border-gray-200 shadow-2xl overflow-hidden"
                 >
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-50 to-white">
                     <p className="text-xs uppercase text-gray-500">Current plan</p>
@@ -157,11 +159,9 @@ export default function Dashboard() {
       </div>
 
       {/* ================= HERO ================= */}
-      <motion.section className="mt-28 max-w-4xl">
+      <motion.section className="mt-24 max-w-4xl">
         <h2 className="text-5xl font-bold">{greeting}</h2>
-        <p className="text-xl text-gray-600 mt-4">
-          Your business is already moving forward.
-        </p>
+        <p className="text-xl text-gray-600 mt-4">Your business is already moving forward.</p>
 
         <blockquote className="mt-10 pl-6 border-l-2 border-amber-300 italic text-lg text-gray-700">
           “{quote.text}”
@@ -172,21 +172,21 @@ export default function Dashboard() {
       </motion.section>
 
       {/* ================= ACTIONS ================= */}
-      <motion.section className="mt-32">
+      <motion.section className="mt-28">
         <h3 className="text-3xl font-semibold mb-10">
           What should AI handle next?
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <ActionCard title="Generate content" onClick={() => router.push("/dashboard/content")} />
-          <ActionCard title="Write emails" onClick={() => router.push("/dashboard/email")} />
-          <ActionCard title="Create ads" onClick={() => router.push("/dashboard/ads")} />
+          <ActionCard title="Generate Content" onClick={() => router.push("/dashboard/content")} />
+          <ActionCard title="Write Emails" onClick={() => router.push("/dashboard/email")} />
+          <ActionCard title="Create Ads" onClick={() => router.push("/dashboard/ads")} />
           <ActionCard title="My Work" onClick={() => router.push("/dashboard/work")} />
         </div>
       </motion.section>
 
       {/* ================= USAGE ================= */}
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-36 max-w-3xl">
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-32 max-w-3xl">
         <h3 className="text-2xl font-semibold mb-4">Your usage</h3>
 
         {limit === null ? (
@@ -214,7 +214,7 @@ export default function Dashboard() {
       </motion.section>
 
       {/* ================= AI FOCUS ================= */}
-      <motion.section className="mt-40 max-w-3xl">
+      <motion.section className="mt-36 max-w-3xl pb-24">
         <h3 className="text-3xl font-semibold mb-6">AI Focus for Today</h3>
 
         <div className={`rounded-3xl p-10 border shadow-sm ${
@@ -266,7 +266,7 @@ function ActionCard({ title, onClick }: any) {
       whileHover={{ y: -8 }}
       onClick={onClick}
       className="cursor-pointer bg-white rounded-3xl p-10 shadow-sm hover:shadow-2xl
-                 hover:border-amber-300 border border-transparent"
+        hover:border-amber-300 border border-transparent transition"
     >
       <h4 className="text-2xl font-semibold">{title}</h4>
     </motion.div>
