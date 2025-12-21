@@ -29,9 +29,9 @@ export default function PricingPage() {
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("autopilot-theme", newTheme);
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("autopilot-theme", next);
   };
 
   const isDark = theme === "dark";
@@ -49,7 +49,6 @@ export default function PricingPage() {
       const res = await api.post(
         `/api/stripe/create-checkout-session?plan=${plan}`
       );
-
       window.location.href = res.data.checkout_url;
     } catch {
       alert("Something went wrong. Please try again.");
@@ -58,312 +57,185 @@ export default function PricingPage() {
 
   return (
     <div
-      className={`min-h-screen flex transition-all duration-500 ${
+      className={`min-h-screen transition-all duration-500 ${
         isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
       }`}
     >
-      {/* SIDEBAR */}
-      <aside
-        className={`hidden md:flex flex-col w-64 px-6 py-8 border-r ${
-          isDark
-            ? "bg-[#0F0F14] border-gray-800"
-            : "bg-white border-gray-200"
+      {/* NAVBAR */}
+      <header
+        className={`w-full py-6 px-8 md:px-12 flex justify-between items-center border-b sticky top-0 backdrop-blur-xl z-50 ${
+          isDark ? "border-gray-800 bg-[#0B0B0E]/80" : "border-gray-200 bg-white/80"
         }`}
       >
         <h1
+          className="text-2xl font-bold cursor-pointer"
           onClick={() => (window.location.href = "/")}
-          className="text-2xl font-semibold tracking-tight cursor-pointer"
         >
           AutopilotAI<span className="text-amber-500">.</span>
         </h1>
 
-        <nav className="mt-12 space-y-4 text-sm">
-          <SidebarItem label="Dashboard" href="/dashboard" />
-          <SidebarItem label="Generate Content" href="/dashboard/content" />
-          <SidebarItem label="Write Emails" href="/dashboard/email" />
-          <SidebarItem label="Create Ads" href="/dashboard/ads" />
-          <SidebarItem label="My Work" href="/dashboard/work" />
-          <SidebarItem label="Billing" href="/billing" />
-        </nav>
+        <div className="flex gap-6 items-center text-sm">
+          <a href="/" className="hover:underline">Home</a>
+          <a href="/features" className="hover:underline">Features</a>
+          {!isLoggedIn && <a href="/login" className="hover:underline">Login</a>}
 
-        <div className="mt-auto pt-10 text-xs text-gray-500">
-          Secure payments powered by Stripe.
-        </div>
-      </aside>
-
-      {/* MAIN */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Header */}
-        <div
-          className={`w-full py-6 px-6 md:px-10 border-b sticky top-0 backdrop-blur-xl z-50 flex justify-between items-center ${
-            isDark
-              ? "border-gray-800 bg-[#0B0B0E]/80"
-              : "border-gray-200 bg-white/80"
-          }`}
-        >
-          <h2 className="text-xl font-semibold tracking-tight">
-            Pricing Plans
-          </h2>
+          <a
+            href={isLoggedIn ? "/dashboard" : "/register"}
+            className={`px-5 py-2 rounded-full text-white transition ${
+              isDark ? "bg-amber-500 text-black" : "bg-black hover:bg-gray-900"
+            }`}
+          >
+            {isLoggedIn ? "Dashboard" : "Get Started"}
+          </a>
 
           <button
             onClick={toggleTheme}
-            className={`px-4 py-2 rounded-full border text-sm transition ${
+            className={`px-4 py-2 rounded-full border text-xs transition ${
               isDark
                 ? "border-gray-700 hover:border-amber-500"
                 : "border-gray-300 hover:border-black"
             }`}
           >
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
+            {isDark ? "Light Mode" : "Dark Mode"}
           </button>
         </div>
+      </header>
 
-        {/* HERO */}
-        <section className="px-8 md:px-20 pt-20 text-center max-w-5xl mx-auto">
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl font-extrabold tracking-tight"
-          >
-            Simple, Honest
-            <span className="text-amber-500"> Pricing</span>
-          </motion.h1>
+      {/* HERO */}
+      <section className="px-8 md:px-20 pt-20 text-center max-w-5xl mx-auto">
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-6xl font-extrabold"
+        >
+          Simple, Honest
+          <span className="text-amber-500"> Pricing</span>
+        </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className={`mt-6 text-lg md:text-xl ${
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className={`mt-6 text-lg md:text-xl ${
+            isDark ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          No hidden fees. No contracts. Cancel anytime.
+          You stay in control — always.
+        </motion.p>
+      </section>
+
+      {/* PRICING GRID */}
+      <section className="mt-24 px-8 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+        <PriceCard
+          theme={theme}
+          plan="Basic"
+          price="19"
+          desc="Perfect for individuals & small businesses."
+          features={[
+            "30-day content generator",
+            "Email & reply templates",
+            "Ad & campaign generator",
+            "Save up to 5 projects",
+            "Standard processing speed",
+          ]}
+          current={user?.subscription_plan === "basic"}
+          onChoose={() => handleSubscribe("basic")}
+        />
+
+        <PriceCard
+          theme={theme}
+          plan="Growth"
+          price="49"
+          highlight
+          desc="The best plan for momentum & real growth."
+          features={[
+            "Everything in Basic",
+            "Unlimited generations",
+            "Full history",
+            "Multiple variations per request",
+            "AI scheduling & tips",
+            "Faster processing",
+            "Priority support",
+          ]}
+          current={user?.subscription_plan === "growth"}
+          onChoose={() => handleSubscribe("growth")}
+        />
+
+        <PriceCard
+          theme={theme}
+          plan="Pro"
+          price="99"
+          desc="For serious businesses scaling aggressively."
+          features={[
+            "Everything in Growth",
+            "AI image generation",
+            "Long-form blogs",
+            "Campaign bundles",
+            "Advanced automation",
+            "Highest priority queue",
+          ]}
+          current={user?.subscription_plan === "pro"}
+          onChoose={() => handleSubscribe("pro")}
+        />
+      </section>
+
+      {/* GUARANTEE */}
+      <section className="mt-28 px-8 md:px-12 max-w-4xl mx-auto text-center">
+        <div
+          className={`border rounded-3xl p-10 shadow-xl ${
+            isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
+          }`}
+        >
+          <h3 className="text-3xl font-bold">Built For Growth — Not Lock-In</h3>
+          <p
+            className={`mt-3 text-lg ${
               isDark ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            No hidden fees. No contracts. Cancel anytime.
-            You stay in control — always.
-          </motion.p>
+            Upgrade, downgrade, pause, or cancel anytime.
+            No contracts. No stress.
+          </p>
+        </div>
+      </section>
 
-          {!isLoggedIn && (
-            <div className="mt-8">
-              <a
-                href="/register"
-                className={`px-8 py-3 rounded-full text-white hover:opacity-90 transition shadow-xl ${
-                  isDark ? "bg-amber-500" : "bg-black"
-                }`}
-              >
-                Get Started Free
-              </a>
-            </div>
-          )}
-        </section>
+      {/* CTA */}
+      {!isLoggedIn && (
+        <div className="text-center mt-24 pb-20 px-6">
+          <h2 className="text-3xl font-bold">
+            Ready to put your business on Autopilot?
+          </h2>
+          <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>
+            Join forward-thinking businesses using AI to scale faster.
+          </p>
 
-        {/* PRICING CARDS */}
-        <section className="mt-24 px-6 md:px-10 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
-          <PriceCard
-            theme={theme}
-            plan="Basic"
-            price="19"
-            desc="Perfect for individuals & small businesses starting with automation."
-            features={[
-              "30-day content generator",
-              "Email & reply templates",
-              "Ad & campaign generator",
-              "Save up to 5 projects",
-              "Standard processing speed",
-            ]}
-            current={user?.subscription_plan === "basic"}
-            onChoose={() => handleSubscribe("basic")}
-          />
-
-          <PriceCard
-            theme={theme}
-            plan="Growth"
-            price="49"
-            highlight
-            desc="The best plan for real momentum and serious growth."
-            features={[
-              "Everything in Basic",
-              "Unlimited generations",
-              "Full project history",
-              "Multiple variations per request",
-              "AI scheduling & strategy tips",
-              "Faster processing",
-              "Priority support",
-            ]}
-            current={user?.subscription_plan === "growth"}
-            onChoose={() => handleSubscribe("growth")}
-          />
-
-          <PriceCard
-            theme={theme}
-            plan="Pro"
-            price="99"
-            desc="For serious businesses & creators who want maximum output."
-            features={[
-              "Everything in Growth",
-              "AI image generation",
-              "Long-form blog & article writer",
-              "Complete campaign bundles",
-              "Advanced automation tools",
-              "Highest priority queue",
-            ]}
-            current={user?.subscription_plan === "pro"}
-            onChoose={() => handleSubscribe("pro")}
-          />
-        </section>
-
-        {/* GUARANTEE */}
-        <section className="mt-28 px-6 md:px-10 max-w-4xl mx-auto text-center">
-          <div
-            className={`border rounded-3xl p-10 shadow-xl ${
-              isDark
-                ? "bg-[#0F0F14] border-gray-800"
-                : "bg-white border-gray-200"
+          <a
+            href="/register"
+            className={`inline-block mt-8 px-10 py-4 rounded-full text-lg text-white hover:opacity-90 transition shadow-xl ${
+              isDark ? "bg-amber-500 text-black" : "bg-black"
             }`}
           >
-            <h3 className="text-3xl font-bold">
-              Built For Growth — Not Lock-In
-            </h3>
-            <p
-              className={`mt-3 text-lg leading-relaxed ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Upgrade, downgrade, pause, or cancel anytime.
-              No contracts. No stress. Just real business results.
-            </p>
-          </div>
-        </section>
+            Get Started
+          </a>
+        </div>
+      )}
 
-        {/* COMPARE TABLE */}
-        <section className="mt-32 px-6 md:px-10 max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            Compare Plans
-          </h2>
-
-          <div
-            className={`overflow-x-auto rounded-3xl border shadow-xl ${
-              isDark
-                ? "border-gray-800 bg-[#0F0F14]"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <table className="w-full text-sm">
-              <thead
-                className={isDark ? "bg-[#13131A]" : "bg-gray-50"}
-              >
-                <tr>
-                  <th className="text-left py-4 px-6">Feature</th>
-                  <th className="text-center">Basic</th>
-                  <th className="text-center text-amber-500 font-semibold">
-                    Growth ⭐
-                  </th>
-                  <th className="text-center">Pro</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y dark:divide-gray-800">
-                {[
-                  ["Unlimited generations", "—", "✓", "✓"],
-                  ["Fast processing", "—", "✓", "✓"],
-                  ["Priority queue", "—", "—", "✓"],
-                  ["AI scheduling + strategy", "—", "✓", "✓"],
-                  ["Campaign bundles", "—", "—", "✓"],
-                  ["Project saving", "✓", "✓", "✓"],
-                ].map((row, idx) => (
-                  <tr key={idx} className="text-center">
-                    <td className="text-left py-4 px-6 font-medium">
-                      {row[0]}
-                    </td>
-                    <td>{row[1]}</td>
-                    <td className="text-amber-500 font-semibold">
-                      {row[2]}
-                    </td>
-                    <td>{row[3]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="mt-32 px-6 md:px-10 max-w-5xl mx-auto pb-28">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            Frequently Asked Questions
-          </h2>
-
-          <div className="space-y-6">
-            <Faq
-              theme={theme}
-              q="Do I need a credit card to subscribe?"
-              a="Yes. Payments are handled securely through Stripe and you can cancel anytime."
-            />
-            <Faq
-              theme={theme}
-              q="What happens if I upgrade?"
-              a="Your account instantly unlocks the new plan features without interruption."
-            />
-            <Faq
-              theme={theme}
-              q="Can I cancel whenever I want?"
-              a="Yes — there are no contracts, commitments or hidden penalties."
-            />
-            <Faq
-              theme={theme}
-              q="Is my data secure?"
-              a="Absolutely. Your content, prompts and account information remain private."
-            />
-          </div>
-        </section>
-
-        {/* CTA */}
-        {!isLoggedIn && (
-          <div className="text-center pb-20 px-6">
-            <h2 className="text-3xl font-bold">
-              Ready to put your business on Autopilot?
-            </h2>
-            <p
-              className={`mt-3 ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Join forward-thinking businesses using AI to scale faster.
-            </p>
-
-            <a
-              href="/register"
-              className={`inline-block mt-8 px-10 py-4 rounded-full text-lg text-white hover:opacity-90 transition shadow-xl ${
-                isDark ? "bg-amber-500" : "bg-black"
-              }`}
-            >
-              Get Started
-            </a>
-          </div>
-        )}
-
-        {/* FOOTER */}
-        <footer
-          className={`border-t py-10 text-center ${
-            isDark
-              ? "border-gray-800 text-gray-500"
-              : "border-gray-200 text-gray-500"
-          }`}
-        >
-          © 2025 AutopilotAI. All rights reserved.
-        </footer>
-      </div>
+      {/* FOOTER */}
+      <footer
+        className={`border-t py-10 text-center ${
+          isDark
+            ? "border-gray-800 text-gray-500"
+            : "border-gray-200 text-gray-500"
+        }`}
+      >
+        © 2025 AutopilotAI. All rights reserved.
+      </footer>
     </div>
   );
 }
 
-/* ================= COMPONENTS ================= */
-
-function SidebarItem({ label, href }: any) {
-  return (
-    <a href={href} className="block w-full py-2 hover:translate-x-1 transition">
-      {label}
-    </a>
-  );
-}
+/* ============ COMPONENTS ============ */
 
 function PriceCard({
   plan,
@@ -450,23 +322,5 @@ function PriceCard({
         </button>
       )}
     </motion.div>
-  );
-}
-
-function Faq({ q, a, theme }: any) {
-  const isDark = theme === "dark";
-  return (
-    <div
-      className={`border rounded-2xl p-6 shadow ${
-        isDark
-          ? "bg-[#0F0F14] border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
-    >
-      <h4 className="text-lg font-bold">{q}</h4>
-      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>
-        {a}
-      </p>
-    </div>
   );
 }
