@@ -11,8 +11,12 @@ type User = {
 export default function PricingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
+    const saved = localStorage.getItem("autopilot-theme");
+    if (saved === "dark") setTheme("dark");
+
     const token = localStorage.getItem("autopilot_token");
     setIsLoggedIn(!!token);
 
@@ -23,6 +27,14 @@ export default function PricingPage() {
         .catch(() => setUser(null));
     }
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("autopilot-theme", newTheme);
+  };
+
+  const isDark = theme === "dark";
 
   const handleSubscribe = async (plan: "basic" | "growth" | "pro") => {
     const token = localStorage.getItem("autopilot_token");
@@ -45,9 +57,19 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex">
-      {/* LEFT SIDEBAR (Consistent with dashboard) */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white px-6 py-8">
+    <div
+      className={`min-h-screen flex transition-all duration-500 ${
+        isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
+      }`}
+    >
+      {/* SIDEBAR */}
+      <aside
+        className={`hidden md:flex flex-col w-64 px-6 py-8 border-r ${
+          isDark
+            ? "bg-[#0F0F14] border-gray-800"
+            : "bg-white border-gray-200"
+        }`}
+      >
         <h1
           onClick={() => (window.location.href = "/")}
           className="text-2xl font-semibold tracking-tight cursor-pointer"
@@ -65,12 +87,35 @@ export default function PricingPage() {
         </nav>
 
         <div className="mt-auto pt-10 text-xs text-gray-500">
-          Secure payments handled by Stripe.
+          Secure payments powered by Stripe.
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div className="flex-1 overflow-y-auto">
+        {/* Header */}
+        <div
+          className={`w-full py-6 px-6 md:px-10 border-b sticky top-0 backdrop-blur-xl z-50 flex justify-between items-center ${
+            isDark
+              ? "border-gray-800 bg-[#0B0B0E]/80"
+              : "border-gray-200 bg-white/80"
+          }`}
+        >
+          <h2 className="text-xl font-semibold tracking-tight">
+            Pricing Plans
+          </h2>
+
+          <button
+            onClick={toggleTheme}
+            className={`px-4 py-2 rounded-full border text-sm transition ${
+              isDark
+                ? "border-gray-700 hover:border-amber-500"
+                : "border-gray-300 hover:border-black"
+            }`}
+          >
+            {theme === "light" ? "Dark Mode" : "Light Mode"}
+          </button>
+        </div>
 
         {/* HERO */}
         <section className="px-8 md:px-20 pt-20 text-center max-w-5xl mx-auto">
@@ -78,22 +123,21 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-6xl font-bold tracking-tight"
+            className="text-4xl md:text-6xl font-extrabold tracking-tight"
           >
             Simple, Honest
-            <span className="bg-gradient-to-r from-black to-gray-400 bg-clip-text text-transparent">
-              {" "}
-              Pricing
-            </span>
+            <span className="text-amber-500"> Pricing</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-6 text-xl text-gray-600"
+            className={`mt-6 text-lg md:text-xl ${
+              isDark ? "text-gray-400" : "text-gray-600"
+            }`}
           >
-            No hidden fees. No contracts. Cancel anytime.  
+            No hidden fees. No contracts. Cancel anytime.
             You stay in control — always.
           </motion.p>
 
@@ -101,7 +145,9 @@ export default function PricingPage() {
             <div className="mt-8">
               <a
                 href="/register"
-                className="px-8 py-3 bg-black text-white rounded-full hover:bg-gray-900 transition"
+                className={`px-8 py-3 rounded-full text-white hover:opacity-90 transition shadow-xl ${
+                  isDark ? "bg-amber-500" : "bg-black"
+                }`}
               >
                 Get Started Free
               </a>
@@ -110,8 +156,9 @@ export default function PricingPage() {
         </section>
 
         {/* PRICING CARDS */}
-        <section className="mt-24 px-10 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+        <section className="mt-24 px-6 md:px-10 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
           <PriceCard
+            theme={theme}
             plan="Basic"
             price="19"
             desc="Perfect for individuals & small businesses starting with automation."
@@ -127,6 +174,7 @@ export default function PricingPage() {
           />
 
           <PriceCard
+            theme={theme}
             plan="Growth"
             price="49"
             highlight
@@ -145,6 +193,7 @@ export default function PricingPage() {
           />
 
           <PriceCard
+            theme={theme}
             plan="Pro"
             price="99"
             desc="For serious businesses & creators who want maximum output."
@@ -162,33 +211,56 @@ export default function PricingPage() {
         </section>
 
         {/* GUARANTEE */}
-        <section className="mt-28 px-10 max-w-4xl mx-auto text-center">
-          <div className="border rounded-3xl p-10 shadow-sm bg-white">
-            <h3 className="text-3xl font-bold">Built For Growth — Not Lock-In</h3>
-            <p className="text-gray-600 mt-3 text-lg leading-relaxed">
-              Upgrade, downgrade, pause, or cancel anytime.  
+        <section className="mt-28 px-6 md:px-10 max-w-4xl mx-auto text-center">
+          <div
+            className={`border rounded-3xl p-10 shadow-xl ${
+              isDark
+                ? "bg-[#0F0F14] border-gray-800"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <h3 className="text-3xl font-bold">
+              Built For Growth — Not Lock-In
+            </h3>
+            <p
+              className={`mt-3 text-lg leading-relaxed ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Upgrade, downgrade, pause, or cancel anytime.
               No contracts. No stress. Just real business results.
             </p>
           </div>
         </section>
 
-        {/* FEATURE COMPARISON */}
-        <section className="mt-32 px-10 max-w-6xl mx-auto">
+        {/* COMPARE TABLE */}
+        <section className="mt-32 px-6 md:px-10 max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-10">
             Compare Plans
           </h2>
 
-          <div className="overflow-x-auto rounded-3xl border shadow-sm">
+          <div
+            className={`overflow-x-auto rounded-3xl border shadow-xl ${
+              isDark
+                ? "border-gray-800 bg-[#0F0F14]"
+                : "border-gray-200 bg-white"
+            }`}
+          >
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead
+                className={isDark ? "bg-[#13131A]" : "bg-gray-50"}
+              >
                 <tr>
                   <th className="text-left py-4 px-6">Feature</th>
                   <th className="text-center">Basic</th>
-                  <th className="text-center text-black font-semibold">Growth ⭐</th>
+                  <th className="text-center text-amber-500 font-semibold">
+                    Growth ⭐
+                  </th>
                   <th className="text-center">Pro</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+
+              <tbody className="divide-y dark:divide-gray-800">
                 {[
                   ["Unlimited generations", "—", "✓", "✓"],
                   ["Fast processing", "—", "✓", "✓"],
@@ -198,9 +270,13 @@ export default function PricingPage() {
                   ["Project saving", "✓", "✓", "✓"],
                 ].map((row, idx) => (
                   <tr key={idx} className="text-center">
-                    <td className="text-left py-4 px-6 font-medium">{row[0]}</td>
+                    <td className="text-left py-4 px-6 font-medium">
+                      {row[0]}
+                    </td>
                     <td>{row[1]}</td>
-                    <td className="text-black font-semibold">{row[2]}</td>
+                    <td className="text-amber-500 font-semibold">
+                      {row[2]}
+                    </td>
                     <td>{row[3]}</td>
                   </tr>
                 ))}
@@ -210,25 +286,29 @@ export default function PricingPage() {
         </section>
 
         {/* FAQ */}
-        <section className="mt-32 px-10 max-w-5xl mx-auto pb-28">
+        <section className="mt-32 px-6 md:px-10 max-w-5xl mx-auto pb-28">
           <h2 className="text-3xl font-bold text-center mb-10">
             Frequently Asked Questions
           </h2>
 
           <div className="space-y-6">
             <Faq
+              theme={theme}
               q="Do I need a credit card to subscribe?"
               a="Yes. Payments are handled securely through Stripe and you can cancel anytime."
             />
             <Faq
+              theme={theme}
               q="What happens if I upgrade?"
               a="Your account instantly unlocks the new plan features without interruption."
             />
             <Faq
+              theme={theme}
               q="Can I cancel whenever I want?"
               a="Yes — there are no contracts, commitments or hidden penalties."
             />
             <Faq
+              theme={theme}
               q="Is my data secure?"
               a="Absolutely. Your content, prompts and account information remain private."
             />
@@ -237,17 +317,23 @@ export default function PricingPage() {
 
         {/* CTA */}
         {!isLoggedIn && (
-          <div className="text-center pb-20">
+          <div className="text-center pb-20 px-6">
             <h2 className="text-3xl font-bold">
               Ready to put your business on Autopilot?
             </h2>
-            <p className="text-gray-600 mt-3">
+            <p
+              className={`mt-3 ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               Join forward-thinking businesses using AI to scale faster.
             </p>
 
             <a
               href="/register"
-              className="inline-block mt-8 px-10 py-4 bg-black text-white rounded-full text-lg hover:bg-gray-900 transition"
+              className={`inline-block mt-8 px-10 py-4 rounded-full text-lg text-white hover:opacity-90 transition shadow-xl ${
+                isDark ? "bg-amber-500" : "bg-black"
+              }`}
             >
               Get Started
             </a>
@@ -255,7 +341,13 @@ export default function PricingPage() {
         )}
 
         {/* FOOTER */}
-        <footer className="border-t py-10 text-center text-gray-500">
+        <footer
+          className={`border-t py-10 text-center ${
+            isDark
+              ? "border-gray-800 text-gray-500"
+              : "border-gray-200 text-gray-500"
+          }`}
+        >
           © 2025 AutopilotAI. All rights reserved.
         </footer>
       </div>
@@ -273,48 +365,86 @@ function SidebarItem({ label, href }: any) {
   );
 }
 
-function PriceCard({ plan, price, desc, features, highlight, onChoose, current }: any) {
+function PriceCard({
+  plan,
+  price,
+  desc,
+  features,
+  highlight,
+  onChoose,
+  current,
+  theme,
+}: any) {
+  const isDark = theme === "dark";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className={`p-10 rounded-3xl border text-center bg-white shadow-sm ${
-        highlight ? "border-black shadow-2xl scale-[1.03]" : "border-gray-200"
+      className={`p-10 rounded-3xl text-center shadow-xl border ${
+        highlight
+          ? "scale-[1.04] border-amber-500"
+          : isDark
+          ? "bg-[#0F0F14] border-gray-800"
+          : "bg-white border-gray-200"
       }`}
     >
       {highlight && (
         <div className="mb-4">
-          <span className="px-3 py-1 bg-black text-white text-xs rounded-full">
+          <span className="px-3 py-1 bg-amber-500 text-black text-xs rounded-full">
             Most Popular
           </span>
         </div>
       )}
 
       <h3 className="text-2xl font-bold">{plan}</h3>
-      <p className="text-gray-600 mt-2">{desc}</p>
+      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>
+        {desc}
+      </p>
 
-      <div className="text-5xl font-bold mt-6">${price}</div>
-      <div className="text-gray-600 mt-1">per month</div>
+      <div className="text-5xl font-bold mt-6">
+        ${price}
+        <span className="text-lg font-normal">/mo</span>
+      </div>
 
       <ul className="text-left mt-8 space-y-3">
         {features.map((f: string, idx: number) => (
-          <li key={idx} className="flex items-center gap-3 text-gray-800">
-            <span className="w-2 h-2 bg-black rounded-full"></span>
+          <li
+            key={idx}
+            className={`flex items-center gap-3 ${
+              isDark ? "text-gray-300" : "text-gray-800"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                highlight
+                  ? "bg-amber-500"
+                  : isDark
+                  ? "bg-gray-300"
+                  : "bg-black"
+              }`}
+            ></span>
             {f}
           </li>
         ))}
       </ul>
 
       {current ? (
-        <div className="mt-10 font-semibold text-green-600">
+        <div className="mt-10 font-semibold text-green-500">
           Current Plan
         </div>
       ) : (
         <button
           onClick={onChoose}
-          className="block w-full mt-10 px-6 py-3 bg-black text-white rounded-full hover:bg-gray-900 transition"
+          className={`w-full mt-10 px-6 py-3 rounded-full text-white hover:opacity-90 transition shadow-lg ${
+            highlight
+              ? "bg-amber-500 text-black"
+              : isDark
+              ? "bg-amber-500 text-black"
+              : "bg-black"
+          }`}
         >
           Choose {plan}
         </button>
@@ -323,11 +453,20 @@ function PriceCard({ plan, price, desc, features, highlight, onChoose, current }
   );
 }
 
-function Faq({ q, a }: any) {
+function Faq({ q, a, theme }: any) {
+  const isDark = theme === "dark";
   return (
-    <div className="border rounded-2xl p-6 bg-white">
+    <div
+      className={`border rounded-2xl p-6 shadow ${
+        isDark
+          ? "bg-[#0F0F14] border-gray-800"
+          : "bg-white border-gray-200"
+      }`}
+    >
       <h4 className="text-lg font-bold">{q}</h4>
-      <p className="text-gray-600 mt-2">{a}</p>
+      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>
+        {a}
+      </p>
     </div>
   );
 }

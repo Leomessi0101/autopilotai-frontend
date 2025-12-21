@@ -26,7 +26,13 @@ export default function BillingPage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const isDark = theme === "dark";
+
   useEffect(() => {
+    const saved = localStorage.getItem("autopilot-theme");
+    if (saved === "dark") setTheme("dark");
+
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
       router.push("/login");
@@ -45,6 +51,12 @@ export default function BillingPage() {
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [router]);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("autopilot-theme", next);
+  };
 
   const planLabel = (sub?: string) => {
     if (!sub) return "Free";
@@ -70,10 +82,19 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex">
-
+    <div
+      className={`min-h-screen flex transition-all duration-500 ${
+        isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
+      }`}
+    >
       {/* SIDEBAR */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white px-6 py-8">
+      <aside
+        className={`hidden md:flex flex-col w-64 px-6 py-8 border-r ${
+          isDark
+            ? "bg-[#0F0F14] border-gray-800"
+            : "bg-white border-gray-200"
+        }`}
+      >
         <h1
           onClick={() => router.push("/")}
           className="text-2xl font-semibold tracking-tight cursor-pointer"
@@ -98,34 +119,55 @@ export default function BillingPage() {
       </aside>
 
       {/* MAIN */}
-      <div className="flex-1 px-6 md:px-16 py-10 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-6 md:px-16 py-10">
 
         {/* TOP BAR */}
-        <div className="flex justify-between items-center relative">
+        <div
+          className={`flex justify-between items-center sticky top-0 z-50 backdrop-blur-xl border-b mb-6 pb-4 ${
+            isDark ? "border-gray-800 bg-[#0B0B0E]/80" : "border-gray-200 bg-white/80"
+          }`}
+        >
           <div>
             <h2 className="text-4xl font-bold tracking-tight mb-2">
               Billing & Subscription
             </h2>
-            <p className="text-gray-600">
+            <p className={isDark ? "text-gray-400" : "text-gray-600"}>
               View your plan, usage, and manage your subscription.
             </p>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setMenuOpen(true)}
-            className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
-          >
-            {name}
-            <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
-          </motion.button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className={`px-4 py-2 rounded-full border text-sm transition ${
+                isDark
+                  ? "border-gray-700 hover:border-amber-500"
+                  : "border-gray-300 hover:border-black"
+              }`}
+            >
+              {isDark ? "Light Mode" : "Dark Mode"}
+            </button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setMenuOpen(true)}
+              className={`relative w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold shadow-sm ${
+                isDark
+                  ? "bg-[#13131A] text-white"
+                  : "bg-gradient-to-br from-gray-200 to-gray-300 text-gray-700"
+              }`}
+            >
+              {name}
+              <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
+            </motion.button>
+          </div>
 
           {/* PROFILE PANEL */}
           <AnimatePresence>
             {menuOpen && (
               <>
                 <motion.div
-                  className="fixed inset-0 bg-black/20"
+                  className="fixed inset-0 bg-black/40"
                   onClick={() => setMenuOpen(false)}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -137,9 +179,17 @@ export default function BillingPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 40 }}
                   transition={{ type: "spring", stiffness: 260, damping: 26 }}
-                  className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
+                  className={`fixed top-20 right-6 w-80 rounded-3xl border shadow-2xl z-50 overflow-hidden backdrop-blur-xl ${
+                    isDark
+                      ? "bg-[#0F0F14]/95 border-gray-800"
+                      : "bg-white/95 border-gray-200"
+                  }`}
                 >
-                  <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
+                  <div
+                    className={`relative px-6 pt-6 pb-4 border-b ${
+                      isDark ? "bg-[#13131A]" : "bg-amber-50"
+                    }`}
+                  >
                     <button
                       onClick={() => setMenuOpen(false)}
                       className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
@@ -148,7 +198,11 @@ export default function BillingPage() {
                     </button>
 
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
+                          isDark ? "bg-black text-white" : "bg-black text-white"
+                        }`}
+                      >
                         {name}
                       </div>
                       <div>
@@ -182,15 +236,21 @@ export default function BillingPage() {
         </div>
 
         {/* CONTENT */}
-        <div className="mt-14 max-w-6xl">
+        <div className="mt-10 max-w-6xl">
 
           {loading ? (
-            <div className="border border-gray-200 rounded-3xl p-10 bg-white">
-              <p className="text-gray-500">Loading your billing details…</p>
+            <div
+              className={`rounded-3xl p-10 shadow-xl border ${
+                isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
+              }`}
+            >
+              <p className={isDark ? "text-gray-400" : "text-gray-500"}>
+                Loading your billing details…
+              </p>
             </div>
           ) : !data ? (
-            <div className="border border-red-200 bg-red-50 text-red-800 rounded-3xl p-6">
-              <p>Could not load your billing information. Please refresh.</p>
+            <div className="border border-red-300 bg-red-100 text-red-800 rounded-3xl p-6">
+              Could not load your billing information. Please refresh.
             </div>
           ) : (
             <div className="grid gap-8 md:grid-cols-[2fr,1.5fr]">
@@ -200,10 +260,12 @@ export default function BillingPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm"
+                className={`rounded-3xl p-10 shadow-xl border ${
+                  isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
+                }`}
               >
                 <h3 className="text-xl font-semibold mb-2">Current Plan</h3>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className={isDark ? "text-gray-400 mb-6" : "text-gray-500 mb-6"}>
                   Linked to <span className="font-mono">{data.email}</span>
                 </p>
 
@@ -213,13 +275,13 @@ export default function BillingPage() {
                   </span>
 
                   {data.subscription?.toLowerCase() === "free" && (
-                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">
-                      Free tier
+                    <span className="px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs">
+                      Free Tier
                     </span>
                   )}
                 </div>
 
-                <p className="text-gray-600 mb-8">
+                <p className={isDark ? "text-gray-400 mb-8" : "text-gray-600 mb-8"}>
                   {data.subscription === "free"
                     ? "Start your journey with limited access. Upgrade when you’re ready."
                     : data.subscription === "basic"
@@ -232,7 +294,7 @@ export default function BillingPage() {
                 {data.subscription?.toLowerCase() === "free" ? (
                   <button
                     onClick={() => router.push("/pricing")}
-                    className="px-7 py-3 rounded-full bg-black text-white text-sm hover:bg-gray-900 transition"
+                    className="px-7 py-3 rounded-full bg-black text-white text-sm hover:opacity-90 transition"
                   >
                     Upgrade plan
                   </button>
@@ -240,7 +302,7 @@ export default function BillingPage() {
                   <button
                     onClick={openStripePortal}
                     disabled={portalLoading}
-                    className="px-7 py-3 rounded-full bg-black text-white text-sm hover:bg-gray-900 transition disabled:opacity-50"
+                    className="px-7 py-3 rounded-full bg-black text-white text-sm hover:opacity-90 transition disabled:opacity-50"
                   >
                     {portalLoading ? "Opening portal…" : "Manage subscription"}
                   </button>
@@ -252,19 +314,21 @@ export default function BillingPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
-                className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm"
+                className={`rounded-3xl p-10 shadow-xl border ${
+                  isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
+                }`}
               >
                 <h3 className="text-xl font-semibold mb-4">
                   Usage this month
                 </h3>
 
-                <p className="text-gray-800 text-lg mb-2">
+                <p className="text-lg mb-2">
                   {usageText(data)}
                 </p>
 
                 {data.monthly_limit !== null && (
                   <>
-                    <div className="w-full h-2 rounded-full bg-gray-100 mt-4 mb-4 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-gray-200 mt-4 mb-4 overflow-hidden">
                       <div
                         className="h-full bg-amber-500"
                         style={{
@@ -277,14 +341,14 @@ export default function BillingPage() {
                       />
                     </div>
 
-                    <p className="text-sm text-gray-600">
+                    <p className={isDark ? "text-gray-400 text-sm" : "text-gray-600 text-sm"}>
                       {data.remaining_generations} generations remaining
                     </p>
                   </>
                 )}
 
                 {data.last_reset && (
-                  <p className="text-xs text-gray-500 mt-6">
+                  <p className={isDark ? "text-gray-500 text-xs mt-6" : "text-gray-500 text-xs mt-6"}>
                     Last reset: {new Date(data.last_reset).toLocaleString()}
                   </p>
                 )}
@@ -304,7 +368,9 @@ function SidebarItem({ label, onClick, active = false }: any) {
     <button
       onClick={onClick}
       className={`w-full text-left py-2 transition text-sm ${
-        active ? "text-black font-semibold" : "hover:translate-x-1"
+        active
+          ? "text-amber-500 font-semibold"
+          : "hover:translate-x-1"
       }`}
     >
       {label}
@@ -319,7 +385,7 @@ function MenuItem({ label, onClick, danger = false }: any) {
       onClick={onClick}
       className={`w-full px-6 py-3 text-left text-sm ${
         danger ? "text-red-500" : "text-gray-700"
-      } hover:bg-gray-100`}
+      } hover:bg-gray-100 dark:hover:bg-[#13131A]`}
     >
       {label}
     </motion.button>

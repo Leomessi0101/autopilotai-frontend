@@ -232,9 +232,11 @@ export default function HomePage() {
             better and operate like a modern business — without needing a team.
           </p>
 
-          <ul className={`mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-lg ${
-            isDark ? "text-gray-300" : "text-gray-700"
-          }`}>
+          <ul
+            className={`mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-lg ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             <li>• AI-written daily content</li>
             <li>• Smart email & lead responses</li>
             <li>• Ad creation for Meta & Google</li>
@@ -273,32 +275,6 @@ export default function HomePage() {
             theme={theme}
             title="Marketers & Agencies"
             text="Scale output. Work smarter. Deliver more."
-          />
-        </div>
-      </section>
-
-      {/* EXTRA SECTION - Testimonials */}
-      <section className="mt-28 px-6 md:px-10 max-w-5xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-6">What users say</h2>
-        <p className={isDark ? "text-gray-400" : "text-gray-600"}>
-          Real feedback from people actually using AutopilotAI
-        </p>
-
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Testimonial
-            theme={theme}
-            name="Daniel"
-            text="Saved me at least 8 hours a week. This thing is insane."
-          />
-          <Testimonial
-            theme={theme}
-            name="Maya"
-            text="Finally feel like I run a real brand without stress."
-          />
-          <Testimonial
-            theme={theme}
-            name="Leo"
-            text="Hands down the best AI platform for business."
           />
         </div>
       </section>
@@ -375,20 +351,6 @@ function Persona({ title, text, theme }: any) {
     >
       <h4 className="text-xl font-bold">{title}</h4>
       <p className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{text}</p>
-    </div>
-  );
-}
-
-function Testimonial({ name, text, theme }: any) {
-  const isDark = theme === "dark";
-  return (
-    <div
-      className={`p-6 rounded-2xl border shadow ${
-        isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
-      }`}
-    >
-      <p className={isDark ? "text-gray-300" : "text-gray-700"}>"{text}"</p>
-      <h4 className="mt-4 font-bold">{name}</h4>
     </div>
   );
 }
