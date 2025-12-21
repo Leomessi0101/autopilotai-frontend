@@ -59,10 +59,7 @@ export default function ProfilePage() {
         setForm(res.data);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [router, token]);
 
   const updateField = (field: string, value: string) => {
@@ -135,8 +132,8 @@ export default function ProfilePage() {
             <h2 className="text-4xl font-bold tracking-tight">
               Your Profile
             </h2>
-            <p className="text-gray-600 mt-2 text-lg">
-              Tell AutopilotAI who you are — every email, ad & post adapts automatically.
+            <p className="text-gray-600 mt-2 text-lg max-w-2xl">
+              Tell AutopilotAI who you are — emails, ads & content adapt automatically to your brand voice.
             </p>
           </div>
 
@@ -149,66 +146,13 @@ export default function ProfilePage() {
             <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
           </motion.button>
 
-          {/* PROFILE PANEL */}
-          <AnimatePresence>
-            {menuOpen && (
-              <>
-                <motion.div
-                  className="fixed inset-0 bg-black/20"
-                  onClick={() => setMenuOpen(false)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                />
-
-                <motion.aside
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 40 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 26 }}
-                  className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
-                >
-                  <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
-                    <button
-                      onClick={() => setMenuOpen(false)}
-                      className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
-                    >
-                      ✕
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
-                        {name}
-                      </div>
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Plan</p>
-                        <p className="font-bold capitalize">
-                          {subscriptionPlan ?? "Free"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="py-2">
-                    <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-                    <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-                    <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
-
-                    <div className="border-t mt-2 pt-2">
-                      <MenuItem
-                        label="Log out"
-                        danger
-                        onClick={() => {
-                          localStorage.removeItem("autopilot_token");
-                          router.push("/login");
-                        }}
-                      />
-                    </div>
-                  </div>
-                </motion.aside>
-              </>
-            )}
-          </AnimatePresence>
+          <AvatarMenu
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            subscriptionPlan={subscriptionPlan}
+            name={name}
+            router={router}
+          />
         </div>
 
         {/* BILLING CARD */}
@@ -216,12 +160,12 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="mt-12 p-6 border border-gray-200 rounded-2xl shadow-sm bg-white flex items-center justify-between"
+          className="mt-12 p-6 border border-gray-200 rounded-3xl shadow-sm bg-white flex items-center justify-between"
         >
           <div>
             <h3 className="text-xl font-semibold">Billing & Subscription</h3>
             <p className="text-gray-600 mt-1">
-              View your current plan, manage payment, cancel or upgrade anytime.
+              View your current plan and manage payments anytime.
             </p>
           </div>
 
@@ -235,21 +179,20 @@ export default function ProfilePage() {
 
         {/* FORM */}
         <div className="mt-10 p-8 border border-gray-200 rounded-3xl shadow-sm bg-white space-y-6 mb-20 max-w-4xl">
-          <SectionTitle title="Personal Info" />
 
+          <SectionTitle title="Personal Info" />
           <Input label="Full Name" field="full_name" value={form.full_name} onChange={updateField} />
           <Input label="Company Name" field="company_name" value={form.company_name} onChange={updateField} />
           <Input label="Company Website" field="company_website" value={form.company_website} onChange={updateField} />
           <Input label="Your Title (CEO, Founder, Marketing Lead…)" field="title" value={form.title} onChange={updateField} />
 
           <SectionTitle title="Brand Voice" />
-
-          <Input label="Brand Tone (Friendly, Professional, Aggressive…)" field="brand_tone" value={form.brand_tone} onChange={updateField} />
+          <Input label="Brand Tone (Friendly, Professional…)" field="brand_tone" value={form.brand_tone} onChange={updateField} />
           <Input label="Industry" field="industry" value={form.industry} onChange={updateField} />
 
           <Textarea
             label="Brand Description"
-            placeholder="Explain what your business does, your mission, values, and how you want people to feel…"
+            placeholder="Explain what your business does, your mission, values, and style…"
             field="brand_description"
             value={form.brand_description}
             onChange={updateField}
@@ -257,7 +200,7 @@ export default function ProfilePage() {
 
           <Input
             label="Target Audience"
-            placeholder="Small business owners, gym members, tech professionals, students…"
+            placeholder="Small business owners, students, gym owners, tech professionals…"
             field="target_audience"
             value={form.target_audience}
             onChange={updateField}
@@ -275,7 +218,7 @@ export default function ProfilePage() {
 
           <Input
             label="Writing Style"
-            placeholder="Short & punchy, storytelling, corporate, persuasive…"
+            placeholder="Short & punchy, storytelling, persuasive…"
             field="writing_style"
             value={form.writing_style}
             onChange={updateField}
@@ -312,7 +255,11 @@ function SidebarItem({ label, onClick, active = false }: any) {
 }
 
 function SectionTitle({ title }: any) {
-  return <h3 className="text-2xl font-semibold mb-4 mt-6">{title}</h3>;
+  return (
+    <div className="mt-6 mb-2">
+      <h3 className="text-2xl font-semibold">{title}</h3>
+    </div>
+  );
 }
 
 function Input({ label, field, value, onChange, placeholder }: any) {
@@ -340,6 +287,69 @@ function Textarea({ label, field, value, onChange, placeholder }: any) {
         className="w-full p-4 border bg-gray-50 rounded-xl mt-1 resize-none h-28 focus:outline-none focus:border-black"
       />
     </div>
+  );
+}
+
+function AvatarMenu({ open, onClose, subscriptionPlan, name, router }: any) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black/20"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+          <motion.aside
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
+          >
+            <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
+              >
+                ✕
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
+                  {name}
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-gray-500">Plan</p>
+                  <p className="font-bold capitalize">
+                    {subscriptionPlan ?? "Free"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="py-2">
+              <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
+              <MenuItem label="Billing" onClick={() => router.push("/billing")} />
+              <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+
+              <div className="border-t mt-2 pt-2">
+                <MenuItem
+                  label="Log out"
+                  danger
+                  onClick={() => {
+                    localStorage.removeItem("autopilot_token");
+                    router.push("/login");
+                  }}
+                />
+              </div>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 

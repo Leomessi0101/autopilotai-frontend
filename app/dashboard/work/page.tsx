@@ -19,7 +19,8 @@ export default function MyWorkPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "content" | "email" | "ad">("all");
+  const [filter, setFilter] =
+    useState<"all" | "content" | "email" | "ad">("all");
 
   const [selected, setSelected] = useState<WorkItem | null>(null);
 
@@ -64,7 +65,7 @@ export default function MyWorkPage() {
   return (
     <div className="min-h-screen bg-white text-black flex">
 
-      {/* LEFT SIDEBAR */}
+      {/* SIDEBAR */}
       <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white px-6 py-8">
         <h1
           onClick={() => router.push("/")}
@@ -111,66 +112,13 @@ export default function MyWorkPage() {
             <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
           </motion.button>
 
-          {/* PROFILE PANEL */}
-          <AnimatePresence>
-            {menuOpen && (
-              <>
-                <motion.div
-                  className="fixed inset-0 bg-black/20"
-                  onClick={() => setMenuOpen(false)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                />
-
-                <motion.aside
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 40 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 26 }}
-                  className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
-                >
-                  <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
-                    <button
-                      onClick={() => setMenuOpen(false)}
-                      className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
-                    >
-                      ✕
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
-                        {name}
-                      </div>
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Plan</p>
-                        <p className="font-bold capitalize">
-                          {subscriptionPlan ?? "Free"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="py-2">
-                    <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-                    <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-                    <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
-
-                    <div className="border-t mt-2 pt-2">
-                      <MenuItem
-                        label="Log out"
-                        danger
-                        onClick={() => {
-                          localStorage.removeItem("autopilot_token");
-                          router.push("/login");
-                        }}
-                      />
-                    </div>
-                  </div>
-                </motion.aside>
-              </>
-            )}
-          </AnimatePresence>
+          <AvatarMenu
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            subscriptionPlan={subscriptionPlan}
+            name={name}
+            router={router}
+          />
         </div>
 
         {/* TOOLS */}
@@ -180,7 +128,7 @@ export default function MyWorkPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your work..."
-              className="px-4 py-3 rounded-xl border border-gray-300 w-full md:w-96 focus:outline-none focus:border-black"
+              className="px-4 py-3 rounded-xl border border-gray-300 w-full md:w-96 focus:outline-none focus:border-black transition"
             />
 
             <div className="flex gap-3">
@@ -228,9 +176,7 @@ export default function MyWorkPage() {
   );
 }
 
-/* =========================
-   SIDEBAR
-   ========================= */
+/* SIDEBAR */
 function SidebarItem({ label, onClick, active = false }: any) {
   return (
     <button
@@ -244,10 +190,12 @@ function SidebarItem({ label, onClick, active = false }: any) {
   );
 }
 
-/* =========================
-   ROW
-   ========================= */
+/* ROW */
 function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
+  const date = item.created_at
+    ? new Date(item.created_at).toLocaleString()
+    : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -261,7 +209,13 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
             {labelForType(item.content_type)}
           </span>
 
-          <p className="text-gray-800 line-clamp-2">{item.result}</p>
+          {date && (
+            <p className="text-xs text-gray-400 mb-2">{date}</p>
+          )}
+
+          <p className="text-gray-800 line-clamp-2 whitespace-pre-line">
+            {item.result}
+          </p>
         </div>
 
         <button
@@ -275,9 +229,7 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
   );
 }
 
-/* =========================
-   EMPTY
-   ========================= */
+/* EMPTY */
 function EmptyState({ hasItems }: { hasItems: boolean }) {
   return (
     <div className="max-w-xl mt-28 text-center mx-auto">
@@ -303,9 +255,7 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
   );
 }
 
-/* =========================
-   MODAL
-   ========================= */
+/* MODAL */
 function WorkModal({
   item,
   onClose,
@@ -368,9 +318,7 @@ function WorkModal({
   );
 }
 
-/* =========================
-   HELPERS
-   ========================= */
+/* HELPERS */
 function labelForType(type: WorkItem["content_type"]) {
   if (type === "content") return "Content";
   if (type === "email") return "Email";
@@ -378,9 +326,70 @@ function labelForType(type: WorkItem["content_type"]) {
   return "AI Output";
 }
 
-/* =========================
-   MENU
-   ========================= */
+/* PROFILE MENU */
+function AvatarMenu({ open, onClose, subscriptionPlan, name, router }: any) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black/20"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+          <motion.aside
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-30 overflow-hidden"
+          >
+            <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
+              >
+                ✕
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
+                  {name}
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-gray-500">Plan</p>
+                  <p className="font-bold capitalize">
+                    {subscriptionPlan ?? "Free"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="py-2">
+              <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
+              <MenuItem label="Billing" onClick={() => router.push("/billing")} />
+              <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+
+              <div className="border-t mt-2 pt-2">
+                <MenuItem
+                  label="Log out"
+                  danger
+                  onClick={() => {
+                    localStorage.removeItem("autopilot_token");
+                    router.push("/login");
+                  }}
+                />
+              </div>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function MenuItem({ label, onClick, danger = false }: any) {
   return (
     <motion.button
