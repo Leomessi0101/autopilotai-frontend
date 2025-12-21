@@ -19,8 +19,9 @@ export default function MyWorkPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] =
-    useState<"all" | "content" | "email" | "ad">("all");
+  const [filter, setFilter] = useState<"all" | "content" | "email" | "ad">(
+    "all"
+  );
 
   const [selected, setSelected] = useState<WorkItem | null>(null);
 
@@ -63,44 +64,56 @@ export default function MyWorkPage() {
   });
 
   return (
-    <div className="min-h-screen bg-white text-black flex">
+    <div className="min-h-screen bg-white text-black">
+      <div className="max-w-6xl mx-auto px-4 md:px-10 py-8 md:py-12 flex flex-col min-h-screen">
+        {/* TOP NAV */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-10">
+            <h1
+              onClick={() => router.push("/")}
+              className="text-2xl font-semibold tracking-tight cursor-pointer"
+            >
+              AutopilotAI<span className="text-amber-500">.</span>
+            </h1>
 
-      {/* SIDEBAR */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white px-6 py-8">
-        <h1
-          onClick={() => router.push("/")}
-          className="text-2xl font-semibold tracking-tight cursor-pointer"
-        >
-          AutopilotAI<span className="text-amber-500">.</span>
-        </h1>
-
-        <nav className="mt-12 space-y-4 text-sm">
-          <SidebarItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-          <SidebarItem label="Generate Content" onClick={() => router.push("/dashboard/content")} />
-          <SidebarItem label="Write Emails" onClick={() => router.push("/dashboard/email")} />
-          <SidebarItem label="Create Ads" onClick={() => router.push("/dashboard/ads")} />
-          <SidebarItem label="My Work" active />
-          <SidebarItem label="Billing" onClick={() => router.push("/billing")} />
-          <SidebarItem label="Pricing" onClick={() => router.push("/pricing")} />
-        </nav>
-
-        <div className="mt-auto pt-6 text-xs text-gray-500">
-          Everything you create — stored safely.
-        </div>
-      </aside>
-
-      {/* MAIN */}
-      <div className="flex-1 px-6 md:px-16 py-10 overflow-y-auto">
-
-        {/* TOP BAR */}
-        <div className="flex justify-between items-center relative">
-          <div>
-            <h2 className="text-4xl font-bold tracking-tight">
-              My Work
-            </h2>
-            <p className="text-gray-600 mt-2">
-              Every piece of content AI generated for you — automatically saved.
-            </p>
+            <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="hover:text-black transition"
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/content")}
+                className="hover:text-black transition"
+              >
+                Generate Content
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/email")}
+                className="hover:text-black transition"
+              >
+                Write Emails
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/ads")}
+                className="hover:text-black transition"
+              >
+                Create Ads
+              </button>
+              <button
+                onClick={() => router.push("/billing")}
+                className="hover:text-black transition"
+              >
+                Billing
+              </button>
+              <button
+                onClick={() => router.push("/pricing")}
+                className="hover:text-black transition"
+              >
+                Pricing
+              </button>
+            </nav>
           </div>
 
           <motion.button
@@ -115,28 +128,36 @@ export default function MyWorkPage() {
           <AvatarMenu
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
-            subscriptionPlan={subscriptionPlan}
             name={name}
+            subscriptionPlan={subscriptionPlan}
             router={router}
           />
         </div>
 
+        {/* HEADER */}
+        <div className="mt-10">
+          <h2 className="text-4xl font-bold tracking-tight">My Work</h2>
+          <p className="text-gray-600 mt-2 max-w-2xl">
+            Every piece of content AI generated for you — automatically saved and searchable.
+          </p>
+        </div>
+
         {/* TOOLS */}
         {items.length > 0 && (
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mt-12 mb-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mt-10 mb-8">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your work..."
-              className="px-4 py-3 rounded-xl border border-gray-300 w-full md:w-96 focus:outline-none focus:border-black transition"
+              className="px-4 py-3 rounded-xl border border-gray-300 w-full md:w-96 focus:outline-none focus:border-black"
             />
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               {["all", "content", "email", "ad"].map((t) => (
                 <button
                   key={t}
                   onClick={() => setFilter(t as any)}
-                  className={`px-4 py-2 rounded-full border transition ${
+                  className={`px-4 py-2 rounded-full border text-sm transition ${
                     filter === t
                       ? "border-black bg-black text-white"
                       : "border-gray-300 hover:border-black"
@@ -176,26 +197,10 @@ export default function MyWorkPage() {
   );
 }
 
-/* SIDEBAR */
-function SidebarItem({ label, onClick, active = false }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full text-left py-2 transition text-sm ${
-        active ? "text-black font-semibold" : "hover:translate-x-1"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-/* ROW */
+/* =========================
+   ROW
+   ========================= */
 function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
-  const date = item.created_at
-    ? new Date(item.created_at).toLocaleString()
-    : null;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -209,13 +214,13 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
             {labelForType(item.content_type)}
           </span>
 
-          {date && (
-            <p className="text-xs text-gray-400 mb-2">{date}</p>
-          )}
+          <p className="text-gray-800 line-clamp-2">{item.result}</p>
 
-          <p className="text-gray-800 line-clamp-2 whitespace-pre-line">
-            {item.result}
-          </p>
+          {item.created_at && (
+            <p className="mt-2 text-xs text-gray-400">
+              {new Date(item.created_at).toLocaleString()}
+            </p>
+          )}
         </div>
 
         <button
@@ -229,7 +234,9 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
   );
 }
 
-/* EMPTY */
+/* =========================
+   EMPTY
+   ========================= */
 function EmptyState({ hasItems }: { hasItems: boolean }) {
   return (
     <div className="max-w-xl mt-28 text-center mx-auto">
@@ -240,7 +247,7 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
       <p className="text-gray-600 mb-8">
         {hasItems
           ? "Try another filter or search phrase."
-          : "Everything you generate with AI will appear here."}
+          : "Everything you generate with AI will appear here automatically."}
       </p>
 
       {!hasItems && (
@@ -255,7 +262,9 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
   );
 }
 
-/* MODAL */
+/* =========================
+   MODAL
+   ========================= */
 function WorkModal({
   item,
   onClose,
@@ -288,7 +297,10 @@ function WorkModal({
               {labelForType(item.content_type)}
             </h3>
 
-            <button onClick={onClose} className="text-gray-500 hover:text-black">
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-black"
+            >
               ✕
             </button>
           </div>
@@ -318,7 +330,9 @@ function WorkModal({
   );
 }
 
-/* HELPERS */
+/* =========================
+   HELPERS
+   ========================= */
 function labelForType(type: WorkItem["content_type"]) {
   if (type === "content") return "Content";
   if (type === "email") return "Email";
@@ -326,8 +340,10 @@ function labelForType(type: WorkItem["content_type"]) {
   return "AI Output";
 }
 
-/* PROFILE MENU */
-function AvatarMenu({ open, onClose, subscriptionPlan, name, router }: any) {
+/* =========================
+   AVATAR MENU
+   ========================= */
+function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
   return (
     <AnimatePresence>
       {open && (
@@ -368,9 +384,18 @@ function AvatarMenu({ open, onClose, subscriptionPlan, name, router }: any) {
             </div>
 
             <div className="py-2">
-              <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-              <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-              <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+              <MenuItem
+                label="Dashboard"
+                onClick={() => router.push("/dashboard")}
+              />
+              <MenuItem
+                label="Billing"
+                onClick={() => router.push("/billing")}
+              />
+              <MenuItem
+                label="Subscription Plans"
+                onClick={() => router.push("/pricing")}
+              />
 
               <div className="border-t mt-2 pt-2">
                 <MenuItem
