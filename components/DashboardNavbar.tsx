@@ -4,54 +4,40 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function DashboardNavbar({ name = "U", subscriptionPlan = "Free" }: any) {
+export default function DashboardNavbar({
+  name = "U",
+  subscriptionPlan = "Free",
+}: any) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 md:px-10 h-16 flex items-center justify-between">
-        
-        {/* LEFT */}
-        <div className="flex items-center gap-8">
-          <h1
-            onClick={() => router.push("/dashboard")}
-            className="text-xl font-semibold tracking-tight cursor-pointer"
-          >
-            AutopilotAI<span className="text-amber-500">.</span>
-          </h1>
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+        {/* BRAND */}
+        <h1
+          onClick={() => router.push("/dashboard")}
+          className="text-xl font-semibold tracking-tight cursor-pointer"
+        >
+          AutopilotAI<span className="text-amber-500">.</span>
+        </h1>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
-            <button onClick={() => router.push("/dashboard")} className="hover:text-black transition">
-              Dashboard
-            </button>
+        {/* CENTER NAV */}
+        <nav className="hidden md:flex items-center gap-2">
+          <NavButton label="Dashboard" onClick={() => router.push("/dashboard")} />
+          <NavButton label="Content" onClick={() => router.push("/dashboard/content")} />
+          <NavButton label="Emails" onClick={() => router.push("/dashboard/email")} />
+          <NavButton label="Ads" onClick={() => router.push("/dashboard/ads")} />
+          <NavButton label="My Work" onClick={() => router.push("/dashboard/work")} />
+        </nav>
 
-            <button onClick={() => router.push("/dashboard/content")} className="hover:text-black transition">
-              Content
-            </button>
-
-            <button onClick={() => router.push("/dashboard/email")} className="hover:text-black transition">
-              Emails
-            </button>
-
-            <button onClick={() => router.push("/dashboard/ads")} className="hover:text-black transition">
-              Ads
-            </button>
-
-            <button onClick={() => router.push("/dashboard/work")} className="hover:text-black transition">
-              My Work
-            </button>
-          </nav>
-        </div>
-
-        {/* RIGHT */}
+        {/* RIGHT — AVATAR */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.07 }}
           onClick={() => setMenuOpen(true)}
-          className="relative w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700 shadow-sm"
+          className="relative w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold"
         >
           {name}
-          <span className="absolute inset-0 rounded-full ring-2 ring-amber-400 opacity-40" />
         </motion.button>
 
         <AvatarMenu
@@ -66,14 +52,31 @@ export default function DashboardNavbar({ name = "U", subscriptionPlan = "Free" 
   );
 }
 
-/* Avatar Menu */
+/* =========================
+   NAV BUTTON
+   ========================= */
+function NavButton({ label, onClick }: any) {
+  return (
+    <motion.button
+      whileHover={{ y: -1 }}
+      onClick={onClick}
+      className="px-4 py-1.5 rounded-full text-sm border border-gray-200 hover:border-amber-400 hover:bg-amber-50 transition"
+    >
+      {label}
+    </motion.button>
+  );
+}
+
+/* =========================
+   AVATAR MENU
+   ========================= */
 function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/20"
+            className="fixed inset-0 bg-black/30"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -81,13 +84,13 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
           />
 
           <motion.aside
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 40 }}
-            transition={{ type: "spring", stiffness: 260, damping: 26 }}
-            className="fixed top-20 right-6 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-50 overflow-hidden"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="fixed right-6 top-20 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-50 overflow-hidden"
           >
-            <div className="relative px-6 pt-6 pb-4 border-b bg-amber-50">
+            <div className="relative px-6 pt-6 pb-4 border-b bg-gray-50">
               <button
                 onClick={onClose}
                 className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
@@ -110,9 +113,9 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
 
             <div className="py-2">
               <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
+              <MenuItem label="Profile" onClick={() => router.push("/dashboard/profile")} />
               <MenuItem label="Billing" onClick={() => router.push("/billing")} />
               <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
-              <MenuItem label="Profile" onClick={() => router.push("/dashboard/profile")} />
 
               <div className="border-t mt-2 pt-2">
                 <MenuItem
@@ -132,6 +135,9 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
   );
 }
 
+/* =========================
+   MENU ITEM
+   ========================= */
 function MenuItem({ label, onClick, danger = false }: any) {
   return (
     <motion.button
