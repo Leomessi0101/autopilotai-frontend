@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import DashboardNavbar from "@/components/DashboardNavbar";
 
 const PLATFORMS = [
   { key: "meta", label: "Facebook / Instagram" },
@@ -25,16 +26,10 @@ export default function AdsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  /* Load theme + user */
   useEffect(() => {
-    const saved = localStorage.getItem("autopilot-theme");
-    if (saved === "dark") setTheme("dark");
-
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
       router.push("/login");
@@ -44,16 +39,16 @@ export default function AdsPage() {
     api
       .get("/api/auth/me")
       .then((res) => {
-        if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
+        if (res.data?.name)
+          setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription)
+          setSubscriptionPlan(res.data.subscription);
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
       });
   }, [router]);
-
-  const isDark = theme === "dark";
 
   const handleGenerate = async () => {
     setError("");
@@ -89,121 +84,59 @@ export default function AdsPage() {
   };
 
   return (
-    <div
-      className={`min-h-screen flex flex-col ${
-        isDark ? "bg-[#0A0A0D] text-white" : "bg-white text-black"
-      }`}
-    >
-      {/* NAVBAR */}
-      <header
-        className={`w-full py-6 px-6 md:px-12 flex justify-between items-center border-b sticky top-0 backdrop-blur-xl z-50 ${
-          isDark ? "border-gray-800 bg-[#0A0A0D]/80" : "border-gray-200 bg-white/80"
-        }`}
-      >
-        <h1
-          className="text-2xl font-bold cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          AutopilotAI<span className="text-amber-500">.</span>
-        </h1>
+    <div className="min-h-screen bg-white text-black">
 
-        <div className="flex items-center gap-6 text-sm">
-          <button onClick={() => router.push("/dashboard")} className="hover:underline">
-            Dashboard
-          </button>
+      {/* 🌟 GLOBAL DASHBOARD NAV */}
+      <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setMenuOpen(true)}
-            className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-sm font-semibold text-black shadow"
-          >
-            {name}
-          </motion.button>
-        </div>
-      </header>
+      <div className="px-6 md:px-16 py-12 max-w-7xl mx-auto">
 
-      {/* PROFILE PANEL */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/30"
-              onClick={() => setMenuOpen(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
+        {/* HEADER */}
+        <div>
+          <h1 className="text-4xl font-bold">
+            Ad Generator<span className="text-amber-500">.</span>
+          </h1>
 
-            <motion.aside
-              initial={{ opacity: 0, x: 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 60 }}
-              transition={{ type: "spring", stiffness: 250, damping: 22 }}
-              className={`fixed top-24 right-6 w-80 rounded-3xl z-50 overflow-hidden border ${
-                isDark ? "bg-[#0E0E12] border-gray-800" : "bg-white border-gray-200"
-              } shadow-2xl`}
-            >
-              <div className="p-6 border-b border-gray-800">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="text-xs uppercase text-gray-400">Plan</p>
-                    <p className="text-lg font-bold capitalize">
-                      {subscriptionPlan ?? "Free"}
-                    </p>
-                  </div>
-                  <button onClick={() => setMenuOpen(false)}>✕</button>
-                </div>
-              </div>
+          <p className="text-gray-600 mt-2 text-lg">
+            High-converting ad copy: hooks, angles, CTAs — tailored to your offer.
+          </p>
 
-              <div className="p-3">
-                <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-                <MenuItem label="My Work" onClick={() => router.push("/dashboard/work")} />
-                <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-                <MenuItem label="Pricing" onClick={() => router.push("/pricing")} />
-
-                <div className="border-t mt-3 pt-2">
-                  <MenuItem
-                    label="Logout"
-                    danger
-                    onClick={() => {
-                      localStorage.removeItem("autopilot_token");
-                      router.push("/login");
-                    }}
-                  />
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN */}
-      <div className="px-6 md:px-16 py-14 max-w-7xl w-full mx-auto flex-1">
-        <h2 className="text-4xl md:text-5xl font-bold">Ad Generator</h2>
-        <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>
-          Build high-converting ad campaigns fast.
-        </p>
-
-        {/* BUILDER */}
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-12 grid gap-10 lg:grid-cols-[2fr,1fr]"
-        >
-          {/* LEFT PANEL */}
-          <div
-            className={`rounded-3xl border p-8 ${
-              isDark ? "border-gray-800 bg-[#0F0F14]" : "border-gray-200 bg-gray-50"
-            }`}
-          >
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Step 1 — Define the campaign
+          {subscriptionPlan && (
+            <p className="mt-1 text-xs text-gray-500">
+              Plan:{" "}
+              <span className="capitalize font-medium">
+                {subscriptionPlan}
+              </span>
             </p>
+          )}
+        </div>
+
+        {/* GENERATION AREA */}
+        <motion.section
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,2.2fr),minmax(280px,1fr)] max-w-6xl"
+        >
+          {/* LEFT MAIN PANEL */}
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Step 1 · Define the campaign
+                </p>
+                <h3 className="text-xl font-semibold mt-1">
+                  What are we trying to achieve?
+                </h3>
+              </div>
+
+              <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                Paid Ads
+              </span>
+            </div>
 
             {/* PLATFORM */}
-            <div className="mt-6 mb-6">
-              <p className="text-sm text-gray-500 mb-2">Platform</p>
-              <div className="flex flex-wrap gap-2">
+            <Section label="Platform">
+              <div className="flex gap-2 flex-wrap">
                 {PLATFORMS.map((p) => (
                   <button
                     key={p.key}
@@ -211,8 +144,6 @@ export default function AdsPage() {
                     className={`px-4 py-2 rounded-full border text-sm transition ${
                       platform === p.key
                         ? "bg-amber-500 border-amber-500 text-white"
-                        : isDark
-                        ? "border-gray-700 text-gray-400 hover:border-amber-400"
                         : "border-gray-300 text-gray-700 hover:border-amber-400"
                     }`}
                   >
@@ -220,12 +151,11 @@ export default function AdsPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </Section>
 
             {/* OBJECTIVE */}
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 mb-2">Objective</p>
-              <div className="flex flex-wrap gap-2">
+            <Section label="Objective">
+              <div className="flex gap-2 flex-wrap">
                 {OBJECTIVES.map((o) => (
                   <button
                     key={o}
@@ -233,8 +163,6 @@ export default function AdsPage() {
                     className={`px-4 py-2 rounded-full border text-sm transition ${
                       objective === o
                         ? "bg-black text-white border-black"
-                        : isDark
-                        ? "border-gray-700 text-gray-400 hover:border-amber-400"
                         : "border-gray-300 text-gray-700 hover:border-amber-400"
                     }`}
                   >
@@ -242,128 +170,116 @@ export default function AdsPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </Section>
 
             {/* PRODUCT */}
-            <label className="text-sm text-gray-500">What are you selling?</label>
-            <input
+            <Input
+              label="What are you selling?"
               value={product}
-              onChange={(e) => setProduct(e.target.value)}
-              placeholder="Example: Custom MMA mouthguards, $60, pro fit + protection"
-              className={`w-full mt-2 p-4 rounded-2xl border outline-none ${
-                isDark
-                  ? "bg-[#0B0B0E] border-gray-800 focus:border-amber-500"
-                  : "bg-white border-gray-200 focus:border-black"
-              }`}
+              onChange={setProduct}
+              placeholder="e.g. Custom MMA mouthguards — $60 premium protection"
             />
 
             {/* AUDIENCE */}
-            <label className="text-sm text-gray-500 mt-6 block">Who is this for?</label>
-            <input
+            <Input
+              label="Who is this for?"
               value={audience}
-              onChange={(e) => setAudience(e.target.value)}
-              placeholder="Example: Fighters 18–35 who train combat sports weekly"
-              className={`w-full mt-2 p-4 rounded-2xl border outline-none ${
-                isDark
-                  ? "bg-[#0B0B0E] border-gray-800 focus:border-amber-500"
-                  : "bg-white border-gray-200 focus:border-black"
-              }`}
+              onChange={setAudience}
+              placeholder="e.g. Amateur & pro fighters, 18–35, train at combat gyms"
             />
 
-            {/* PRESETS */}
-            <div className="flex flex-wrap gap-2 mt-6">
-              <QuickChip
+            {/* QUICK PRESETS */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Chip
                 label="Direct response"
                 onClick={() =>
                   setProduct(
-                    "Custom MMA mouthguards with pro-level protection, perfect fit + custom designs."
+                    "Custom MMA mouthguards with pro level protection and custom designs for serious fighters."
                   )
                 }
               />
-              <QuickChip
+              <Chip
                 label="Brand angle"
                 onClick={() =>
                   setAudience(
-                    "Combat sports fans who want to look sharp, stay safe and train confidently."
+                    "Combat sports fans who care about look + performance, active on Instagram and TikTok."
                   )
                 }
               />
-              <QuickChip
+              <Chip
                 label="High ticket"
                 onClick={() =>
                   setProduct(
-                    "Done-for-you custom mouthguard packages for gyms including branding + bulk pricing."
+                    "Done-for-you custom mouthguard packages for gyms — design + branding included."
                   )
                 }
               />
             </div>
 
-            {/* CTA */}
+            {/* BUTTON */}
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="mt-6 px-8 py-3 bg-black text-white rounded-full text-sm hover:bg-gray-900 transition disabled:opacity-50"
+              className="mt-2 px-7 py-3 rounded-full bg-black text-white hover:bg-gray-900 transition disabled:opacity-60"
             >
               {loading ? "Generating…" : "Generate Ad Copy"}
             </button>
 
-            {error && <p className="mt-3 text-red-500 text-sm">{error}</p>}
+            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
-            <p className="text-xs text-gray-500 mt-2">
-              Saved automatically in <b>My Work</b>.
+            <p className="mt-3 text-xs text-gray-500">
+              Generated ads are automatically saved in{" "}
+              <span className="font-medium">My Work</span>.
             </p>
           </div>
 
-          {/* RIGHT PANEL */}
+          {/* RIGHT KNOWLEDGE PANEL */}
           <div className="space-y-4">
-            <div
-              className={`rounded-3xl p-6 border ${
-                isDark ? "border-gray-800 bg-[#0F0F14]" : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <h4 className="font-semibold mb-2 text-sm">Stronger ad inputs</h4>
-              <ul className="text-sm text-gray-500 space-y-2">
-                <li>• Mention the offer + main benefit</li>
-                <li>• Say exactly who it’s for</li>
-                <li>• Include price if it matters</li>
-                <li>• Decide urgency or brand tone</li>
-              </ul>
-            </div>
+            <InfoPanel
+              title="Make your ads stronger"
+              bullets={[
+                "Say your main benefit clearly",
+                "Mention who you want clicking",
+                "Add pricing if relevant",
+                "Choose urgency OR brand tone — not both",
+              ]}
+            />
 
-            <div className="rounded-3xl border border-amber-300 bg-amber-50/40 p-6 text-sm text-amber-800">
-              Performance tip:
-              <br />
-              Test 3–5 angles. Don’t rely on one.
-            </div>
+            <TipPanel
+              title="Performance tip"
+              text="Test 3–5 angles, not one. Use variations and let the platform choose winners."
+            />
           </div>
         </motion.section>
 
         {/* RESULT */}
         {result && (
           <motion.section
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-16 pb-24"
+            className="mt-12 max-w-6xl pb-24"
           >
-            <div
-              className={`rounded-3xl border p-8 ${
-                isDark ? "border-amber-500/40 bg-[#0F0F14]" : "border-amber-300 bg-amber-50"
-              }`}
-            >
-              <div className="flex justify-between mb-4">
-                <h3 className="text-xl font-semibold">
-                  Generated Ad Copy · <span className="capitalize">{platform}</span>
-                </h3>
+            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 shadow-sm">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-amber-600">
+                    Step 2 · Review & launch
+                  </p>
+                  <h3 className="text-xl font-semibold">
+                    Generated Ad Copy
+                    <span className="text-amber-600"> · {platform}</span>
+                  </h3>
+                </div>
 
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-4 py-2 rounded-full border border-amber-400 hover:bg-amber-100 transition text-sm"
+                  className="px-4 py-2 rounded-full border border-amber-300 hover:bg-amber-100 transition text-sm"
                 >
-                  Copy
+                  Copy ad
                 </button>
               </div>
 
-              <pre className="whitespace-pre-wrap leading-relaxed text-[15px]">
+              <pre className="whitespace-pre-wrap text-gray-900 leading-relaxed text-[15px]">
                 {result}
               </pre>
             </div>
@@ -375,21 +291,34 @@ export default function AdsPage() {
 }
 
 /* COMPONENTS */
-function MenuItem({ label, onClick, danger = false }: any) {
+function Section({ label, children }: any) {
   return (
-    <motion.button
-      whileHover={{ x: 6 }}
-      onClick={onClick}
-      className={`w-full px-4 py-3 text-left text-sm ${
-        danger ? "text-red-500" : "text-gray-400"
-      } hover:bg-black/10`}
-    >
-      {label}
-    </motion.button>
+    <div className="mb-6">
+      <p className="text-sm uppercase tracking-wide text-gray-500 mb-3">
+        {label}
+      </p>
+      {children}
+    </div>
   );
 }
 
-function QuickChip({ label, onClick }: any) {
+function Input({ label, value, onChange, placeholder }: any) {
+  return (
+    <div className="mb-6">
+      <label className="text-sm uppercase tracking-wide text-gray-500">
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+      />
+    </div>
+  );
+}
+
+function Chip({ label, onClick }: any) {
   return (
     <button
       onClick={onClick}
@@ -397,5 +326,29 @@ function QuickChip({ label, onClick }: any) {
     >
       {label}
     </button>
+  );
+}
+
+function InfoPanel({ title, bullets }: any) {
+  return (
+    <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
+      <h4 className="text-sm font-semibold mb-2">{title}</h4>
+      <ul className="text-sm text-gray-700 space-y-2">
+        {bullets.map((b: string, i: number) => (
+          <li key={i}>• {b}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TipPanel({ title, text }: any) {
+  return (
+    <div className="rounded-3xl border border-amber-100 bg-amber-50 p-6">
+      <h4 className="text-sm font-semibold mb-1 text-amber-800">
+        {title}
+      </h4>
+      <p className="text-sm text-amber-800">{text}</p>
+    </div>
   );
 }

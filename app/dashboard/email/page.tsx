@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import DashboardNavbar from "@/components/DashboardNavbar";
 
 export default function EmailPage() {
   const router = useRouter();
@@ -15,16 +16,10 @@ export default function EmailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  /* Load theme + user */
   useEffect(() => {
-    const saved = localStorage.getItem("autopilot-theme");
-    if (saved === "dark") setTheme("dark");
-
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
       router.push("/login");
@@ -34,16 +29,16 @@ export default function EmailPage() {
     api
       .get("/api/auth/me")
       .then((res) => {
-        if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
+        if (res.data?.name)
+          setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription)
+          setSubscriptionPlan(res.data.subscription);
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
       });
   }, [router]);
-
-  const isDark = theme === "dark";
 
   const handleGenerate = async () => {
     setError("");
@@ -77,214 +72,154 @@ export default function EmailPage() {
   };
 
   return (
-    <div
-      className={`min-h-screen flex flex-col ${
-        isDark ? "bg-[#0A0A0D] text-white" : "bg-white text-black"
-      }`}
-    >
-      {/* NAVBAR */}
-      <header
-        className={`w-full py-6 px-6 md:px-12 flex justify-between items-center border-b sticky top-0 backdrop-blur-xl z-50 ${
-          isDark ? "border-gray-800 bg-[#0A0A0D]/80" : "border-gray-200 bg-white/80"
-        }`}
-      >
-        <h1
-          className="text-2xl font-bold cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          AutopilotAI<span className="text-amber-500">.</span>
-        </h1>
+    <div className="min-h-screen bg-white text-black">
 
-        <div className="flex items-center gap-6 text-sm">
-          <button onClick={() => router.push("/dashboard")} className="hover:underline">
-            Dashboard
-          </button>
+      {/* 🌟 SAME GLOBAL DASHBOARD NAV */}
+      <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setMenuOpen(true)}
-            className="relative w-11 h-11 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-sm font-semibold text-black shadow"
-          >
-            {name}
-          </motion.button>
-        </div>
-      </header>
+      <div className="px-6 md:px-16 py-12 max-w-7xl mx-auto">
 
-      {/* PROFILE MENU */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/30"
-              onClick={() => setMenuOpen(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
+        {/* HEADER */}
+        <div>
+          <h1 className="text-4xl font-bold">
+            Email Writer<span className="text-amber-500">.</span>
+          </h1>
 
-            <motion.aside
-              initial={{ opacity: 0, x: 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 60 }}
-              transition={{ type: "spring", stiffness: 250, damping: 22 }}
-              className={`fixed top-24 right-6 w-80 rounded-3xl z-50 overflow-hidden border ${
-                isDark ? "bg-[#0E0E12] border-gray-800" : "bg-white border-gray-200"
-              } shadow-2xl`}
-            >
-              <div className="p-6 border-b border-gray-800">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="text-xs uppercase text-gray-400">Plan</p>
-                    <p className="text-lg font-bold capitalize">
-                      {subscriptionPlan ?? "Free"}
-                    </p>
-                  </div>
-                  <button onClick={() => setMenuOpen(false)}>✕</button>
-                </div>
-              </div>
+          <p className="text-gray-600 mt-2 text-lg">
+            Outreach, follow-ups, client replies — written in your voice.
+          </p>
 
-              <div className="p-3">
-                <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-                <MenuItem label="My Work" onClick={() => router.push("/dashboard/work")} />
-                <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-                <MenuItem label="Pricing" onClick={() => router.push("/pricing")} />
-
-                <div className="border-t mt-3 pt-2">
-                  <MenuItem
-                    label="Logout"
-                    danger
-                    onClick={() => {
-                      localStorage.removeItem("autopilot_token");
-                      router.push("/login");
-                    }}
-                  />
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN */}
-      <div className="px-6 md:px-16 py-14 max-w-7xl w-full mx-auto flex-1">
-        <h2 className="text-4xl md:text-5xl font-bold">AI Email Writer</h2>
-        <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>
-          Outreach, follow-ups, replies — written professionally in seconds.
-        </p>
-
-        {/* BUILDER */}
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-12 grid gap-10 lg:grid-cols-[2fr,1fr]"
-        >
-          {/* LEFT PANEL */}
-          <div
-            className={`rounded-3xl border p-8 ${
-              isDark ? "border-gray-800 bg-[#0F0F14]" : "border-gray-200 bg-gray-50"
-            }`}
-          >
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Step 1 — Define the email
+          {subscriptionPlan && (
+            <p className="mt-1 text-xs text-gray-500">
+              Plan:{" "}
+              <span className="capitalize font-medium">
+                {subscriptionPlan}
+              </span>
             </p>
+          )}
+        </div>
+
+        {/* GENERATION AREA */}
+        <motion.section
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,2.2fr),minmax(280px,1fr)] max-w-6xl"
+        >
+          {/* LEFT CARD */}
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Step 1 · Define the email
+                </p>
+                <h3 className="text-xl font-semibold mt-1">
+                  What should this email do?
+                </h3>
+              </div>
+
+              <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                Outreach / Follow-up / Reply
+              </span>
+            </div>
 
             {/* SUBJECT */}
-            <label className="text-sm text-gray-500 block mt-6">Subject (optional)</label>
-            <input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Example: Quick idea about working together"
-              className={`w-full mt-2 p-4 rounded-2xl border outline-none ${
-                isDark
-                  ? "bg-[#0B0B0E] border-gray-800 focus:border-amber-500"
-                  : "bg-white border-gray-200 focus:border-black"
-              }`}
-            />
-
-            <p className="mt-2 text-xs text-gray-500">
-              Leave empty if you want AI to choose a strong subject line.
-            </p>
+            <div className="mb-6">
+              <label className="text-sm uppercase tracking-wide text-gray-500">
+                Subject (optional)
+              </label>
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. Quick idea about working together"
+                className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Leave empty to let AI choose a strong subject line.
+              </p>
+            </div>
 
             {/* DETAILS */}
-            <label className="text-sm text-gray-500 block mt-6">
-              Email details
-            </label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              rows={7}
-              placeholder="Who is this for? What do you offer? What outcome do you want? Mention tone (casual, professional, confident, luxury, etc.)."
-              className={`w-full mt-2 p-4 rounded-2xl border outline-none resize-none ${
-                isDark
-                  ? "bg-[#0B0B0E] border-gray-800 focus:border-amber-500"
-                  : "bg-white border-gray-200 focus:border-black"
-              }`}
-            />
+            <div className="mb-5">
+              <label className="text-sm uppercase tracking-wide text-gray-500">
+                Email details
+              </label>
+              <textarea
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                rows={7}
+                placeholder="Who is this for? What do you want? Mention tone (friendly, confident, luxury, aggressive). Example: Cold outreach to a gym owner pitching custom MMA mouthguards. Short, confident, benefit-focused, clear CTA to book a call."
+                className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none text-[15px]"
+              />
+            </div>
 
-            {/* PRESETS */}
-            <div className="flex flex-wrap gap-2 mt-6">
-              <QuickChip
+            {/* QUICK PRESETS */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Chip
                 label="Cold outreach"
                 onClick={() =>
                   setDetails(
-                    "Write a cold outreach email to a gym owner about partnering to sell custom MMA mouthguards. Confident tone, short, clear CTA to book a quick call."
+                    "Cold outreach email to a gym owner offering custom MMA mouthguards. Confident, short, benefit-focused, CTA to book a call."
                   )
                 }
               />
-              <QuickChip
+              <Chip
                 label="Follow-up"
                 onClick={() =>
                   setDetails(
-                    "Follow up with someone who showed interest in custom MMA mouthguards but stopped replying. Polite tone, mention benefit, ask if timing is wrong."
+                    "Follow up email to someone who showed interest in custom MMA mouthguards but stopped replying. Polite, respectful, small urgency."
                   )
                 }
               />
-              <QuickChip
-                label="Client check-in"
+              <Chip
+                label="Client email"
                 onClick={() =>
                   setDetails(
-                    "Email to an existing customer asking for feedback after buying custom MMA mouthguards. Friendly tone. Offer referral discount."
+                    "Friendly check-in email to an existing customer asking for feedback and offering a referral discount."
                   )
                 }
               />
             </div>
 
-            {/* CTA */}
+            {/* BUTTON */}
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="mt-6 px-8 py-3 bg-black text-white rounded-full text-sm hover:bg-gray-900 transition disabled:opacity-50"
+              className="mt-2 px-7 py-3 rounded-full bg-black text-white hover:bg-gray-900 transition disabled:opacity-60"
             >
               {loading ? "Generating…" : "Generate Email"}
             </button>
 
-            {error && <p className="mt-3 text-red-500 text-sm">{error}</p>}
+            {error && (
+              <p className="mt-4 text-sm text-red-500">{error}</p>
+            )}
 
-            <p className="text-xs text-gray-500 mt-2">
-              Saved automatically in <b>My Work</b>.
+            <p className="mt-3 text-xs text-gray-500">
+              Emails are automatically saved in{" "}
+              <span className="font-medium">My Work</span>.
             </p>
           </div>
 
-          {/* RIGHT PANEL */}
+          {/* RIGHT INFO PANEL */}
           <div className="space-y-4">
-            <div
-              className={`rounded-3xl p-6 border ${
-                isDark ? "border-gray-800 bg-[#0F0F14]" : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <h4 className="font-semibold mb-2 text-sm">Best practice</h4>
-              <ul className="text-sm text-gray-500 space-y-2">
-                <li>• Say who you are + why you’re emailing</li>
-                <li>• Make benefit stupidly clear</li>
-                <li>• Only ONE call-to-action</li>
-                <li>• Tone matters — tell the AI</li>
+            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
+              <h4 className="text-sm font-semibold mb-2">
+                Strong emails include:
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li>• Who you are & why you’re messaging</li>
+                <li>• One clear benefit</li>
+                <li>• Simple CTA (reply, call, click)</li>
+                <li>• Tone: professional / casual / aggressive</li>
               </ul>
             </div>
 
-            <div className="rounded-3xl border border-amber-300 bg-amber-50/40 p-6 text-sm text-amber-800">
-              Cold email rule:
-              <br />
-              One screen of text is usually enough.
+            <div className="rounded-3xl border border-amber-100 bg-amber-50 p-6">
+              <h4 className="text-sm font-semibold text-amber-800 mb-1">
+                Quick email rule
+              </h4>
+              <p className="text-sm text-amber-800">
+                Short, respectful, confident ➝ wins more than long paragraphs.
+              </p>
             </div>
           </div>
         </motion.section>
@@ -292,27 +227,28 @@ export default function EmailPage() {
         {/* RESULT */}
         {result && (
           <motion.section
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-16 pb-24"
+            className="mt-12 max-w-6xl pb-24"
           >
-            <div
-              className={`rounded-3xl border p-8 ${
-                isDark ? "border-amber-500/40 bg-[#0F0F14]" : "border-amber-300 bg-amber-50"
-              }`}
-            >
-              <div className="flex justify-between mb-4">
-                <h3 className="text-xl font-semibold">Generated Email</h3>
+            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 shadow-sm">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-amber-600">
+                    Step 2 · Review & send
+                  </p>
+                  <h3 className="text-xl font-semibold">Generated Email</h3>
+                </div>
 
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-4 py-2 rounded-full border border-amber-400 hover:bg-amber-100 transition text-sm"
+                  className="px-4 py-2 rounded-full border border-amber-300 hover:bg-amber-100 transition text-sm"
                 >
                   Copy email
                 </button>
               </div>
 
-              <pre className="whitespace-pre-wrap leading-relaxed text-[15px]">
+              <pre className="whitespace-pre-wrap text-gray-900 leading-relaxed text-[15px]">
                 {result}
               </pre>
             </div>
@@ -323,22 +259,8 @@ export default function EmailPage() {
   );
 }
 
-/* COMPONENTS */
-function MenuItem({ label, onClick, danger = false }: any) {
-  return (
-    <motion.button
-      whileHover={{ x: 6 }}
-      onClick={onClick}
-      className={`w-full px-4 py-3 text-left text-sm ${
-        danger ? "text-red-500" : "text-gray-400"
-      } hover:bg-black/10`}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-function QuickChip({ label, onClick }: any) {
+/* COMPONENT */
+function Chip({ label, onClick }: any) {
   return (
     <button
       onClick={onClick}
