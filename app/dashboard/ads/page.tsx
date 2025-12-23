@@ -53,7 +53,7 @@ export default function AdsPage() {
     setResult("");
 
     if (!product.trim() || !audience.trim()) {
-      setError("Fill in your product and audience to get started! 😊");
+      setError("Please provide both product and audience details.");
       return;
     }
 
@@ -67,14 +67,14 @@ export default function AdsPage() {
       });
       setResult(res.data.output || "");
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Oops, something went wrong. Try again!");
+      setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-white to-gray-50 text-black">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
@@ -83,46 +83,41 @@ export default function AdsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="mb-20"
         >
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
-            Ad Generator 📈
+          <h1 className="text-5xl md:text-6xl font-light text-gray-800">
+            Ad Generator
           </h1>
-          <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            High-converting ad copy, hooks, and angles — tailored for your platform and goal.
+          <p className="mt-6 text-xl text-gray-600">
+            High-conversion ad copy tailored to platform, objective, and audience.
           </p>
         </motion.section>
 
         {/* Main Grid */}
-        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-16">
+        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
           {/* Input Area */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-3xl shadow-lg border border-gray-100 p-10"
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
           >
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <p className="text-lg font-medium text-gray-700">Let’s build your next winning ad</p>
-              </div>
-              <span className="px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
-                Paid Ads
-              </span>
+            <div className="mb-10">
+              <p className="text-lg font-medium text-gray-700">Define your campaign</p>
             </div>
 
             {/* Platform */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Platform</label>
+              <label className="block text-sm font-medium text-gray-600 mb-3">Platform</label>
               <div className="flex flex-wrap gap-3">
                 {PLATFORMS.map((p) => (
                   <button
                     key={p.key}
                     onClick={() => setPlatform(p.key)}
-                    className={`px-6 py-3 rounded-full font-medium transition ${
+                    className={`px-6 py-3 rounded-xl font-medium transition ${
                       platform === p.key
-                        ? "bg-black text-white"
-                        : "bg-gray-100 text-gray-800 hover:bg-amber-100 hover:text-amber-900"
+                        ? "bg-blue-900 text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-900"
                     }`}
                   >
                     {p.label}
@@ -133,16 +128,16 @@ export default function AdsPage() {
 
             {/* Objective */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Goal</label>
+              <label className="block text-sm font-medium text-gray-600 mb-3">Objective</label>
               <div className="flex flex-wrap gap-3">
                 {OBJECTIVES.map((o) => (
                   <button
                     key={o}
                     onClick={() => setObjective(o)}
-                    className={`px-6 py-3 rounded-full font-medium transition ${
+                    className={`px-6 py-3 rounded-xl font-medium transition ${
                       objective === o
-                        ? "bg-amber-500 text-white"
-                        : "bg-gray-100 text-gray-800 hover:bg-amber-100 hover:text-amber-900"
+                        ? "bg-teal-600 text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-teal-50 hover:text-teal-900"
                     }`}
                   >
                     {o}
@@ -153,23 +148,23 @@ export default function AdsPage() {
 
             {/* Product */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-2">What are you promoting?</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">What are you promoting?</label>
               <input
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
-                placeholder="e.g. Custom MMA mouthguards with pro-level protection"
-                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 transition"
+                placeholder="e.g. Premium custom mouthguards for combat athletes"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
               />
             </div>
 
             {/* Audience */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Who is your target audience?</label>
+            <div className="mb-10">
+              <label className="block text-sm font-medium text-gray-600 mb-2">Target audience</label>
               <input
                 value={audience}
                 onChange={(e) => setAudience(e.target.value)}
-                placeholder="e.g. Fighters aged 18–35 who train at combat gyms"
-                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 transition"
+                placeholder="e.g. Fighters aged 18–35 training at gyms"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
               />
             </div>
 
@@ -178,16 +173,16 @@ export default function AdsPage() {
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="px-10 py-5 bg-black text-white rounded-full font-bold text-lg hover:bg-gray-800 transition shadow-lg disabled:opacity-60"
+                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
               >
-                {loading ? "Creating your ad…" : "Generate Ad Copy 🚀"}
+                {loading ? "Generating…" : "Generate Ad Copy"}
               </button>
 
-              {error && <p className="text-red-500 ml-4">{error}</p>}
+              {error && <p className="text-red-600 ml-4">{error}</p>}
             </div>
 
             <p className="mt-6 text-sm text-gray-500">
-              All generated ads are saved in <span className="font-medium">My Work</span>.
+              All generated ads are automatically saved in My Work.
             </p>
           </motion.div>
 
@@ -198,32 +193,32 @@ export default function AdsPage() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="space-y-8"
           >
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-8 shadow-lg border border-amber-100">
-              <h4 className="text-xl font-bold text-gray-900 mb-4">✨ Tips for winning ads</h4>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Guidelines for stronger ads</h4>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">🎯</span>
-                  <span>Lead with a strong benefit</span>
+                <li className="flex items-start gap-4">
+                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
+                  <span>Lead with the primary benefit</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">👀</span>
-                  <span>Hook in the first 3 seconds</span>
+                <li className="flex items-start gap-4">
+                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
+                  <span>Hook attention in the first line</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">💬</span>
-                  <span>One clear call-to-action</span>
+                <li className="flex items-start gap-4">
+                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
+                  <span>Include one clear call-to-action</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">🔥</span>
-                  <span>Test multiple angles</span>
+                <li className="flex items-start gap-4">
+                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
+                  <span>Test multiple variations</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200">
-              <h4 className="text-xl font-bold text-gray-900 mb-3">⚡ Pro tip</h4>
+            <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-2xl p-8 border border-blue-100">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Best practice</h4>
               <p className="text-gray-700">
-                Great ads feel personal — be specific about who it’s for and what they get.
+                The highest-performing ads speak directly to a specific audience’s desires and challenges.
               </p>
             </div>
           </motion.div>
@@ -237,22 +232,22 @@ export default function AdsPage() {
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl shadow-xl p-12 border border-amber-200">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-lg font-medium text-amber-800 mb-2">Your ad copy is ready! 📢</p>
-                  <h3 className="text-3xl font-bold text-gray-900">Time to launch</h3>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Generated Ad Copy</p>
+                  <h3 className="text-3xl font-semibold text-gray-900">Ready for review and launch</h3>
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-8 py-4 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition shadow-lg"
+                  className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
                 >
-                  Copy Ad Copy
+                  Copy to Clipboard
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl p-10 shadow-inner">
-                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-lg font-medium">
+              <div className="bg-gray-50 rounded-xl p-10">
+                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-medium">
                   {result}
                 </pre>
               </div>
@@ -263,8 +258,8 @@ export default function AdsPage() {
         {/* Contact Footer */}
         <footer className="text-center py-12 border-t border-gray-200">
           <p className="text-gray-600">
-            Need help or have ideas? Email us at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-black hover:underline">
+            Questions? Reach out at{" "}
+            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
               contact@autopilotai.dev
             </a>
           </p>

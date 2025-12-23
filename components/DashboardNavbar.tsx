@@ -7,23 +7,23 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function DashboardNavbar({
   name = "U",
   subscriptionPlan = "Free",
-}: any) {
+}: { name?: string; subscriptionPlan?: string }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        {/* BRAND */}
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+        {/* Brand */}
         <h1
           onClick={() => router.push("/dashboard")}
-          className="text-xl font-semibold tracking-tight cursor-pointer"
+          className="text-2xl font-light tracking-wide cursor-pointer text-gray-900"
         >
-          AutopilotAI<span className="text-amber-500">.</span>
+          AutopilotAI
         </h1>
 
-        {/* CENTER NAV */}
-        <nav className="hidden md:flex items-center gap-2">
+        {/* Center Navigation */}
+        <nav className="hidden md:flex items-center gap-1">
           <NavButton label="Dashboard" onClick={() => router.push("/dashboard")} />
           <NavButton label="Content" onClick={() => router.push("/dashboard/content")} />
           <NavButton label="Emails" onClick={() => router.push("/dashboard/email")} />
@@ -31,11 +31,11 @@ export default function DashboardNavbar({
           <NavButton label="My Work" onClick={() => router.push("/dashboard/work")} />
         </nav>
 
-        {/* RIGHT — AVATAR */}
+        {/* Right — Avatar */}
         <motion.button
-          whileHover={{ scale: 1.07 }}
+          whileHover={{ scale: 1.05 }}
           onClick={() => setMenuOpen(true)}
-          className="relative w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold"
+          className="relative w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center text-sm font-medium shadow-sm"
         >
           {name}
         </motion.button>
@@ -52,31 +52,39 @@ export default function DashboardNavbar({
   );
 }
 
-/* =========================
-   NAV BUTTON
-   ========================= */
-function NavButton({ label, onClick }: any) {
+/* Nav Button */
+function NavButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <motion.button
-      whileHover={{ y: -1 }}
+      whileHover={{ y: -2 }}
       onClick={onClick}
-      className="px-4 py-1.5 rounded-full text-sm border border-gray-200 hover:border-amber-400 hover:bg-amber-50 transition"
+      className="px-6 py-3 rounded-xl text-sm font-medium text-gray-700 hover:text-blue-900 hover:bg-gray-100 transition"
     >
       {label}
     </motion.button>
   );
 }
 
-/* =========================
-   AVATAR MENU
-   ========================= */
-function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
+/* Avatar Menu */
+function AvatarMenu({
+  open,
+  onClose,
+  name,
+  subscriptionPlan,
+  router,
+}: {
+  open: boolean;
+  onClose: () => void;
+  name: string;
+  subscriptionPlan: string | null;
+  router: any;
+}) {
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/30"
+            className="fixed inset-0 bg-black/20"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,27 +92,27 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
           />
 
           <motion.aside
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            className="fixed right-6 top-20 w-80 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl z-50 overflow-hidden"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed right-6 top-24 w-80 rounded-2xl bg-white shadow-lg border border-gray-200 z-50 overflow-hidden"
           >
-            <div className="relative px-6 pt-6 pb-4 border-b bg-gray-50">
+            <div className="px-8 pt-8 pb-6 border-b border-gray-200">
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 text-sm text-gray-500 hover:text-black"
+                className="absolute right-6 top-6 text-gray-500 hover:text-gray-900 text-xl"
               >
-                ✕
+                ×
               </button>
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-blue-900 text-white flex items-center justify-center text-lg font-medium">
                   {name}
                 </div>
                 <div>
-                  <p className="text-xs uppercase text-gray-500">Plan</p>
-                  <p className="font-bold capitalize">
+                  <p className="text-sm text-gray-500 uppercase tracking-wide">Current Plan</p>
+                  <p className="text-xl font-semibold text-gray-900 capitalize">
                     {subscriptionPlan ?? "Free"}
                   </p>
                 </div>
@@ -112,12 +120,12 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
             </div>
 
             <div className="py-2">
-              <MenuItem label="Dashboard" onClick={() => router.push("/dashboard")} />
-              <MenuItem label="Profile" onClick={() => router.push("/dashboard/profile")} />
-              <MenuItem label="Billing" onClick={() => router.push("/billing")} />
-              <MenuItem label="Subscription Plans" onClick={() => router.push("/pricing")} />
+              <MenuItem label="Dashboard" onClick={() => { onClose(); router.push("/dashboard"); }} />
+              <MenuItem label="Profile" onClick={() => { onClose(); router.push("/dashboard/profile"); }} />
+              <MenuItem label="Billing" onClick={() => { onClose(); router.push("/billing"); }} />
+              <MenuItem label="Subscription Plans" onClick={() => { onClose(); router.push("/pricing"); }} />
 
-              <div className="border-t mt-2 pt-2">
+              <div className="border-t border-gray-200 mt-2 pt-2">
                 <MenuItem
                   label="Log out"
                   danger
@@ -135,17 +143,17 @@ function AvatarMenu({ open, onClose, name, subscriptionPlan, router }: any) {
   );
 }
 
-/* =========================
-   MENU ITEM
-   ========================= */
-function MenuItem({ label, onClick, danger = false }: any) {
+/* Menu Item */
+function MenuItem({ label, onClick, danger = false }: { label: string; onClick: () => void; danger?: boolean }) {
   return (
     <motion.button
       whileHover={{ x: 6 }}
       onClick={onClick}
-      className={`w-full px-6 py-3 text-left text-sm ${
-        danger ? "text-red-500" : "text-gray-700"
-      } hover:bg-gray-100`}
+      className={`w-full px-8 py-4 text-left text-sm font-medium transition ${
+        danger
+          ? "text-red-600 hover:bg-red-50"
+          : "text-gray-700 hover:bg-gray-50"
+      }`}
     >
       {label}
     </motion.button>
