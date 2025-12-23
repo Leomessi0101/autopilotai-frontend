@@ -131,53 +131,9 @@ export default function MyWorkPage() {
           </motion.div>
         )}
 
-        {/* Inline Expanded View — No Full-Screen Modal */}
+        {/* Centered Medium-Size Modal */}
         <AnimatePresence>
-          {selected && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mt-8 bg-white rounded-2xl shadow-md border border-gray-200 p-10"
-            >
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    {labelForType(selected.content_type)}
-                  </p>
-                  <h3 className="text-2xl font-semibold text-gray-900">Full Output</h3>
-                </div>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="text-gray-500 hover:text-gray-900 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-8 mb-6">
-                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-medium">
-                  {selected.result}
-                </pre>
-              </div>
-
-              <div className="flex justify-end gap-4">
-                <button
-                  onClick={() => navigator.clipboard.writeText(selected.result)}
-                  className="px-8 py-4 border border-gray-300 rounded-xl font-medium hover:border-blue-900 transition"
-                >
-                  Copy to Clipboard
-                </button>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          )}
+          {selected && <WorkModal item={selected} onClose={() => setSelected(null)} />}
         </AnimatePresence>
       </main>
 
@@ -196,9 +152,10 @@ export default function MyWorkPage() {
 
 /* Work Row — Balanced Preview */
 function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
-  // Balanced preview: first 3 lines, up to ~300 characters
-  const lines = item.result.split("\n").slice(0, 3).join("\n");
-  const preview = lines.length > 300 ? lines.slice(0, 300) + "…" : lines;
+  // Preview: first 3-4 lines, up to ~350 characters
+  const lines = item.result.split("\n").slice(0, 4);
+  const previewText = lines.join("\n");
+  const preview = previewText.length > 350 ? previewText.slice(0, 350) + "…" : previewText;
 
   return (
     <motion.div
@@ -226,7 +183,7 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
               </span>
             )}
           </div>
-          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-3">
+          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-4">
             {preview || "(empty)"}
           </p>
         </div>
@@ -265,6 +222,67 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
         </a>
       )}
     </motion.div>
+  );
+}
+
+/* Modal — Centered, Medium Size, Not Full Screen */
+function WorkModal({ item, onClose }: { item: WorkItem; onClose: () => void }) {
+  const copy = () => navigator.clipboard.writeText(item.result);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-3xl max-h-[80vh] overflow-y-auto"
+        >
+          <div className="p-10">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  {labelForType(item.content_type)}
+                </p>
+                <h3 className="text-2xl font-semibold text-gray-900">Full Output</h3>
+              </div>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-900 text-2xl">
+                ×
+              </button>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-8 mb-8">
+              <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-medium">
+                {item.result}
+              </pre>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={copy}
+                className="px-8 py-4 border border-gray-300 rounded-xl font-medium hover:border-blue-900 transition"
+              >
+                Copy to Clipboard
+              </button>
+              <button
+                onClick={onClose}
+                className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
