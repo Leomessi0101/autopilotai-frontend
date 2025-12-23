@@ -49,16 +49,10 @@ export default function ContentPage() {
 
     try {
       setLoading(true);
-
-      const payload: { title?: string; details: string } = {
-        details: details.trim(),
-      };
-
-      if (title.trim()) {
-        payload.title = title.trim();
-      }
-
-      const res = await api.post("/api/content/generate", payload);
+      const res = await api.post("/api/content/generate", {
+        title,
+        details,
+      });
       setResult(res.data.output || "");
     } catch (e: any) {
       setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
