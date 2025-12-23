@@ -5,65 +5,43 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { ArrowRight, Sparkles, Zap, MessageSquare, Megaphone, FolderOpen, TrendingUp } from "lucide-react"; // Optional: add lucide-react if you want icons (or remove and use Unicode)
 
 /* =========================
-   QUOTES
+   QUOTES & DAILY FOCUS (unchanged logic)
    ========================= */
 const QUOTES = [
-  {
-    text: "You have power over your mind — not outside events. Realize this, and you will find strength.",
-    author: "Marcus Aurelius",
-  },
-  {
-    text: "He who controls the narrative controls the people.",
-    author: "Niccolò Machiavelli",
-  },
-  {
-    text: "Waste no more time arguing what a good man should be. Be one.",
-    author: "Marcus Aurelius",
-  },
-  { text: "Fortune favors the bold.", author: "Latin Proverb" },
-  {
-    text: "A man who does not plan long ahead will find trouble at his door.",
-    author: "Confucius",
-  },
+  { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+  { text: "Consistency is the last refuge of the unimaginative? No — it's the foundation of greatness.", author: "AutopilotAI" },
+  { text: "You don't rise to the level of your goals. You fall to the level of your systems.", author: "James Clear" },
+  { text: "Amateurs wait for inspiration. The rest of us just get up and go to work.", author: "Stephen King" },
 ];
 
-/* =========================
-   AI DAILY FOCUS
-   ========================= */
 const AI_DAILY_FOCUS = [
   {
-    title: "Increase outbound visibility",
-    tasks: [
-      "Publish one short-form post",
-      "Send one outreach email",
-      "Reply to yesterday’s messages",
-    ],
+    title: "Dominate Visibility",
+    subtitle: "Get seen by more of the right people",
+    tasks: ["Post one high-engagement hook", "Reply to 5 recent comments/DMs", "Share one value-first story"],
+    icon: TrendingUp,
   },
   {
-    title: "Improve lead conversion",
-    tasks: [
-      "Refine your main offer line",
-      "Create one new ad variation",
-      "Follow up with warm leads",
-    ],
+    title: "Close More Deals",
+    subtitle: "Turn conversations into customers",
+    tasks: ["Send 3 personalized follow-ups", "Refine your core offer messaging", "Test one new ad angle"],
+    icon: Zap,
   },
   {
-    title: "Build long-term authority",
-    tasks: [
-      "Outline a valuable long-form post",
-      "Repurpose one old piece of content",
-      "Plan topics for the next 3 days",
-    ],
+    title: "Build Authority",
+    subtitle: "Become the go-to voice in your space",
+    tasks: ["Start a long-form thread or post", "Repurpose your best content", "Plan next week's themes"],
+    icon: Sparkles,
   },
   {
-    title: "Strengthen brand consistency",
-    tasks: [
-      "Check tone across last 3 posts",
-      "Update one email template",
-      "Align copy with your core promise",
-    ],
+    title: "Strengthen Your Brand",
+    subtitle: "Make everything feel unmistakably you",
+    tasks: ["Audit tone in last 5 posts", "Update one email template", "Clarify your one-sentence promise"],
+    icon: MessageSquare,
   },
 ];
 
@@ -76,10 +54,9 @@ function getDailyItem<T>(list: T[]) {
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 18) return "Good afternoon";
-  if (hour >= 18 && hour < 23) return "Good evening";
-  return "Welcome back";
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function DashboardPage() {
@@ -91,7 +68,6 @@ export default function DashboardPage() {
 
   const [used, setUsed] = useState<number | null>(null);
   const [limit, setLimit] = useState<number | null>(null);
-
   const [usageLoading, setUsageLoading] = useState(true);
 
   const quote = getDailyItem(QUOTES);
@@ -105,250 +81,200 @@ export default function DashboardPage() {
       return;
     }
 
-    // Auth / profile
-    api
-      .get("/api/auth/me")
-      .then((res) => {
-        if (res.data?.name) {
-          setInitial(res.data.name.charAt(0).toUpperCase());
-          setFullName(res.data.name.split(" ")[0] || res.data.name);
-        }
-        if (res.data?.subscription) {
-          setSubscriptionPlan(res.data.subscription);
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem("autopilot_token");
-        router.push("/login");
-      });
+    api.get("/api/auth/me").then((res) => {
+      if (res.data?.name) {
+        setInitial(res.data.name.charAt(0).toUpperCase());
+        setFullName(res.data.name.split(" ")[0] || res.data.name);
+      }
+      if (res.data?.subscription) {
+        setSubscriptionPlan(res.data.subscription);
+      }
+    }).catch(() => {
+      localStorage.removeItem("autopilot_token");
+      router.push("/login");
+    });
 
-    // Usage
-    api
-      .get("/api/auth/usage")
-      .then((res) => {
-        const data = res.data || {};
-
-        const usedValue =
-          typeof data.used === "number"
-            ? data.used
-            : typeof data.used_generations === "number"
-            ? data.used_generations
-            : null;
-
-        const limitValue =
-          typeof data.limit === "number"
-            ? data.limit
-            : typeof data.monthly_limit === "number"
-            ? data.monthly_limit
-            : null;
-
-        setUsed(usedValue);
-        setLimit(limitValue);
-      })
-      .finally(() => setUsageLoading(false));
+    api.get("/api/auth/usage").then((res) => {
+      const data = res.data || {};
+      const usedValue = typeof data.used === "number" ? data.used : typeof data.used_generations === "number" ? data.used_generations : null;
+      const limitValue = typeof data.limit === "number" ? data.limit : typeof data.monthly_limit === "number" ? data.monthly_limit : null;
+      setUsed(usedValue);
+      setLimit(limitValue);
+    }).finally(() => setUsageLoading(false));
   }, [router]);
 
-  const progress =
-    used !== null && limit !== null && limit > 0
-      ? Math.min(100, (used / limit) * 100)
-      : 0;
+  const progress = used !== null && limit !== null && limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+  const remaining = used !== null && limit !== null ? Math.max(0, limit - used) : null;
 
-  const remaining =
-    used !== null && limit !== null ? Math.max(0, limit - used) : null;
+  const Icon = focus.icon;
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      {/* Dashboard Navbar */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-black">
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-16">
-        {/* GREETING + QUOTE */}
-        <section className="grid gap-10 md:grid-cols-[1fr,380px] items-start mb-20">
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+        {/* HERO GREETING + QUOTE */}
+        <section className="mb-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
+            className="text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
+            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight">
               {greeting}
-              {fullName ? `, ${fullName}.` : "."}
+              {fullName ? `, ${fullName}` : ""}.
             </h1>
-            <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl leading-relaxed">
-              Your AI is ready to write content, reply to leads, and run ads —
-              while you focus on building the business.
+            <p className="mt-6 text-2xl md:text-3xl text-gray-600 max-w-4xl mx-auto">
+              Your AI is warmed up and ready. Let&apos;s make today count.
             </p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="rounded-3xl border border-gray-200 bg-white p-8 shadow-xl"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-16 max-w-3xl mx-auto rounded-3xl bg-white border border-gray-200 p-10 shadow-2xl"
           >
-            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
-              Today&apos;s mindset
-            </p>
-            <p className="text-lg italic text-gray-800 leading-relaxed">
+            <p className="text-lg italic text-gray-800 leading-relaxed text-center">
               “{quote.text}”
             </p>
-            <p className="mt-5 text-sm font-semibold text-amber-600">
+            <p className="mt-6 text-center text-amber-600 font-semibold text-lg">
               — {quote.author}
             </p>
           </motion.div>
         </section>
 
-        {/* USAGE + PLAN CARD */}
-        <section className="grid gap-8 md:grid-cols-3 mb-20">
-          {/* Usage Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="md:col-span-2 rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
-          >
-            <h3 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-2">
-              Monthly usage
-            </h3>
-            <p className="text-3xl font-extrabold mb-8">
-              {usageLoading ? "Loading…" : limit === null ? "Unlimited" : `${used ?? 0} of ${limit} generations used`}
-            </p>
+        {/* USAGE HERO CARD */}
+        {limit !== null && (
+          <section className="mb-20">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="rounded-3xl bg-gradient-to-r from-amber-500 to-orange-500 p-1 shadow-2xl"
+            >
+              <div className="rounded-3xl bg-white p-12">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div>
+                    <h3 className="text-4xl font-extrabold">Monthly Generations</h3>
+                    <p className="mt-3 text-xl text-gray-600">
+                      {usageLoading ? "Loading…" : `${used ?? 0} of ${limit} used this month`}
+                    </p>
+                  </div>
 
-            {usageLoading ? (
-              <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full w-2/5 bg-gray-300 animate-pulse" />
-              </div>
-            ) : limit === null ? (
-              <div className="text-lg font-semibold text-amber-600">
-                No limits — generate as much as you want.
-              </div>
-            ) : (
-              <>
-                <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden mb-4">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                    className="absolute inset-y-0 left-0 bg-amber-500"
-                  />
+                  <div className="w-full max-w-md">
+                    <div className="relative h-12 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-orange-500"
+                      />
+                    </div>
+                    <p className="mt-4 text-right text-sm text-gray-600">
+                      {remaining !== null ? `${remaining} remaining • Resets monthly` : "Unlimited"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>{remaining} remaining</span>
-                  <span>Resets monthly</span>
-                </div>
-              </>
-            )}
+              </div>
+            </motion.div>
+          </section>
+        )}
+
+        {/* QUICK ACTIONS – BIG, BOLD, PLAYFUL */}
+        <section className="mb-20">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-12">
+            What will you build today?
+          </h2>
+
+          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+            <BigActionCard
+              title="Generate Content"
+              description="Posts, hooks, threads that actually get attention"
+              href="/dashboard/content"
+              gradient="from-blue-500 to-cyan-500"
+              icon="✍️"
+            />
+            <BigActionCard
+              title="Write Emails & Replies"
+              description="Close deals while you sleep"
+              href="/dashboard/email"
+              gradient="from-purple-500 to-pink-500"
+              icon="📧"
+            />
+            <BigActionCard
+              title="Create Ads"
+              description="Winning angles for Meta, Google, TikTok"
+              href="/dashboard/ads"
+              gradient="from-green-500 to-emerald-500"
+              icon="📢"
+            />
+            <BigActionCard
+              title="My Work"
+              description="Everything you've created — organized"
+              href="/dashboard/work"
+              gradient="from-amber-500 to-orange-500"
+              icon="📂"
+            />
+          </div>
+        </section>
+
+        {/* AI FOCUS + PLAN */}
+        <section className="grid gap-10 md:grid-cols-2">
+          {/* AI Daily Focus */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="rounded-3xl bg-white border-2 border-amber-500 p-10 shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-amber-100 rounded-full opacity-50" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                {Icon && <Icon className="w-8 h-8 text-amber-600" />}
+                <p className="text-sm uppercase tracking-wider text-amber-600 font-bold">
+                  AI Recommended Focus
+                </p>
+              </div>
+              <h3 className="text-3xl font-extrabold mb-3">{focus.title}</h3>
+              <p className="text-lg text-gray-600 mb-8">{focus.subtitle}</p>
+              <ul className="space-y-4">
+                {focus.tasks.map((task, i) => (
+                  <li key={i} className="flex items-start gap-4">
+                    <span className="mt-1 w-4 h-4 rounded-full bg-amber-500 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">{task}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </motion.div>
 
-          {/* Current Plan Card */}
+          {/* Current Plan */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl flex flex-col justify-between"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="rounded-3xl bg-black text-white p-10 shadow-2xl flex flex-col justify-between"
           >
             <div>
-              <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-2">
-                Current plan
+              <p className="text-amber-400 text-sm uppercase tracking-wider font-bold mb-2">
+                Your Current Plan
               </p>
-              <h3 className="text-3xl font-extrabold">
+              <h3 className="text-4xl font-extrabold mb-6">
                 {subscriptionPlan
                   ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)
                   : "Free"}
               </h3>
-              <p className="mt-4 text-gray-600">
-                Upgrade for unlimited generations, priority processing, and advanced tools.
+              <p className="text-gray-300 text-lg leading-relaxed">
+                You're doing the work. Let's remove the limits.
               </p>
             </div>
             <button
               onClick={() => router.push("/pricing")}
-              className="mt-8 w-full py-4 rounded-full bg-black text-white font-semibold hover:bg-gray-900 transition shadow-lg hover:shadow-xl"
+              className="mt-10 w-full py-5 rounded-full bg-amber-500 text-black font-bold text-lg hover:bg-amber-400 transition shadow-xl"
             >
-              Upgrade Plan
-            </button>
-          </motion.div>
-        </section>
-
-        {/* QUICK ACTIONS */}
-        <section className="mb-20">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold">
-              What do you want AI to do today?
-            </h2>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-4">
-            <ActionCard
-              title="Generate Content"
-              description="Social posts, hooks, threads, captions"
-              href="/dashboard/content"
-            />
-            <ActionCard
-              title="Write Emails & Replies"
-              description="Cold outreach, follow-ups, smart responses"
-              href="/dashboard/email"
-            />
-            <ActionCard
-              title="Create Ads"
-              description="Meta, Google, TikTok — copy + angles"
-              href="/dashboard/ads"
-            />
-            <ActionCard
-              title="My Work"
-              description="All generated content, history & exports"
-              href="/dashboard/work"
-            />
-          </div>
-        </section>
-
-        {/* AI FOCUS + RECENT ACTIVITY */}
-        <section className="grid gap-8 md:grid-cols-2">
-          {/* AI Daily Focus */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
-          >
-            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
-              AI Recommended Focus
-            </p>
-            <h3 className="text-2xl font-extrabold mb-4">{focus.title}</h3>
-            <p className="text-gray-600 mb-6">
-              Simple, high-leverage actions to keep momentum going.
-            </p>
-            <ul className="space-y-4">
-              {focus.tasks.map((task, i) => (
-                <li key={i} className="flex items-start gap-4">
-                  <span className="mt-1 w-3 h-3 rounded-full bg-amber-500 flex-shrink-0" />
-                  <span className="text-gray-700">{task}</span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Recent Activity */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
-          >
-            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
-              Recent Activity
-            </p>
-            <h3 className="text-2xl font-extrabold mb-6">
-              You&apos;ve been consistent
-            </h3>
-            <ul className="space-y-6">
-              <ActivityRow label="Generated social content" type="Content" time="Today" />
-              <ActivityRow label="Drafted outreach emails" type="Email" time="Yesterday" />
-              <ActivityRow label="Created new ad variations" type="Ads" time="This week" />
-            </ul>
-            <button
-              onClick={() => router.push("/dashboard/work")}
-              className="mt-8 text-amber-600 font-medium hover:text-black transition flex items-center gap-2"
-            >
-              View all activity →
+              Upgrade Now →
             </button>
           </motion.div>
         </section>
@@ -357,56 +283,25 @@ export default function DashboardPage() {
   );
 }
 
-/* COMPONENTS */
-
-function ActionCard({
-  title,
-  description,
-  href,
-}: {
-  title: string;
-  description: string;
-  href: string;
-}) {
+/* BIG, PLAYFUL ACTION CARDS */
+function BigActionCard({ title, description, href, gradient, icon }: { title: string; description: string; href: string; gradient: string; icon: string }) {
   const router = useRouter();
 
   return (
     <motion.button
-      whileHover={{ y: -6, scale: 1.02 }}
+      whileHover={{ y: -12, scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => router.push(href)}
-      className="text-left rounded-3xl border-2 border-gray-200 bg-white p-8 shadow-xl hover:border-amber-500 hover:shadow-2xl transition-all cursor-pointer text-center group"
+      className={`relative rounded-3xl p-10 text-left text-white overflow-hidden shadow-2xl group`}
+      style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}
     >
-      <h3 className="text-2xl font-extrabold mb-3 group-hover:text-amber-600 transition">
-        {title}
-      </h3>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
-      <span className="mt-6 inline-block text-lg font-semibold text-amber-600 group-hover:translate-x-2 transition-transform">
-        →
-      </span>
-    </motion.button>
-  );
-}
-
-function ActivityRow({
-  label,
-  type,
-  time,
-}: {
-  label: string;
-  type: string;
-  time: string;
-}) {
-  return (
-    <li className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-3 h-3 rounded-full bg-amber-500" />
-        <div>
-          <p className="font-semibold text-gray-900">{label}</p>
-          <p className="text-sm text-gray-500">{type}</p>
-        </div>
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90 group-hover:opacity-100 transition`} />
+      <div className="relative z-10">
+        <div className="text-6xl mb-6">{icon}</div>
+        <h3 className="text-3xl font-extrabold mb-3">{title}</h3>
+        <p className="text-lg opacity-90">{description}</p>
+        <ArrowRight className="mt-8 w-8 h-8 opacity-80 group-hover:translate-x-4 transition-transform" />
       </div>
-      <span className="text-sm text-gray-500">{time}</span>
-    </li>
+    </motion.button>
   );
 }
