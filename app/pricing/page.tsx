@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import MarketingNavbar from "@/components/MarketingNavbar";
 
 type User = {
   subscription_plan: "basic" | "growth" | "pro";
@@ -61,45 +62,8 @@ export default function PricingPage() {
         isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
       }`}
     >
-      {/* NAVBAR */}
-      <header
-        className={`w-full py-6 px-8 md:px-12 flex justify-between items-center border-b sticky top-0 backdrop-blur-xl z-50 ${
-          isDark ? "border-gray-800 bg-[#0B0B0E]/80" : "border-gray-200 bg-white/80"
-        }`}
-      >
-        <h1
-          className="text-2xl font-bold cursor-pointer"
-          onClick={() => (window.location.href = "/")}
-        >
-          AutopilotAI<span className="text-amber-500">.</span>
-        </h1>
-
-        <div className="flex gap-6 items-center text-sm">
-          <a href="/" className="hover:underline">Home</a>
-          <a href="/features" className="hover:underline">Features</a>
-          {!isLoggedIn && <a href="/login" className="hover:underline">Login</a>}
-
-          <a
-            href={isLoggedIn ? "/dashboard" : "/register"}
-            className={`px-5 py-2 rounded-full text-white transition ${
-              isDark ? "bg-amber-500 text-black" : "bg-black hover:bg-gray-900"
-            }`}
-          >
-            {isLoggedIn ? "Dashboard" : "Get Started"}
-          </a>
-
-          <button
-            onClick={toggleTheme}
-            className={`px-4 py-2 rounded-full border text-xs transition ${
-              isDark
-                ? "border-gray-700 hover:border-amber-500"
-                : "border-gray-300 hover:border-black"
-            }`}
-          >
-            {isDark ? "Light Mode" : "Dark Mode"}
-          </button>
-        </div>
-      </header>
+      {/* ⭐ SHARED GLOBAL MARKETING NAVBAR */}
+      <MarketingNavbar />
 
       {/* HERO */}
       <section className="px-8 md:px-20 pt-20 text-center max-w-5xl mx-auto">

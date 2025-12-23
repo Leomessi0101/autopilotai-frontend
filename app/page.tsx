@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import MarketingNavbar from "@/components/MarketingNavbar";
 
 export default function HomePage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -26,113 +27,8 @@ export default function HomePage() {
         isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
       }`}
     >
-      {/* NAVBAR */}
-      <header
-        className={`w-full py-6 px-6 md:px-10 flex justify-between items-center border-b sticky top-0 backdrop-blur-xl z-50 ${
-          isDark ? "border-gray-800 bg-[#0B0B0E]/80" : "border-gray-200 bg-white/80"
-        }`}
-      >
-        <h1
-          className="text-2xl font-bold tracking-tight cursor-pointer"
-          onClick={() => (window.location.href = "/")}
-        >
-          AutopilotAI
-        </h1>
-
-        {/* Desktop Nav */}
-        <div className="hidden md:flex gap-6 items-center text-sm font-medium">
-          <a
-            href="/features"
-            className={`${isDark ? "hover:text-amber-500" : "hover:text-amber-600"} transition`}
-          >
-            Features
-          </a>
-          <a
-            href="/pricing"
-            className={`${isDark ? "hover:text-amber-500" : "hover:text-amber-600"} transition`}
-          >
-            Pricing
-          </a>
-          <a
-            href="/login"
-            className={`${isDark ? "hover:text-amber-500" : "hover:text-amber-600"} transition`}
-          >
-            Login
-          </a>
-
-          <button
-            onClick={toggleTheme}
-            className={`px-4 py-2 rounded-full border transition ${
-              isDark
-                ? "border-gray-700 hover:border-amber-500"
-                : "border-gray-300 hover:border-amber-500"
-            }`}
-          >
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
-          </button>
-
-          <a
-            href="/register"
-            className={`px-6 py-3 rounded-full text-white hover:opacity-90 transition shadow-lg ${
-              isDark ? "bg-amber-500" : "bg-black"
-            }`}
-          >
-            Get Started
-          </a>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-          <svg
-            className="w-7 h-7"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </header>
-
-      {/* Mobile Dropdown */}
-      {menuOpen && (
-        <div
-          className={`md:hidden px-6 py-4 border-b space-y-4 text-lg ${
-            isDark ? "border-gray-800 bg-[#0B0B0E]" : "border-gray-200 bg-white"
-          }`}
-        >
-          <a href="/features" className="block hover:text-amber-500">
-            Features
-          </a>
-          <a href="/pricing" className="block hover:text-amber-500">
-            Pricing
-          </a>
-          <a href="/login" className="block hover:text-amber-500">
-            Login
-          </a>
-
-          <button
-            onClick={toggleTheme}
-            className={`w-full px-4 py-2 rounded-xl border transition ${
-              isDark
-                ? "border-gray-700 hover:border-amber-500"
-                : "border-gray-300 hover:border-amber-500"
-            }`}
-          >
-            {theme === "light" ? "Enable Dark Mode" : "Disable Dark Mode"}
-          </button>
-
-          <a
-            href="/register"
-            className={`block text-center px-6 py-3 rounded-xl text-white hover:opacity-90 transition ${
-              isDark ? "bg-amber-500" : "bg-black"
-            }`}
-          >
-            Get Started
-          </a>
-        </div>
-      )}
+      {/* ⭐ NEW GLOBAL MARKETING NAVBAR */}
+      <MarketingNavbar />
 
       {/* HERO */}
       <section className="pt-20 pb-24 px-6 md:px-10 text-center max-w-5xl mx-auto">

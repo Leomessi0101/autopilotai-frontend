@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import MarketingNavbar from "@/components/MarketingNavbar";
 
 export default function FeaturesPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -25,43 +26,8 @@ export default function FeaturesPage() {
         isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
       }`}
     >
-      {/* HEADER */}
-      <div
-        className={`w-full py-8 px-6 md:px-10 border-b flex justify-between items-center sticky top-0 backdrop-blur-xl z-40 ${
-          isDark ? "border-gray-800 bg-[#0B0B0E]/80" : "border-gray-200 bg-white/80"
-        }`}
-      >
-        <h1
-          className="text-2xl font-bold tracking-tight cursor-pointer"
-          onClick={() => (window.location.href = "/")}
-        >
-          AutopilotAI
-        </h1>
-
-        <div className="flex gap-4 items-center">
-          <button
-            onClick={toggleTheme}
-            className={`px-4 py-2 rounded-full border text-sm transition ${
-              isDark
-                ? "border-gray-700 hover:border-amber-500"
-                : "border-gray-300 hover:border-amber-500"
-            }`}
-          >
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
-          </button>
-
-          <a
-            href="/pricing"
-            className={`px-6 py-2 rounded-full border transition ${
-              isDark
-                ? "border-gray-700 hover:border-amber-500"
-                : "border-gray-300 hover:border-black"
-            }`}
-          >
-            Pricing
-          </a>
-        </div>
-      </div>
+      {/* 🔥 UNIFIED MARKETING NAVBAR */}
+      <MarketingNavbar />
 
       {/* HERO */}
       <section className="px-6 md:px-10 pt-24 text-center max-w-4xl mx-auto">
@@ -287,9 +253,12 @@ export default function FeaturesPage() {
         </a>
       </div>
 
+      {/* FOOTER */}
       <footer
         className={`border-t py-10 text-center ${
-          isDark ? "border-gray-800 text-gray-500" : "border-gray-200 text-gray-500"
+          isDark
+            ? "border-gray-800 text-gray-500"
+            : "border-gray-200 text-gray-500"
         }`}
       >
         © 2025 AutopilotAI. All rights reserved.
@@ -298,7 +267,7 @@ export default function FeaturesPage() {
   );
 }
 
-/* COMPONENTS */
+/* COMPONENTS BELOW REMAIN UNCHANGED */
 
 function FeatureBlock({ title, desc, items, theme }: any) {
   const isDark = theme === "dark";
@@ -313,7 +282,9 @@ function FeatureBlock({ title, desc, items, theme }: any) {
       }`}
     >
       <h3 className="text-3xl font-bold">{title}</h3>
-      <p className={isDark ? "text-gray-400 mt-4" : "text-gray-600 mt-4"}>{desc}</p>
+      <p className={isDark ? "text-gray-400 mt-4" : "text-gray-600 mt-4"}>
+        {desc}
+      </p>
 
       <ul className="mt-6 space-y-2">
         {items.map((i: any, idx: number) => (
@@ -340,7 +311,9 @@ function PersonaCard({ title, text, theme }: any) {
       }`}
     >
       <h4 className="text-xl font-bold">{title}</h4>
-      <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>{text}</p>
+      <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>
+        {text}
+      </p>
     </div>
   );
 }
@@ -379,7 +352,9 @@ function Faq({ question, answer, theme }: any) {
   return (
     <div className="border-b py-6 border-gray-300 dark:border-gray-800">
       <h4 className="font-semibold text-lg">{question}</h4>
-      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>{answer}</p>
+      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>
+        {answer}
+      </p>
     </div>
   );
 }
