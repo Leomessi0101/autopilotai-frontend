@@ -20,7 +20,7 @@ export default function HomePage() {
           <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
             Your Business
             <br />
-            <span className="text-amber-600">On Complete Autopilot</span>
+            <span className="text-blue-900">On Complete Autopilot</span>
           </h1>
 
           <p className="mt-8 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">

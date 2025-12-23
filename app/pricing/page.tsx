@@ -59,7 +59,7 @@ export default function PricingPage() {
           >
             Simple, transparent pricing
             <br />
-            <span className="text-amber-600">that scales with you.</span>
+            <span className="text-blue-900">that scales with you.</span>
           </motion.h1>
 
           <motion.p

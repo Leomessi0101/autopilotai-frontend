@@ -20,7 +20,7 @@ export default function FeaturesPage() {
           >
             Everything you need
             <br />
-            <span className="text-amber-600">to run on autopilot.</span>
+            <span className="text-blue-900">to run on autopilot.</span>
           </motion.h1>
 
           <motion.p
