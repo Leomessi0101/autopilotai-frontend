@@ -5,10 +5,9 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import { ArrowRight, Sparkles, Zap, MessageSquare, Megaphone, FolderOpen, TrendingUp } from "lucide-react"; // Optional: add lucide-react if you want icons (or remove and use Unicode)
 
 /* =========================
-   QUOTES & DAILY FOCUS (unchanged logic)
+   QUOTES & DAILY FOCUS
    ========================= */
 const QUOTES = [
   { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
@@ -23,25 +22,21 @@ const AI_DAILY_FOCUS = [
     title: "Dominate Visibility",
     subtitle: "Get seen by more of the right people",
     tasks: ["Post one high-engagement hook", "Reply to 5 recent comments/DMs", "Share one value-first story"],
-    icon: TrendingUp,
   },
   {
     title: "Close More Deals",
     subtitle: "Turn conversations into customers",
     tasks: ["Send 3 personalized follow-ups", "Refine your core offer messaging", "Test one new ad angle"],
-    icon: Zap,
   },
   {
     title: "Build Authority",
     subtitle: "Become the go-to voice in your space",
     tasks: ["Start a long-form thread or post", "Repurpose your best content", "Plan next week's themes"],
-    icon: Sparkles,
   },
   {
     title: "Strengthen Your Brand",
     subtitle: "Make everything feel unmistakably you",
     tasks: ["Audit tone in last 5 posts", "Update one email template", "Clarify your one-sentence promise"],
-    icon: MessageSquare,
   },
 ];
 
@@ -105,8 +100,6 @@ export default function DashboardPage() {
 
   const progress = used !== null && limit !== null && limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
   const remaining = used !== null && limit !== null ? Math.max(0, limit - used) : null;
-
-  const Icon = focus.icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-black">
@@ -182,7 +175,7 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* QUICK ACTIONS – BIG, BOLD, PLAYFUL */}
+        {/* QUICK ACTIONS – BIG, BOLD */}
         <section className="mb-20">
           <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-12">
             What will you build today?
@@ -231,12 +224,9 @@ export default function DashboardPage() {
           >
             <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-amber-100 rounded-full opacity-50" />
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                {Icon && <Icon className="w-8 h-8 text-amber-600" />}
-                <p className="text-sm uppercase tracking-wider text-amber-600 font-bold">
-                  AI Recommended Focus
-                </p>
-              </div>
+              <p className="text-sm uppercase tracking-wider text-amber-600 font-bold mb-4">
+                AI Recommended Focus
+              </p>
               <h3 className="text-3xl font-extrabold mb-3">{focus.title}</h3>
               <p className="text-lg text-gray-600 mb-8">{focus.subtitle}</p>
               <ul className="space-y-4">
@@ -283,7 +273,7 @@ export default function DashboardPage() {
   );
 }
 
-/* BIG, PLAYFUL ACTION CARDS */
+/* BIG ACTION CARD – NO EXTERNAL DEPENDENCIES */
 function BigActionCard({ title, description, href, gradient, icon }: { title: string; description: string; href: string; gradient: string; icon: string }) {
   const router = useRouter();
 
@@ -293,14 +283,15 @@ function BigActionCard({ title, description, href, gradient, icon }: { title: st
       whileTap={{ scale: 0.98 }}
       onClick={() => router.push(href)}
       className={`relative rounded-3xl p-10 text-left text-white overflow-hidden shadow-2xl group`}
-      style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90 group-hover:opacity-100 transition`} />
       <div className="relative z-10">
         <div className="text-6xl mb-6">{icon}</div>
         <h3 className="text-3xl font-extrabold mb-3">{title}</h3>
         <p className="text-lg opacity-90">{description}</p>
-        <ArrowRight className="mt-8 w-8 h-8 opacity-80 group-hover:translate-x-4 transition-transform" />
+        <span className="mt-8 inline-block text-4xl font-bold group-hover:translate-x-4 transition-transform">
+          →
+        </span>
       </div>
     </motion.button>
   );
