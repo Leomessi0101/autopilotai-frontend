@@ -218,10 +218,10 @@ export default function DashboardPage() {
               </p>
             </div>
             <button
-              onClick={() => router.push("/pricing")}
+              onClick={() => router.push("/upgrade")}
               className="mt-10 py-4 bg-white text-blue-900 rounded-xl font-medium hover:bg-gray-100 transition"
             >
-              View Plans
+              Upgrade Plan
             </button>
           </motion.div>
         </section>
