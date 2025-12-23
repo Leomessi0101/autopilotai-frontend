@@ -133,35 +133,16 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* GUARANTEE + TRUST */}
+      {/* TRUST / FLEXIBILITY */}
       <section className="py-28 px-6 md:px-10 bg-gray-50">
         <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-10">
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-8">
             Built for flexibility, not lock-in
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-16">
-            <div className="p-8">
-              <div className="text-5xl mb-4">🛡️</div>
-              <h3 className="text-xl font-bold">30-Day Money-Back Guarantee</h3>
-              <p className="mt-3 text-gray-600">
-                Try risk-free. Full refund if it’s not for you.
-              </p>
-            </div>
-            <div className="p-8">
-              <div className="text-5xl mb-4">🔄</div>
-              <h3 className="text-xl font-bold">Change Plans Anytime</h3>
-              <p className="mt-3 text-gray-600">
-                Upgrade, downgrade, or cancel instantly — no questions asked.
-              </p>
-            </div>
-            <div className="p-8">
-              <div className="text-5xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold">No Long-Term Contracts</h3>
-              <p className="mt-3 text-gray-600">
-                Month-to-month billing. You’re always in control.
-              </p>
-            </div>
-          </div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Upgrade, downgrade, pause, or cancel anytime from your dashboard. 
+            Month-to-month billing keeps you in full control — no contracts, no stress.
+          </p>
         </div>
       </section>
 
@@ -181,7 +162,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
+      {/* FINAL CTA (for non-logged-in users) */}
       {!isLoggedIn && (
         <section className="py-32 px-6 md:px-10 text-center">
           <div className="max-w-4xl mx-auto">

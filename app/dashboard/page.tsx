@@ -11,8 +11,7 @@ import DashboardNavbar from "@/components/DashboardNavbar";
    ========================= */
 const QUOTES = [
   {
-    text:
-      "You have power over your mind — not outside events. Realize this, and you will find strength.",
+    text: "You have power over your mind — not outside events. Realize this, and you will find strength.",
     author: "Marcus Aurelius",
   },
   {
@@ -88,8 +87,7 @@ export default function DashboardPage() {
 
   const [initial, setInitial] = useState("U");
   const [fullName, setFullName] = useState<string | null>(null);
-  const [subscriptionPlan, setSubscriptionPlan] =
-    useState<string | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   const [used, setUsed] = useState<number | null>(null);
   const [limit, setLimit] = useState<number | null>(null);
@@ -124,7 +122,7 @@ export default function DashboardPage() {
         router.push("/login");
       });
 
-    // Usage (bulletproof against slightly different backend keys)
+    // Usage
     api
       .get("/api/auth/usage")
       .then((res) => {
@@ -160,235 +158,197 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      {/* TOP NAVBAR (shared) */}
+      {/* Dashboard Navbar */}
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
-      <main className="max-w-6xl mx-auto px-6 md:px-8 lg:px-0 py-10 md:py-14">
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-16">
         {/* GREETING + QUOTE */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-        >
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <section className="grid gap-10 md:grid-cols-[1fr,380px] items-start mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
               {greeting}
               {fullName ? `, ${fullName}.` : "."}
             </h1>
-            <p className="mt-3 text-lg text-gray-600 max-w-xl">
-              Your AI is ready to write, reply and generate while you focus on
-              actually running the business.
+            <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl leading-relaxed">
+              Your AI is ready to write content, reply to leads, and run ads —
+              while you focus on building the business.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="md:max-w-sm w-full">
-            <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">
-                Today&apos;s quote
-              </p>
-              <p className="italic text-gray-800 text-sm leading-relaxed">
-                “{quote.text}”
-              </p>
-              <p className="mt-3 text-xs font-semibold text-amber-600">
-                — {quote.author}
-              </p>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* TOP GRID: USAGE + PLAN + SHORTCUTS */}
-        <section className="mt-12 grid gap-6 md:grid-cols-3">
-          {/* Usage card */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="md:col-span-2 rounded-3xl border border-gray-200 bg-white p-7 shadow-sm"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="rounded-3xl border border-gray-200 bg-white p-8 shadow-xl"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">
-                  Usage this month
-                </p>
-                <h2 className="text-xl font-semibold mt-1">
-                  Content, emails & ads generated
-                </h2>
-              </div>
-            </div>
+            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
+              Today&apos;s mindset
+            </p>
+            <p className="text-lg italic text-gray-800 leading-relaxed">
+              “{quote.text}”
+            </p>
+            <p className="mt-5 text-sm font-semibold text-amber-600">
+              — {quote.author}
+            </p>
+          </motion.div>
+        </section>
+
+        {/* USAGE + PLAN CARD */}
+        <section className="grid gap-8 md:grid-cols-3 mb-20">
+          {/* Usage Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="md:col-span-2 rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
+          >
+            <h3 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-2">
+              Monthly usage
+            </h3>
+            <p className="text-3xl font-extrabold mb-8">
+              {usageLoading ? "Loading…" : limit === null ? "Unlimited" : `${used ?? 0} of ${limit} generations used`}
+            </p>
 
             {usageLoading ? (
-              <div className="mt-6 h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full w-1/3 bg-gray-300 animate-pulse" />
+              <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full w-2/5 bg-gray-300 animate-pulse" />
               </div>
             ) : limit === null ? (
-              <div>
-                <p className="text-lg font-semibold text-amber-600">
-                  Unlimited generations
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  You&apos;re on a plan without a hard monthly cap. Use it.
-                </p>
+              <div className="text-lg font-semibold text-amber-600">
+                No limits — generate as much as you want.
               </div>
             ) : (
               <>
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>
-                    {used ?? 0} / {limit} used
-                  </span>
-                  <span>
-                    {remaining !== null ? `${remaining} remaining` : ""}
-                  </span>
-                </div>
-                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden mb-4">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.6 }}
-                    className="h-full bg-amber-500"
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                    className="absolute inset-y-0 left-0 bg-amber-500"
                   />
                 </div>
-                <p className="mt-3 text-xs text-gray-500">
-                  Usage resets automatically every month based on your plan.
-                </p>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>{remaining} remaining</span>
+                  <span>Resets monthly</span>
+                </div>
               </>
             )}
           </motion.div>
 
-          {/* Plan card */}
+          {/* Current Plan Card */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="rounded-3xl border border-gray-200 bg-white p-7 shadow-sm flex flex-col justify-between"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl flex flex-col justify-between"
           >
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">
+              <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-2">
                 Current plan
               </p>
-              <h2 className="text-2xl font-bold mt-1">
+              <h3 className="text-3xl font-extrabold">
                 {subscriptionPlan
-                  ? subscriptionPlan.charAt(0).toUpperCase() +
-                    subscriptionPlan.slice(1)
+                  ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)
                   : "Free"}
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Upgrade to unlock unlimited generations and faster queues.
+              </h3>
+              <p className="mt-4 text-gray-600">
+                Upgrade for unlimited generations, priority processing, and advanced tools.
               </p>
             </div>
-
             <button
               onClick={() => router.push("/pricing")}
-              className="mt-5 w-full px-5 py-2.5 rounded-full border border-black text-sm font-medium hover:bg-black hover:text-white transition"
+              className="mt-8 w-full py-4 rounded-full bg-black text-white font-semibold hover:bg-gray-900 transition shadow-lg hover:shadow-xl"
             >
-              View plans
+              Upgrade Plan
             </button>
           </motion.div>
         </section>
 
         {/* QUICK ACTIONS */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="mt-16"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">What do you want AI to do?</h2>
-            <p className="text-xs text-gray-500">
-              Everything you generate is saved automatically in{" "}
-              <span className="font-medium">My Work</span>.
-            </p>
+        <section className="mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold">
+              What do you want AI to do today?
+            </h2>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-4">
             <ActionCard
-              title="Generate content"
-              line="Social posts, hooks, ideas."
-              onClick={() => router.push("/dashboard/content")}
+              title="Generate Content"
+              description="Social posts, hooks, threads, captions"
+              href="/dashboard/content"
             />
             <ActionCard
-              title="Write emails"
-              line="Cold, follow-ups & replies."
-              onClick={() => router.push("/dashboard/email")}
+              title="Write Emails & Replies"
+              description="Cold outreach, follow-ups, smart responses"
+              href="/dashboard/email"
             />
             <ActionCard
-              title="Create ads"
-              line="Meta, Google, TikTok angles."
-              onClick={() => router.push("/dashboard/ads")}
+              title="Create Ads"
+              description="Meta, Google, TikTok — copy + angles"
+              href="/dashboard/ads"
             />
             <ActionCard
-              title="Open my work"
-              line="See everything AI created."
-              onClick={() => router.push("/dashboard/work")}
+              title="My Work"
+              description="All generated content, history & exports"
+              href="/dashboard/work"
             />
           </div>
-        </motion.section>
+        </section>
 
-        {/* DAILY FOCUS + ACTIVITY */}
-        <section className="mt-16 grid gap-6 md:grid-cols-[1.4fr,1.2fr] pb-20">
-          {/* AI Focus */}
+        {/* AI FOCUS + RECENT ACTIVITY */}
+        <section className="grid gap-8 md:grid-cols-2">
+          {/* AI Daily Focus */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.08 }}
-            className="rounded-3xl border border-gray-200 bg-white p-7 shadow-sm"
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
           >
-            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">
-              AI focus for today
+            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
+              AI Recommended Focus
             </p>
-            <h3 className="text-xl font-semibold mb-2">{focus.title}</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Use these as simple prompts inside the tools and keep momentum.
+            <h3 className="text-2xl font-extrabold mb-4">{focus.title}</h3>
+            <p className="text-gray-600 mb-6">
+              Simple, high-leverage actions to keep momentum going.
             </p>
-
-            <ul className="space-y-2 text-sm text-gray-800">
-              {focus.tasks.map((t, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="mt-[6px] w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  <span>{t}</span>
+            <ul className="space-y-4">
+              {focus.tasks.map((task, i) => (
+                <li key={i} className="flex items-start gap-4">
+                  <span className="mt-1 w-3 h-3 rounded-full bg-amber-500 flex-shrink-0" />
+                  <span className="text-gray-700">{task}</span>
                 </li>
               ))}
             </ul>
           </motion.div>
 
-          {/* Recent activity (dummy, but feels alive) */}
+          {/* Recent Activity */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="rounded-3xl border border-gray-200 bg-white p-7 shadow-sm"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="rounded-3xl border border-gray-200 bg-white p-10 shadow-xl"
           >
-            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">
-              Recent activity
+            <p className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
+              Recent Activity
             </p>
-            <h3 className="text-xl font-semibold mb-4">
-              How you&apos;ve been using AutopilotAI
+            <h3 className="text-2xl font-extrabold mb-6">
+              You&apos;ve been consistent
             </h3>
-
-            <ul className="space-y-3 text-sm">
-              <ActivityRow
-                label="Generated social content"
-                type="Content"
-                time="Today"
-              />
-              <ActivityRow
-                label="Drafted outreach emails"
-                type="Email"
-                time="Yesterday"
-              />
-              <ActivityRow
-                label="Created new ad angles"
-                type="Ads"
-                time="This week"
-              />
+            <ul className="space-y-6">
+              <ActivityRow label="Generated social content" type="Content" time="Today" />
+              <ActivityRow label="Drafted outreach emails" type="Email" time="Yesterday" />
+              <ActivityRow label="Created new ad variations" type="Ads" time="This week" />
             </ul>
-
             <button
               onClick={() => router.push("/dashboard/work")}
-              className="mt-6 text-xs text-gray-500 hover:text-black underline underline-offset-4"
+              className="mt-8 text-amber-600 font-medium hover:text-black transition flex items-center gap-2"
             >
-              Open My Work →
+              View all activity →
             </button>
           </motion.div>
         </section>
@@ -397,33 +357,32 @@ export default function DashboardPage() {
   );
 }
 
-/* =========================
-   COMPONENTS
-   ========================= */
+/* COMPONENTS */
 
 function ActionCard({
   title,
-  line,
-  onClick,
+  description,
+  href,
 }: {
   title: string;
-  line: string;
-  onClick: () => void;
+  description: string;
+  href: string;
 }) {
+  const router = useRouter();
+
   return (
     <motion.button
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.18 }}
-      onClick={onClick}
-      className="text-left rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:border-amber-400 hover:shadow-md transition cursor-pointer"
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => router.push(href)}
+      className="text-left rounded-3xl border-2 border-gray-200 bg-white p-8 shadow-xl hover:border-amber-500 hover:shadow-2xl transition-all cursor-pointer text-center group"
     >
-      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-        Tool
-      </p>
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-gray-600">{line}</p>
-      <span className="mt-4 inline-block text-xs font-medium text-amber-600">
-        Open →
+      <h3 className="text-2xl font-extrabold mb-3 group-hover:text-amber-600 transition">
+        {title}
+      </h3>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
+      <span className="mt-6 inline-block text-lg font-semibold text-amber-600 group-hover:translate-x-2 transition-transform">
+        →
       </span>
     </motion.button>
   );
@@ -439,15 +398,15 @@ function ActivityRow({
   time: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <span className="w-2 h-2 rounded-full bg-amber-500" />
+    <li className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-3 h-3 rounded-full bg-amber-500" />
         <div>
-          <p className="font-medium text-gray-900">{label}</p>
-          <p className="text-xs text-gray-500">{type}</p>
+          <p className="font-semibold text-gray-900">{label}</p>
+          <p className="text-sm text-gray-500">{type}</p>
         </div>
       </div>
-      <span className="text-xs text-gray-500">{time}</span>
+      <span className="text-sm text-gray-500">{time}</span>
     </li>
   );
 }
