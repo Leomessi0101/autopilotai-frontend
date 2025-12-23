@@ -1,17 +1,16 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useState } from "react";
 import api from "@/lib/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async () => {
-    if (!email) return;
+    if (!email.trim()) return;
 
     setStatus("loading");
     setMessage("");
@@ -27,53 +26,81 @@ export default function ForgotPasswordPage() {
       console.error(err);
       setStatus("error");
       setMessage(
-        err?.response?.data?.detail ||
-          "Something went wrong. Try again later."
+        err?.response?.data?.detail || "Something went wrong. Please try again later."
       );
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
-      <div className="w-full max-w-md p-10 border border-gray-200 rounded-3xl shadow-sm bg-white">
-        <h1 className="text-3xl font-bold text-center mb-6">Forgot password?</h1>
-        <p className="text-gray-600 text-center mb-8">
-          Enter your email and we’ll send you a reset link.
-        </p>
-
-        {message && (
-          <div
-            className={`mb-4 p-3 rounded-xl text-sm ${
-              status === "sent"
-                ? "bg-green-100 border border-green-300 text-green-800"
-                : "bg-red-100 border border-red-300 text-red-800"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <div>
-            <label className="block text-gray-700 mb-1">Email</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-black"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={status === "loading"}
-            className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-900 transition disabled:opacity-60"
-          >
-            {status === "loading" ? "Sending..." : "Send reset link"}
-          </button>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full max-w-md"
+      >
+        {/* Logo */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-light tracking-wide text-gray-900">
+            AutopilotAI
+          </h1>
         </div>
-      </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10">
+          <h2 className="text-3xl font-light text-gray-900 text-center mb-2">
+            Forgot Password
+          </h2>
+          <p className="text-center text-gray-600 mb-8">
+            Enter your email and we’ll send you a password reset link.
+          </p>
+
+          {/* Status Message */}
+          {message && (
+            <div
+              className={`mb-6 p-4 rounded-xl text-sm border ${
+                status === "sent"
+                  ? "bg-teal-50 border-teal-200 text-teal-800"
+                  : "bg-red-50 border-red-200 text-red-700"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          {/* Form */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={status === "loading"}
+              className="w-full py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+            >
+              {status === "loading" ? "Sending…" : "Send Reset Link"}
+            </button>
+          </div>
+
+          {/* Back to Login */}
+          <p className="text-center text-gray-600 mt-8">
+            Remembered your password?{" "}
+            <a href="/login" className="font-medium text-blue-900 hover:underline">
+              Back to Login
+            </a>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }

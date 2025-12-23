@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import api from "@/lib/api";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,31 +11,13 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const isDark = theme === "dark";
-
-  /* Redirect if logged in */
   useEffect(() => {
-    const saved = localStorage.getItem("autopilot-theme");
-    if (saved === "dark") setTheme("dark");
-
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("autopilot_token")
-        : null;
-
+    const token = localStorage.getItem("autopilot_token");
     if (token) router.push("/dashboard");
   }, [router]);
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("autopilot-theme", next);
-  };
 
   const handleRegister = async () => {
     setError("");
@@ -70,171 +52,111 @@ export default function RegisterPage() {
       });
 
       const token = loginRes.data.token;
-      const subscription =
-        loginRes.data.subscription_plan || loginRes.data.subscription;
+      const subscription = loginRes.data.subscription_plan || loginRes.data.subscription;
 
       localStorage.setItem("autopilot_token", token);
-      if (subscription)
-        localStorage.setItem("autopilot_subscription", subscription);
+      if (subscription) localStorage.setItem("autopilot_subscription", subscription);
 
       router.push("/dashboard");
     } catch (err: any) {
       const backendError = err.response?.data?.detail;
-
-      if (typeof backendError === "string") setError(backendError);
-      else setError("Registration failed. Please try again.");
+      setError(typeof backendError === "string" ? backendError : "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div
-      className={`min-h-screen flex items-center justify-center px-6 transition-all duration-500 ${
-        isDark
-          ? "bg-[#0B0B0E] text-white"
-          : "bg-gradient-to-br from-white to-gray-50 text-black"
-      }`}
-    >
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className={`absolute top-6 right-6 px-4 py-2 rounded-full border text-sm transition ${
-          isDark
-            ? "border-gray-700 hover:border-amber-500"
-            : "border-gray-300 hover:border-black"
-        }`}
-      >
-        {isDark ? "Light Mode" : "Dark Mode"}
-      </button>
-
-      {/* Card */}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className={`w-full max-w-md p-8 md:p-10 rounded-3xl border shadow-xl ${
-          isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
-        }`}
+        transition={{ duration: 0.8 }}
+        className="w-full max-w-md"
       >
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-center mb-2">
-          Create Your Account
-        </h1>
-        <p
-          className={`text-center mb-7 ${
-            isDark ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          Get started with AutopilotAI in seconds.
-        </p>
-
-        {/* Error */}
-        {error && (
-          <div
-            className={`mb-4 p-3 rounded-xl text-sm ${
-              isDark
-                ? "bg-red-900/30 border border-red-700 text-red-200"
-                : "bg-red-100 border border-red-300 text-red-800"
-            }`}
-          >
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <div className="space-y-6">
-          <div>
-            <label
-              className={`block mb-1 text-sm ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Full Name
-            </label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition ${
-                isDark
-                  ? "bg-[#13131A] border-gray-700 focus:border-amber-500"
-                  : "bg-gray-50 border-gray-300 focus:border-black"
-              }`}
-              placeholder="John Smith"
-            />
-          </div>
-
-          <div>
-            <label
-              className={`block mb-1 text-sm ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Email
-            </label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-              type="email"
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition ${
-                isDark
-                  ? "bg-[#13131A] border-gray-700 focus:border-amber-500"
-                  : "bg-gray-50 border-gray-300 focus:border-black"
-              }`}
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label
-              className={`block mb-1 text-sm ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Password
-            </label>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-              type="password"
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition ${
-                isDark
-                  ? "bg-[#13131A] border-gray-700 focus:border-amber-500"
-                  : "bg-gray-50 border-gray-300 focus:border-black"
-              }`}
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            onClick={handleRegister}
-            disabled={loading}
-            className={`w-full py-3 rounded-xl text-lg hover:opacity-90 transition shadow-lg disabled:opacity-60 ${
-              isDark ? "bg-amber-500 text-black" : "bg-black text-white"
-            }`}
-          >
-            {loading ? "Creating account…" : "Create Account"}
-          </button>
+        {/* Logo */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-light tracking-wide text-gray-900">
+            AutopilotAI
+          </h1>
         </div>
 
-        {/* Footer */}
-        <div
-          className={`text-center mt-6 ${
-            isDark ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          Already have an account?{" "}
-          <span
-            onClick={() => router.push("/login")}
-            className={`cursor-pointer ${
-              isDark ? "text-amber-400" : "text-black"
-            } hover:underline`}
-          >
-            Login
-          </span>
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10">
+          <h2 className="text-3xl font-light text-gray-900 text-center mb-2">
+            Create Your Account
+          </h2>
+          <p className="text-center text-gray-600 mb-8">
+            Get started with AutopilotAI in seconds
+          </p>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Smith"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a strong password"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+              />
+            </div>
+
+            <button
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+            >
+              {loading ? "Creating Account…" : "Create Account"}
+            </button>
+          </div>
+
+          {/* Login Link */}
+          <p className="text-center text-gray-600 mt-8">
+            Already have an account?{" "}
+            <button
+              onClick={() => router.push("/login")}
+              className="font-medium text-blue-900 hover:underline"
+            >
+              Log In
+            </button>
+          </p>
         </div>
       </motion.div>
     </div>

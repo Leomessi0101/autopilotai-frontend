@@ -98,11 +98,11 @@ function AvatarMenu({
           />
 
           <motion.aside
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed right-6 top-24 w-80 rounded-2xl bg-white shadow-lg border border-gray-200 z-50 overflow-hidden"
+            initial={{ opacity: 0, y: -16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="fixed right-6 top-24 w-80 rounded-2xl bg-white shadow-xl border border-gray-200 z-50 overflow-hidden"
           >
             <div className="px-8 pt-8 pb-6 border-b border-gray-200">
               <button
@@ -129,7 +129,7 @@ function AvatarMenu({
               <MenuItem label="Dashboard" onClick={() => { onClose(); router.push("/dashboard"); }} />
               <MenuItem label="Profile" onClick={() => { onClose(); router.push("/dashboard/profile"); }} />
               <MenuItem label="Billing" onClick={() => { onClose(); router.push("/billing"); }} />
-              <MenuItem label="Subscription Plans" onClick={() => { onClose(); router.push("/pricing"); }} />
+              <MenuItem label="Upgrade" onClick={() => { onClose(); router.push("/upgrade"); }} />
 
               <div className="border-t border-gray-200 mt-2 pt-2">
                 <MenuItem
@@ -153,7 +153,7 @@ function AvatarMenu({
 function MenuItem({ label, onClick, danger = false }: { label: string; onClick: () => void; danger?: boolean }) {
   return (
     <motion.button
-      whileHover={{ x: 6 }}
+      whileHover={{ x: 8 }}
       onClick={onClick}
       className={`w-full px-8 py-4 text-left text-sm font-medium transition ${
         danger
