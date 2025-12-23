@@ -50,8 +50,8 @@ export default function EmailPage() {
     try {
       setLoading(true);
       const res = await api.post("/api/email/generate", {
-        subject,
-        details,
+        subject: subject || undefined,
+        prompt: details,
       });
       setResult(res.data.output || "");
     } catch (e: any) {

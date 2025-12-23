@@ -50,8 +50,8 @@ export default function ContentPage() {
     try {
       setLoading(true);
       const res = await api.post("/api/content/generate", {
-        title,
-        details,
+        title: title || undefined,
+        prompt: details,
       });
       setResult(res.data.output || "");
     } catch (e: any) {

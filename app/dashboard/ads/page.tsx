@@ -64,6 +64,7 @@ export default function AdsPage() {
         objective,
         product,
         audience,
+        prompt: `Generate ad copy for ${platform} with objective ${objective}. Product: ${product}. Audience: ${audience}.`,
       });
       setResult(res.data.output || "");
     } catch (e: any) {
