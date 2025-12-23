@@ -1,11 +1,14 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
+/* =========================
+   CONTENT PAGE
+   ========================= */
 export default function ContentPage() {
   const router = useRouter();
 
@@ -19,8 +22,6 @@ export default function ContentPage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
@@ -31,10 +32,8 @@ export default function ContentPage() {
     api
       .get("/api/auth/me")
       .then((res) => {
-        if (res.data?.name)
-          setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription)
-          setSubscriptionPlan(res.data.subscription);
+        if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
@@ -46,227 +45,223 @@ export default function ContentPage() {
     setError("");
     setResult("");
 
-    const token = localStorage.getItem("autopilot_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     if (!details.trim()) {
-      setError("Write what you want to create first.");
+      setError("Tell me what kind of content you’d like to create first! 😊");
       return;
     }
 
     try {
       setLoading(true);
-
-      const res = await api.post("/api/content/generate", {
-        title,
-        details,
-      });
-
+      const res = await api.post("/api/content/generate", { title, details });
       setResult(res.data.output || "");
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Something went wrong.");
+      setError(e?.response?.data?.detail || "Oops, something went wrong. Try again!");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-white text-black">
+  const quickTemplates = [
+    {
+      label: "Instagram Caption",
+      text: "Short Instagram caption for my product. Confident tone, highlight benefits, strong CTA.",
+    },
+    {
+      label: "LinkedIn Post",
+      text: "Professional LinkedIn post sharing a win or insight. Thought-leadership style, engaging question at the end.",
+    },
+    {
+      label: "Twitter Thread",
+      text: "Engaging Twitter thread (3-5 tweets) on a topic I know well. Hook first, value in the middle, CTA at the end.",
+    },
+    {
+      label: "Product Description",
+      text: "Compelling product description that sells benefits, not just features. Persuasive and clear.",
+    },
+    {
+      label: "YouTube Script Intro",
+      text: "Energetic YouTube video intro script that hooks viewers in the first 10 seconds.",
+    },
+  ];
 
-      {/* 🌟 Same Universal Navbar */}
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-white to-gray-50 text-black">
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-      {/* MAIN */}
-      <div className="px-6 md:px-16 py-12 max-w-7xl mx-auto">
-
-        {/* HEADER */}
-        <div>
-          <h1 className="text-4xl font-bold">
-            Content Generator<span className="text-amber-500">.</span>
-          </h1>
-
-          <p className="text-gray-600 mt-2 text-lg">
-            Posts, captions, scripts, descriptions — written in seconds.
-          </p>
-
-          {subscriptionPlan && (
-            <p className="mt-1 text-xs text-gray-500">
-              Plan:{" "}
-              <span className="capitalize font-medium">
-                {subscriptionPlan}
-              </span>
-            </p>
-          )}
-        </div>
-
-        {/* GENERATION AREA */}
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+        {/* Header */}
         <motion.section
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,2.2fr),minmax(280px,1fr)] max-w-6xl"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
         >
-          {/* LEFT PANEL */}
-          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">
-                  Step 1 · Define the content
-                </p>
-                <h3 className="text-xl font-semibold mt-1">
-                  What do you want to create?
-                </h3>
-              </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
+            Content Generator ✨
+          </h1>
+          <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
+            Posts, captions, threads, scripts — let AI write it for you in seconds.
+          </p>
+        </motion.section>
 
-              <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+        {/* Main Grid */}
+        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-16">
+          {/* Input Area */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="bg-white rounded-3xl shadow-lg border border-gray-100 p-10"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-lg font-medium text-gray-700">What would you like to create today?</p>
+              </div>
+              <span className="px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                 AI Writing
               </span>
             </div>
 
-            {/* TITLE */}
+            {/* Title (optional) */}
             <div className="mb-6">
-              <label className="text-sm uppercase tracking-wide text-gray-500">
-                Title (optional)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title or topic (optional)
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Instagram caption for my MMA mouthguard brand"
-                className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="e.g. Instagram caption for my coffee brand"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 transition"
               />
             </div>
 
-            {/* DETAILS */}
-            <div className="mb-5">
-              <label className="text-sm uppercase tracking-wide text-gray-500">
-                Content details
+            {/* Details */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Describe what you need
               </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                rows={7}
-                placeholder="Explain what you want. Platform? Tone? Audience? Length? Key points? Example: ‘Short Instagram caption selling custom MMA mouthguards, confident tone, mention protection + style, CTA to DM’"
-                className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none text-[15px]"
+                rows={8}
+                placeholder="Platform? Tone? Length? Audience? Key points? The more you tell me, the better it gets! 😊"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 resize-none transition text-base"
               />
             </div>
 
-            {/* QUICK TEMPLATES */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Chip
-                label="Instagram caption"
-                onClick={() =>
-                  setDetails(
-                    "Instagram caption promoting custom MMA mouthguards. Confident tone, benefit-focused, short but punchy, with a strong CTA to DM for orders."
-                  )
-                }
-              />
-
-              <Chip
-                label="Product description"
-                onClick={() =>
-                  setDetails(
-                    "Short but powerful product description for custom MMA mouthguards. Emphasize protection, comfort, premium feel, and why it's better than cheap alternatives."
-                  )
-                }
-              />
-
-              <Chip
-                label="YouTube script"
-                onClick={() =>
-                  setDetails(
-                    "Short YouTube script about the importance of mouthguards in combat sports, speaking to fighters in a motivational and direct tone."
-                  )
-                }
-              />
+            {/* Quick Templates */}
+            <div className="mb-8">
+              <p className="text-sm font-medium text-gray-700 mb-4">Quick starters</p>
+              <div className="flex flex-wrap gap-3">
+                {quickTemplates.map((template) => (
+                  <button
+                    key={template.label}
+                    onClick={() => setDetails(template.text)}
+                    className="px-5 py-3 rounded-full bg-gray-100 text-gray-800 hover:bg-amber-100 hover:text-amber-900 transition font-medium text-sm"
+                  >
+                    {template.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* BUTTON + ERROR */}
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="mt-2 px-7 py-3 rounded-full bg-black text-white hover:bg-gray-900 transition disabled:opacity-60"
-            >
-              {loading ? "Generating…" : "Generate Content"}
-            </button>
+            {/* Generate Button + Error */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="px-10 py-5 bg-black text-white rounded-full font-bold text-lg hover:bg-gray-800 transition shadow-lg disabled:opacity-60"
+              >
+                {loading ? "Generating magic…" : "Generate Content ✨"}
+              </button>
 
-            {error && (
-              <p className="mt-4 text-sm text-red-500">{error}</p>
-            )}
+              {error && <p className="text-red-500 ml-4">{error}</p>}
+            </div>
 
-            <p className="mt-3 text-xs text-gray-500">
-              Everything you create is automatically saved in{" "}
-              <span className="font-medium">My Work</span>.
+            <p className="mt-6 text-sm text-gray-500">
+              Everything you generate is automatically saved in <span className="font-medium">My Work</span>.
             </p>
-          </div>
+          </motion.div>
 
-          {/* RIGHT SIDEBAR INFO */}
-          <div className="space-y-4">
-            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <h4 className="text-sm font-semibold mb-2">Tips for better results</h4>
-              <ul className="text-sm text-gray-700 space-y-2">
-                <li>• Say what the content is for</li>
-                <li>• Mention tone (casual, funny, luxury, aggressive)</li>
-                <li>• Add target audience</li>
-                <li>• Include CTA if needed</li>
+          {/* Tips Sidebar */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="space-y-8"
+          >
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-8 shadow-lg border border-amber-100">
+              <h4 className="text-xl font-bold text-gray-900 mb-4">✨ Tips for amazing results</h4>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🎯</span>
+                  <span>Be specific about platform & tone</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">👥</span>
+                  <span>Mention your target audience</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <span>Include key points or examples</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">📣</span>
+                  <span>Add a clear call-to-action if needed</span>
+                </li>
               </ul>
             </div>
 
-            <div className="rounded-3xl border border-amber-100 bg-amber-50 p-6">
-              <h4 className="text-sm font-semibold mb-1 text-amber-800">
-                Fastest workflow
-              </h4>
-              <p className="text-sm text-amber-800">
-                Use quick templates, tweak them slightly, generate, then refine.
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-3">🚀 Pro tip</h4>
+              <p className="text-gray-700">
+                Start with a quick template, tweak it a little, then generate — fastest way to great content!
               </p>
             </div>
-          </div>
-        </motion.section>
+          </motion.div>
+        </section>
 
-        {/* RESULT */}
+        {/* Result */}
         {result && (
           <motion.section
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-12 max-w-6xl pb-24"
+            transition={{ duration: 0.8 }}
+            className="mb-24"
           >
-            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 shadow-sm">
-              <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl shadow-xl p-12 border border-amber-200">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-amber-600">
-                    Step 2 · Review & use
-                  </p>
-                  <h3 className="text-xl font-semibold">Generated Content</h3>
+                  <p className="text-lg font-medium text-amber-800 mb-2">Here’s your content 🎉</p>
+                  <h3 className="text-3xl font-bold text-gray-900">Ready to post or edit</h3>
                 </div>
-
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-4 py-2 rounded-full border border-amber-300 hover:bg-amber-100 transition text-sm"
+                  className="px-8 py-4 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition shadow-lg"
                 >
-                  Copy content
+                  Copy to Clipboard
                 </button>
               </div>
 
-              <pre className="whitespace-pre-wrap text-gray-900 leading-relaxed text-[15px]">
-                {result}
-              </pre>
+              <div className="bg-white rounded-2xl p-10 shadow-inner">
+                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-lg font-medium">
+                  {result}
+                </pre>
+              </div>
             </div>
           </motion.section>
         )}
-      </div>
-    </div>
-  );
-}
 
-/* COMPONENTS */
-function Chip({ label, onClick }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-3 py-1.5 rounded-full border border-gray-300 text-xs text-gray-700 hover:border-amber-400 hover:text-amber-700 transition"
-    >
-      {label}
-    </button>
+        {/* Contact Footer */}
+        <footer className="text-center py-12 border-t border-gray-200">
+          <p className="text-gray-600">
+            Need help or have ideas? Email us at{" "}
+            <a href="mailto:contact@autopilotai.dev" className="font-medium text-black hover:underline">
+              contact@autopilotai.dev
+            </a>
+          </p>
+        </footer>
+      </main>
+    </div>
   );
 }

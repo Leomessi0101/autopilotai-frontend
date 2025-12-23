@@ -39,10 +39,8 @@ export default function AdsPage() {
     api
       .get("/api/auth/me")
       .then((res) => {
-        if (res.data?.name)
-          setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription)
-          setSubscriptionPlan(res.data.subscription);
+        if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
@@ -54,301 +52,224 @@ export default function AdsPage() {
     setError("");
     setResult("");
 
-    const token = localStorage.getItem("autopilot_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     if (!product.trim() || !audience.trim()) {
-      setError("Fill in product + audience.");
+      setError("Fill in your product and audience to get started! 😊");
       return;
     }
 
     try {
       setLoading(true);
-
       const res = await api.post("/api/ads/generate", {
         platform,
         objective,
         product,
         audience,
       });
-
       setResult(res.data.output || "");
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Something went wrong.");
+      setError(e?.response?.data?.detail || "Oops, something went wrong. Try again!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
-
-      {/* 🌟 GLOBAL DASHBOARD NAV */}
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-white to-gray-50 text-black">
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-      <div className="px-6 md:px-16 py-12 max-w-7xl mx-auto">
-
-        {/* HEADER */}
-        <div>
-          <h1 className="text-4xl font-bold">
-            Ad Generator<span className="text-amber-500">.</span>
-          </h1>
-
-          <p className="text-gray-600 mt-2 text-lg">
-            High-converting ad copy: hooks, angles, CTAs — tailored to your offer.
-          </p>
-
-          {subscriptionPlan && (
-            <p className="mt-1 text-xs text-gray-500">
-              Plan:{" "}
-              <span className="capitalize font-medium">
-                {subscriptionPlan}
-              </span>
-            </p>
-          )}
-        </div>
-
-        {/* GENERATION AREA */}
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+        {/* Header */}
         <motion.section
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,2.2fr),minmax(280px,1fr)] max-w-6xl"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
         >
-          {/* LEFT MAIN PANEL */}
-          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">
-                  Step 1 · Define the campaign
-                </p>
-                <h3 className="text-xl font-semibold mt-1">
-                  What are we trying to achieve?
-                </h3>
-              </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
+            Ad Generator 📈
+          </h1>
+          <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
+            High-converting ad copy, hooks, and angles — tailored for your platform and goal.
+          </p>
+        </motion.section>
 
-              <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+        {/* Main Grid */}
+        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-16">
+          {/* Input Area */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="bg-white rounded-3xl shadow-lg border border-gray-100 p-10"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-lg font-medium text-gray-700">Let’s build your next winning ad</p>
+              </div>
+              <span className="px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                 Paid Ads
               </span>
             </div>
 
-            {/* PLATFORM */}
-            <Section label="Platform">
-              <div className="flex gap-2 flex-wrap">
+            {/* Platform */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Platform</label>
+              <div className="flex flex-wrap gap-3">
                 {PLATFORMS.map((p) => (
                   <button
                     key={p.key}
                     onClick={() => setPlatform(p.key)}
-                    className={`px-4 py-2 rounded-full border text-sm transition ${
+                    className={`px-6 py-3 rounded-full font-medium transition ${
                       platform === p.key
-                        ? "bg-amber-500 border-amber-500 text-white"
-                        : "border-gray-300 text-gray-700 hover:border-amber-400"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-amber-100 hover:text-amber-900"
                     }`}
                   >
                     {p.label}
                   </button>
                 ))}
               </div>
-            </Section>
+            </div>
 
-            {/* OBJECTIVE */}
-            <Section label="Objective">
-              <div className="flex gap-2 flex-wrap">
+            {/* Objective */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Goal</label>
+              <div className="flex flex-wrap gap-3">
                 {OBJECTIVES.map((o) => (
                   <button
                     key={o}
                     onClick={() => setObjective(o)}
-                    className={`px-4 py-2 rounded-full border text-sm transition ${
+                    className={`px-6 py-3 rounded-full font-medium transition ${
                       objective === o
-                        ? "bg-black text-white border-black"
-                        : "border-gray-300 text-gray-700 hover:border-amber-400"
+                        ? "bg-amber-500 text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-amber-100 hover:text-amber-900"
                     }`}
                   >
                     {o}
                   </button>
                 ))}
               </div>
-            </Section>
+            </div>
 
-            {/* PRODUCT */}
-            <Input
-              label="What are you selling?"
-              value={product}
-              onChange={setProduct}
-              placeholder="e.g. Custom MMA mouthguards — $60 premium protection"
-            />
-
-            {/* AUDIENCE */}
-            <Input
-              label="Who is this for?"
-              value={audience}
-              onChange={setAudience}
-              placeholder="e.g. Amateur & pro fighters, 18–35, train at combat gyms"
-            />
-
-            {/* QUICK PRESETS */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Chip
-                label="Direct response"
-                onClick={() =>
-                  setProduct(
-                    "Custom MMA mouthguards with pro level protection and custom designs for serious fighters."
-                  )
-                }
-              />
-              <Chip
-                label="Brand angle"
-                onClick={() =>
-                  setAudience(
-                    "Combat sports fans who care about look + performance, active on Instagram and TikTok."
-                  )
-                }
-              />
-              <Chip
-                label="High ticket"
-                onClick={() =>
-                  setProduct(
-                    "Done-for-you custom mouthguard packages for gyms — design + branding included."
-                  )
-                }
+            {/* Product */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">What are you promoting?</label>
+              <input
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="e.g. Custom MMA mouthguards with pro-level protection"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 transition"
               />
             </div>
 
-            {/* BUTTON */}
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="mt-2 px-7 py-3 rounded-full bg-black text-white hover:bg-gray-900 transition disabled:opacity-60"
-            >
-              {loading ? "Generating…" : "Generate Ad Copy"}
-            </button>
+            {/* Audience */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Who is your target audience?</label>
+              <input
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                placeholder="e.g. Fighters aged 18–35 who train at combat gyms"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-amber-200 transition"
+              />
+            </div>
 
-            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+            {/* Generate Button + Error */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="px-10 py-5 bg-black text-white rounded-full font-bold text-lg hover:bg-gray-800 transition shadow-lg disabled:opacity-60"
+              >
+                {loading ? "Creating your ad…" : "Generate Ad Copy 🚀"}
+              </button>
 
-            <p className="mt-3 text-xs text-gray-500">
-              Generated ads are automatically saved in{" "}
-              <span className="font-medium">My Work</span>.
+              {error && <p className="text-red-500 ml-4">{error}</p>}
+            </div>
+
+            <p className="mt-6 text-sm text-gray-500">
+              All generated ads are saved in <span className="font-medium">My Work</span>.
             </p>
-          </div>
+          </motion.div>
 
-          {/* RIGHT KNOWLEDGE PANEL */}
-          <div className="space-y-4">
-            <InfoPanel
-              title="Make your ads stronger"
-              bullets={[
-                "Say your main benefit clearly",
-                "Mention who you want clicking",
-                "Add pricing if relevant",
-                "Choose urgency OR brand tone — not both",
-              ]}
-            />
+          {/* Tips Sidebar */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="space-y-8"
+          >
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-8 shadow-lg border border-amber-100">
+              <h4 className="text-xl font-bold text-gray-900 mb-4">✨ Tips for winning ads</h4>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🎯</span>
+                  <span>Lead with a strong benefit</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">👀</span>
+                  <span>Hook in the first 3 seconds</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">💬</span>
+                  <span>One clear call-to-action</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🔥</span>
+                  <span>Test multiple angles</span>
+                </li>
+              </ul>
+            </div>
 
-            <TipPanel
-              title="Performance tip"
-              text="Test 3–5 angles, not one. Use variations and let the platform choose winners."
-            />
-          </div>
-        </motion.section>
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-3">⚡ Pro tip</h4>
+              <p className="text-gray-700">
+                Great ads feel personal — be specific about who it’s for and what they get.
+              </p>
+            </div>
+          </motion.div>
+        </section>
 
-        {/* RESULT */}
+        {/* Result */}
         {result && (
           <motion.section
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-12 max-w-6xl pb-24"
+            transition={{ duration: 0.8 }}
+            className="mb-24"
           >
-            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 shadow-sm">
-              <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl shadow-xl p-12 border border-amber-200">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-amber-600">
-                    Step 2 · Review & launch
-                  </p>
-                  <h3 className="text-xl font-semibold">
-                    Generated Ad Copy
-                    <span className="text-amber-600"> · {platform}</span>
-                  </h3>
+                  <p className="text-lg font-medium text-amber-800 mb-2">Your ad copy is ready! 📢</p>
+                  <h3 className="text-3xl font-bold text-gray-900">Time to launch</h3>
                 </div>
-
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-4 py-2 rounded-full border border-amber-300 hover:bg-amber-100 transition text-sm"
+                  className="px-8 py-4 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition shadow-lg"
                 >
-                  Copy ad
+                  Copy Ad Copy
                 </button>
               </div>
 
-              <pre className="whitespace-pre-wrap text-gray-900 leading-relaxed text-[15px]">
-                {result}
-              </pre>
+              <div className="bg-white rounded-2xl p-10 shadow-inner">
+                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-lg font-medium">
+                  {result}
+                </pre>
+              </div>
             </div>
           </motion.section>
         )}
-      </div>
-    </div>
-  );
-}
 
-/* COMPONENTS */
-function Section({ label, children }: any) {
-  return (
-    <div className="mb-6">
-      <p className="text-sm uppercase tracking-wide text-gray-500 mb-3">
-        {label}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function Input({ label, value, onChange, placeholder }: any) {
-  return (
-    <div className="mb-6">
-      <label className="text-sm uppercase tracking-wide text-gray-500">
-        {label}
-      </label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full mt-3 p-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
-      />
-    </div>
-  );
-}
-
-function Chip({ label, onClick }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-3 py-1.5 rounded-full border border-gray-300 text-xs text-gray-700 hover:border-amber-400 hover:text-amber-700 transition"
-    >
-      {label}
-    </button>
-  );
-}
-
-function InfoPanel({ title, bullets }: any) {
-  return (
-    <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
-      <h4 className="text-sm font-semibold mb-2">{title}</h4>
-      <ul className="text-sm text-gray-700 space-y-2">
-        {bullets.map((b: string, i: number) => (
-          <li key={i}>• {b}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function TipPanel({ title, text }: any) {
-  return (
-    <div className="rounded-3xl border border-amber-100 bg-amber-50 p-6">
-      <h4 className="text-sm font-semibold mb-1 text-amber-800">
-        {title}
-      </h4>
-      <p className="text-sm text-amber-800">{text}</p>
+        {/* Contact Footer */}
+        <footer className="text-center py-12 border-t border-gray-200">
+          <p className="text-gray-600">
+            Need help or have ideas? Email us at{" "}
+            <a href="mailto:contact@autopilotai.dev" className="font-medium text-black hover:underline">
+              contact@autopilotai.dev
+            </a>
+          </p>
+        </footer>
+      </main>
     </div>
   );
 }
