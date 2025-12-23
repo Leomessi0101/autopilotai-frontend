@@ -6,10 +6,16 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export default function DashboardNavbar({
   name = "U",
-  subscriptionPlan = "Free",
-}: { name?: string; subscriptionPlan?: string }) {
+  subscriptionPlan,
+}: {
+  name?: string;
+  subscriptionPlan?: string | null;
+}) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Convert null to undefined to satisfy TypeScript
+  const plan = subscriptionPlan ?? undefined;
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200">
@@ -44,7 +50,7 @@ export default function DashboardNavbar({
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
           name={name}
-          subscriptionPlan={subscriptionPlan}
+          subscriptionPlan={plan}
           router={router}
         />
       </div>
@@ -76,7 +82,7 @@ function AvatarMenu({
   open: boolean;
   onClose: () => void;
   name: string;
-  subscriptionPlan: string | null;
+  subscriptionPlan?: string;
   router: any;
 }) {
   return (
