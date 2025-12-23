@@ -59,12 +59,15 @@ export default function AdsPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/api/ads/generate", {
+
+      const payload = {
         platform,
         objective,
-        product,
-        audience,
-      });
+        product: product.trim(),
+        audience: audience.trim(),
+      };
+
+      const res = await api.post("/api/ads/generate", payload);
       setResult(res.data.output || "");
     } catch (e: any) {
       setError(e?.response?.data?.detail || "Something went wrong. Please try again.");

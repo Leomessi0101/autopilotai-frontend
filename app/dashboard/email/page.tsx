@@ -49,7 +49,16 @@ export default function EmailPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/api/email/generate", { subject, details });
+
+      const payload: { subject?: string; details: string } = {
+        details: details.trim(),
+      };
+
+      if (subject.trim()) {
+        payload.subject = subject.trim();
+      }
+
+      const res = await api.post("/api/email/generate", payload);
       setResult(res.data.output || "");
     } catch (e: any) {
       setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
