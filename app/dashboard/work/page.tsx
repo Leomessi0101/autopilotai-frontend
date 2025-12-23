@@ -123,7 +123,7 @@ export default function MyWorkPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="space-y-8 pb-32"
+            className="space-y-6 pb-32"
           >
             {filtered.map((item) => (
               <WorkRow key={item.id} item={item} onOpen={() => setSelected(item)} />
@@ -150,13 +150,11 @@ export default function MyWorkPage() {
   );
 }
 
-/* Work Row — Improved Preview */
+/* Work Row — Compact & Clean Preview */
 function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
-  // Shorten long results for preview
-  const previewText = item.result.trim();
-  const shortPreview = previewText.length > 280 
-    ? previewText.slice(0, 280).split("\n").slice(0, 4).join("\n") + "…"
-    : previewText.split("\n").slice(0, 4).join("\n");
+  // Very short preview: first 120 characters + first line
+  const firstLine = item.result.split("\n")[0].trim();
+  const shortPreview = firstLine.length > 120 ? firstLine.slice(0, 120) + "…" : firstLine;
 
   return (
     <motion.div
@@ -164,34 +162,31 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 hover:border-blue-900 hover:shadow-md transition cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:border-blue-900 hover:shadow-md transition cursor-pointer group"
       onClick={onOpen}
     >
-      <div className="flex items-start justify-between gap-10">
+      <div className="flex items-center justify-between gap-8">
         <div className="flex-1">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-2">
             <span className="text-sm font-medium text-teal-600 uppercase tracking-wide">
               {labelForType(item.content_type)}
             </span>
             {item.created_at && (
-              <span className="text-sm text-gray-500">
+              <span className="text-xs text-gray-500">
                 {new Date(item.created_at).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
                 })}
               </span>
             )}
           </div>
-
-          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-            {shortPreview}
+          <p className="text-gray-800 text-base line-clamp-1">
+            {shortPreview || "(empty)"}
           </p>
         </div>
 
-        <span className="text-sm text-gray-500 group-hover:text-blue-900 transition mt-1">
-          View full →
+        <span className="text-sm text-gray-500 group-hover:text-blue-900 transition">
+          View →
         </span>
       </div>
     </motion.div>
