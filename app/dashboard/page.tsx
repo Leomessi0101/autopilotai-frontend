@@ -10,33 +10,33 @@ import DashboardNavbar from "@/components/DashboardNavbar";
    QUOTES & DAILY FOCUS
    ========================= */
 const QUOTES = [
-  { text: "The work you do while you procrastinate is probably the work you should be doing for the rest of your life.", author: "Jessica Hische" },
-  { text: "Momentum is a cruel mistress. Once you have it, she makes everything easy. Until then, she makes you earn every inch.", author: "AutopilotAI" },
-  { text: "The most dangerous distraction is the one that feels like progress.", author: "James Clear" },
-  { text: "Stop thinking about building an audience. Start thinking about serving one.", author: "AutopilotAI" },
-  { text: "Your next level requires a version of you that doesn’t exist yet. Build her.", author: "AutopilotAI" },
+  { text: "Small daily improvements are the key to staggering long-term results.", author: "James Clear" },
+  { text: "The magic you’re looking for is in the work you’re avoiding.", author: "Unknown" },
+  { text: "Consistency beats intensity every single time.", author: "AutopilotAI" },
+  { text: "Done is better than perfect.", author: "Sheryl Sandberg" },
+  { text: "You don’t need more time. You need more focus.", author: "AutopilotAI" },
 ];
 
 const AI_DAILY_FOCUS = [
   {
-    title: "Ignite Momentum",
-    subtitle: "One action today that your future self will thank you for",
-    tasks: ["Ship one piece of content no matter what", "Message one person who could change everything", "Decide on the next move and take the first step"],
+    title: "Show Up Boldly",
+    subtitle: "Make your presence felt today",
+    tasks: ["Drop one value-packed post", "Reply to recent messages with personality", "Share something real behind the scenes"],
   },
   {
-    title: "Sharpen Your Edge",
-    subtitle: "Small refinements that compound into massive advantage",
-    tasks: ["Cut one thing that’s draining energy", "Strengthen your core message", "Upgrade one tool or template"],
+    title: "Nurture Your Leads",
+    subtitle: "Turn conversations into connections",
+    tasks: ["Follow up with 3 warm contacts", "Send one thoughtful outreach", "Refine your main offer line"],
   },
   {
-    title: "Own the Conversation",
-    subtitle: "Be the signal in a world full of noise",
-    tasks: ["Say the thing others are afraid to say", "Create content that polarizes the right people", "Double down on what’s already working"],
+    title: "Create Momentum",
+    subtitle: "Build content that compounds",
+    tasks: ["Plan tomorrow’s post now", "Repurpose one strong piece", "Brainstorm 5 fresh hooks"],
   },
   {
-    title: "Protect Your Energy",
-    subtitle: "Ruthless focus on what actually moves the needle",
-    tasks: ["Say no to one low-leverage request", "Batch tomorrow’s distractions", "End the day with a win"],
+    title: "Stay Sharp",
+    subtitle: "Keep your messaging on point",
+    tasks: ["Review your last 3 posts for tone", "Update one email template", "Clarify your core promise"],
   },
 ];
 
@@ -49,9 +49,9 @@ function getDailyItem<T>(list: T[]) {
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return "Rise & conquer";
-  if (hour < 18) return "Keep pushing";
-  return "Finish strong";
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function DashboardPage() {
@@ -102,177 +102,198 @@ export default function DashboardPage() {
   const remaining = used !== null && limit !== null ? Math.max(0, limit - used) : null;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-white to-gray-50 text-black">
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-20">
-        {/* HERO – DARK, INTENSE, MOTIVATIONAL */}
-        <section className="mb-32 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-7xl md:text-9xl font-black tracking-tighter uppercase"
-          >
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+        {/* Friendly Greeting */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
             {greeting}
-            {fullName ? `, ${fullName}` : ""}.
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 1 }}
-            className="mt-8 text-2xl md:text-3xl text-gray-400 font-light tracking-wide"
-          >
-            Most people won’t do the work. You will.
-          </motion.p>
-        </section>
+            {fullName ? `, ${fullName}! 👋` : "!"}
+          </h1>
+          <p className="mt-6 text-xl md:text-2xl text-gray-600">
+            Ready to create something great today?
+          </p>
+        </motion.section>
 
-        {/* USAGE – BRUTALIST BAR */}
+        {/* Usage Card – Soft & Friendly */}
         {limit !== null && (
-          <section className="mb-32">
-            <motion.div
-              initial={{ opacity: 0, scaleX: 0 }}
-              animate={{ opacity: 1, scaleX: 1 }}
-              transition={{ duration: 1.2, delay: 0.8 }}
-              className="bg-gray-900 p-12 rounded-none border-4 border-white"
-            >
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mb-16"
+          >
+            <div className="bg-white rounded-3xl shadow-lg p-10 border border-gray-100">
               <div className="text-center">
-                <p className="text-sm uppercase tracking-widest text-gray-500 mb-4">Power Used This Month</p>
-                <p className="text-6xl font-black mb-10">
-                  {usageLoading ? "––" : limit === null ? "UNLIMITED" : `${used ?? 0}/${limit}`}
+                <p className="text-lg font-medium text-gray-600 mb-2">Your Generations This Month</p>
+                <p className="text-4xl font-bold text-gray-900 mb-6">
+                  {usageLoading ? "…" : limit === null ? "Unlimited 🎉" : `${used ?? 0} / ${limit}`}
                 </p>
                 {limit !== null && (
-                  <div className="h-16 bg-gray-800 relative overflow-hidden">
-                    <motion.div
-                      initial={{ x: "-100%" }}
-                      animate={{ x: 0 }}
-                      transition={{ duration: 2, ease: "easeOut" }}
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                  <>
+                    <div className="h-12 bg-gray-100 rounded-full overflow-hidden relative mb-4">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 1.4, ease: "easeOut" }}
+                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-amber-400 to-amber-600"
+                      />
+                    </div>
+                    <p className="text-gray-600">
+                      {remaining !== null ? `${remaining} left — keep going!` : "No limits on your plan"}
+                    </p>
+                  </>
                 )}
-                <p className="mt-6 text-gray-400">
-                  {remaining !== null ? `${remaining} generations left` : "No limits. Full power."}
-                </p>
               </div>
-            </motion.div>
-          </section>
+            </div>
+          </motion.section>
         )}
 
-        {/* ACTION GRID – HIGH IMPACT */}
-        <section className="mb-32">
+        {/* Quick Actions – Playful Cards */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">
+            What would you like to create? ✨
+          </h2>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <ImpactCard
+            <PlayfulCard
               title="Generate Content"
-              description="Create what gets attention"
+              description="Fresh posts, hooks & ideas"
+              emoji="🚀"
               href="/dashboard/content"
-              color="from-amber-500 to-orange-600"
+              color="from-amber-400 to-orange-500"
             />
-            <ImpactCard
-              title="Write Emails"
-              description="Close more, faster"
+            <PlayfulCard
+              title="Write Emails & Replies"
+              description="Smart, human-sounding messages"
+              emoji="💌"
               href="/dashboard/email"
-              color="from-purple-600 to-pink-600"
+              color="from-purple-400 to-pink-500"
             />
-            <ImpactCard
+            <PlayfulCard
               title="Create Ads"
-              description="Launch campaigns that convert"
+              description="Winning copy for any platform"
+              emoji="📈"
               href="/dashboard/ads"
-              color="from-cyan-500 to-blue-600"
+              color="from-blue-400 to-cyan-500"
             />
-            <ImpactCard
+            <PlayfulCard
               title="My Work"
-              description="Everything you've built"
+              description="All your creations in one place"
+              emoji="📂"
               href="/dashboard/work"
-              color="from-gray-600 to-gray-800"
+              color="from-green-400 to-emerald-500"
             />
           </div>
         </section>
 
-        {/* DAILY FOCUS – BRUTAL TRUTH */}
-        <section className="mb-32">
+        {/* Daily Focus – Warm & Encouraging */}
+        <section className="mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 60 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="bg-gradient-to-r from-red-600 to-amber-600 p-16 text-center rounded-none"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-3xl p-10 shadow-lg"
           >
-            <p className="text-sm uppercase tracking-widest text-white/80 mb-4">Today’s Hard Truth</p>
-            <h2 className="text-5xl md:text-6xl font-black text-white mb-8">{focus.title}</h2>
-            <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto">{focus.subtitle}</p>
-            <div className="space-y-6 max-w-2xl mx-auto">
-              {focus.tasks.map((task, i) => (
-                <p key={i} className="text-2xl font-bold text-white">{task}</p>
-              ))}
+            <div className="flex items-center gap-4 mb-6">
+              <span className="text-5xl">☀️</span>
+              <div>
+                <p className="text-lg font-medium text-gray-700">Your Focus Today</p>
+                <h3 className="text-3xl font-bold text-gray-900">{focus.title}</h3>
+              </div>
             </div>
+            <p className="text-xl text-gray-700 mb-8 ml-16">{focus.subtitle}</p>
+            <ul className="space-y-4 ml-16">
+              {focus.tasks.map((task, i) => (
+                <li key={i} className="flex items-start gap-4 text-gray-800">
+                  <span className="text-2xl mt-1">✓</span>
+                  <span className="text-lg">{task}</span>
+                </li>
+              ))}
+            </ul>
           </motion.div>
         </section>
 
-        {/* PLAN UPGRADE – NO EXCUSES */}
-        <section className="mb-32 text-center">
+        {/* Plan Card – Friendly Upsell */}
+        <section className="mb-16 text-center">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="bg-white text-black p-16"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="bg-white rounded-3xl shadow-xl p-12 border border-gray-200 inline-block"
           >
-            <p className="text-sm uppercase tracking-widest text-gray-600 mb-4">Current Level</p>
-            <h3 className="text-6xl font-black mb-6">
+            <p className="text-lg font-medium text-gray-600 mb-2">Current Plan</p>
+            <h3 className="text-4xl font-bold text-gray-900 mb-4">
               {subscriptionPlan
                 ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)
                 : "Free"}
             </h3>
-            <p className="text-2xl text-gray-700 mb-10 max-w-2xl mx-auto">
-              Good is the enemy of great. Remove the limits.
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Unlock unlimited generations and priority processing when you upgrade.
             </p>
             <button
               onClick={() => router.push("/pricing")}
-              className="px-20 py-6 bg-black text-white text-xl font-bold uppercase tracking-wider hover:bg-gray-800 transition"
+              className="px-10 py-4 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition shadow-lg"
             >
-              Level Up Now
+              Explore Plans
             </button>
           </motion.div>
         </section>
 
-        {/* FINAL QUOTE – FULL BLEED */}
-        <section className="py-32 bg-black text-center border-t-8 border-amber-500">
+        {/* Inspirational Quote */}
+        <section className="py-20 text-center">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
-            className="text-4xl md:text-6xl font-light italic text-gray-300 max-w-5xl mx-auto leading-relaxed"
+            transition={{ duration: 1.2, delay: 0.6 }}
+            className="text-3xl md:text-4xl font-medium italic text-gray-700 max-w-4xl mx-auto leading-relaxed"
           >
             “{quote.text}”
           </motion.p>
-          <p className="mt-10 text-2xl text-amber-500 font-medium">
+          <p className="mt-6 text-xl text-amber-600 font-medium">
             — {quote.author}
           </p>
         </section>
+
+        {/* Contact Footer */}
+        <footer className="text-center py-12 border-t border-gray-200">
+          <p className="text-gray-600">
+            Need help? We&apos;re here — email us at{" "}
+            <a href="mailto:contact@autopilotai.dev" className="font-medium text-black hover:underline">
+              contact@autopilotai.dev
+            </a>
+          </p>
+        </footer>
       </main>
     </div>
   );
 }
 
-/* HIGH-IMPACT ACTION CARD */
-function ImpactCard({ title, description, href, color }: { title: string; description: string; href: string; color: string }) {
+/* PLAYFUL ACTION CARD */
+function PlayfulCard({ title, description, emoji, href, color }: { title: string; description: string; emoji: string; href: string; color: string }) {
   const router = useRouter();
 
   return (
     <motion.button
-      whileHover={{ y: -12, scale: 1.05 }}
+      whileHover={{ y: -8, scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => router.push(href)}
-      className={`relative p-12 rounded-none overflow-hidden text-white group`}
+      className="bg-white rounded-3xl shadow-lg p-8 text-left border border-gray-200 hover:border-amber-400 hover:shadow-2xl transition-all group"
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-90 group-hover:opacity-100 transition`} />
-      <div className="relative z-10 text-left">
-        <h3 className="text-3xl font-black mb-4">{title}</h3>
-        <p className="text-lg opacity-90">{description}</p>
-        <span className="mt-8 inline-block text-4xl font-black group-hover:translate-x-6 transition-transform">
-          →
-        </span>
-      </div>
+      <div className="text-6xl mb-6">{emoji}</div>
+      <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition">
+        {title}
+      </h3>
+      <p className="text-gray-600">{description}</p>
+      <span className="mt-6 inline-block text-amber-600 font-medium group-hover:translate-x-2 transition">
+        Go →
+      </span>
     </motion.button>
   );
 }
