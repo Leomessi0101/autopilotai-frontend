@@ -29,12 +29,6 @@ export default function PricingPage() {
     }
   }, []);
 
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("autopilot-theme", next);
-  };
-
   const isDark = theme === "dark";
 
   const handleSubscribe = async (plan: "basic" | "growth" | "pro") => {
@@ -62,229 +56,279 @@ export default function PricingPage() {
         isDark ? "bg-[#0B0B0E] text-white" : "bg-white text-black"
       }`}
     >
-      {/* ⭐ SHARED GLOBAL MARKETING NAVBAR */}
       <MarketingNavbar />
 
       {/* HERO */}
-      <section className="px-8 md:px-20 pt-20 text-center max-w-5xl mx-auto">
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-4xl md:text-6xl font-extrabold"
-        >
-          Simple, Honest
-          <span className="text-amber-500"> Pricing</span>
-        </motion.h1>
+      <section className="pt-28 pb-32 px-6 md:px-10 text-center">
+        <div className="max-w-5xl mx-auto">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: "easeOut" }}
+            className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight"
+          >
+            Simple, transparent pricing
+            <br />
+            <span className="text-amber-600">that scales with you.</span>
+          </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className={`mt-6 text-lg md:text-xl ${
-            isDark ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          No hidden fees. No contracts. Cancel anytime.
-          You stay in control — always.
-        </motion.p>
-      </section>
-
-      {/* PRICING GRID */}
-      <section className="mt-24 px-8 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
-        <PriceCard
-          theme={theme}
-          plan="Basic"
-          price="19"
-          desc="Perfect for individuals & small businesses."
-          features={[
-            "30-day content generator",
-            "Email & reply templates",
-            "Ad & campaign generator",
-            "Save up to 5 projects",
-            "Standard processing speed",
-          ]}
-          current={user?.subscription_plan === "basic"}
-          onChoose={() => handleSubscribe("basic")}
-        />
-
-        <PriceCard
-          theme={theme}
-          plan="Growth"
-          price="49"
-          highlight
-          desc="The best plan for momentum & real growth."
-          features={[
-            "Everything in Basic",
-            "Unlimited generations",
-            "Full history",
-            "Multiple variations per request",
-            "AI scheduling & tips",
-            "Faster processing",
-            "Priority support",
-          ]}
-          current={user?.subscription_plan === "growth"}
-          onChoose={() => handleSubscribe("growth")}
-        />
-
-        <PriceCard
-          theme={theme}
-          plan="Pro"
-          price="99"
-          desc="For serious businesses scaling aggressively."
-          features={[
-            "Everything in Growth",
-            "AI image generation",
-            "Long-form blogs",
-            "Campaign bundles",
-            "Advanced automation",
-            "Highest priority queue",
-          ]}
-          current={user?.subscription_plan === "pro"}
-          onChoose={() => handleSubscribe("pro")}
-        />
-      </section>
-
-      {/* GUARANTEE */}
-      <section className="mt-28 px-8 md:px-12 max-w-4xl mx-auto text-center">
-        <div
-          className={`border rounded-3xl p-10 shadow-xl ${
-            isDark ? "bg-[#0F0F14] border-gray-800" : "bg-white border-gray-200"
-          }`}
-        >
-          <h3 className="text-3xl font-bold">Built For Growth — Not Lock-In</h3>
-          <p
-            className={`mt-3 text-lg ${
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className={`mt-8 text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed ${
               isDark ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Upgrade, downgrade, pause, or cancel anytime.
-            No contracts. No stress.
-          </p>
+            No hidden fees. No long-term contracts. Cancel or change plans anytime.
+          </motion.p>
         </div>
       </section>
 
-      {/* CTA */}
-      {!isLoggedIn && (
-        <div className="text-center mt-24 pb-20 px-6">
-          <h2 className="text-3xl font-bold">
-            Ready to put your business on Autopilot?
-          </h2>
-          <p className={isDark ? "text-gray-400 mt-3" : "text-gray-600 mt-3"}>
-            Join forward-thinking businesses using AI to scale faster.
-          </p>
+      {/* PRICING CARDS */}
+      <section className="px-6 md:px-10 -mt-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+          <PriceCard
+            theme={theme}
+            plan="Basic"
+            price="19"
+            desc="Great for getting started and testing the waters."
+            features={[
+              "Up to 30 AI generations per month",
+              "Core content & ad copy tools",
+              "Email & reply templates",
+              "Basic strategy suggestions",
+              "Standard processing speed",
+              "Email support",
+            ]}
+            current={user?.subscription_plan === "basic"}
+            onChoose={() => handleSubscribe("basic")}
+            isLoggedIn={isLoggedIn}
+          />
 
-          <a
-            href="/register"
-            className={`inline-block mt-8 px-10 py-4 rounded-full text-lg text-white hover:opacity-90 transition shadow-xl ${
-              isDark ? "bg-amber-500 text-black" : "bg-black"
-            }`}
-          >
-            Get Started
-          </a>
+          <PriceCard
+            theme={theme}
+            plan="Growth"
+            price="49"
+            highlight
+            desc="Perfect for creators and businesses ready to scale consistently."
+            features={[
+              "Everything in Basic",
+              "Unlimited generations",
+              "Full history & saved projects",
+              "Multiple variations per request",
+              "Advanced AI scheduling & daily tips",
+              "Faster processing & priority queue",
+              "Priority email support",
+            ]}
+            popular
+            current={user?.subscription_plan === "growth"}
+            onChoose={() => handleSubscribe("growth")}
+            isLoggedIn={isLoggedIn}
+          />
+
+          <PriceCard
+            theme={theme}
+            plan="Pro"
+            price="99"
+            desc="Built for power users and teams scaling aggressively."
+            features={[
+              "Everything in Growth",
+              "AI image generation (coming soon)",
+              "Long-form content (blogs, threads)",
+              "Full campaign bundles & automation",
+              "Advanced analytics & insights",
+              "Highest priority processing",
+              "Dedicated support channel",
+            ]}
+            current={user?.subscription_plan === "pro"}
+            onChoose={() => handleSubscribe("pro")}
+            isLoggedIn={isLoggedIn}
+          />
         </div>
+      </section>
+
+      {/* GUARANTEE + TRUST */}
+      <section className="py-28 px-6 md:px-10 bg-gray-50 dark:bg-gray-900/30">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-10">
+            Built for flexibility, not lock-in
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-16">
+            <div className="p-8">
+              <div className="text-5xl mb-4">🛡️</div>
+              <h3 className="text-xl font-bold">30-Day Money-Back Guarantee</h3>
+              <p className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                Try risk-free. Full refund if it’s not for you.
+              </p>
+            </div>
+            <div className="p-8">
+              <div className="text-5xl mb-4">🔄</div>
+              <h3 className="text-xl font-bold">Change Plans Anytime</h3>
+              <p className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                Upgrade, downgrade, or cancel instantly — no questions asked.
+              </p>
+            </div>
+            <div className="p-8">
+              <div className="text-5xl mb-4">🔒</div>
+              <h3 className="text-xl font-bold">No Long-Term Contracts</h3>
+              <p className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                Month-to-month billing. You’re always in control.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-28 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-16">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="space-y-10">
+            <FaqItem theme={theme} question="Is there a free trial?" answer="Yes — sign up for free and explore all features before choosing a paid plan. No card required." />
+            <FaqItem theme={theme} question="Can I change or cancel my plan?" answer="Absolutely. You can upgrade, downgrade, or cancel directly from your dashboard at any time." />
+            <FaqItem theme={theme} question="What payment methods do you accept?" answer="We accept all major credit cards and debit cards via Stripe — secure and reliable." />
+            <FaqItem theme={theme} question="Is my payment information secure?" answer="Yes. All payments are processed through Stripe with bank-level encryption. We never store your card details." />
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      {!isLoggedIn && (
+        <section className="py-32 px-6 md:px-10 text-center">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl md:text-7xl font-extrabold leading-tight">
+              Ready to run on autopilot?
+            </h2>
+            <p className={`mt-8 text-xl md:text-2xl ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+              Join thousands of creators and businesses already saving hours every week.
+            </p>
+            <div className="mt-12">
+              <a
+                href="/register"
+                className={`inline-block px-16 py-7 font-bold text-2xl rounded-full transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 ${
+                  isDark
+                    ? "bg-amber-500 text-black hover:bg-amber-400"
+                    : "bg-black text-white hover:bg-gray-900"
+                }`}
+              >
+                Start Free Today
+              </a>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* FOOTER */}
-      <footer
-        className={`border-t py-10 text-center ${
-          isDark
-            ? "border-gray-800 text-gray-500"
-            : "border-gray-200 text-gray-500"
-        }`}
-      >
-        © 2025 AutopilotAI. All rights reserved.
+      <footer className={`border-t py-16 text-center ${isDark ? "border-gray-800 text-gray-500" : "border-gray-200 text-gray-500"}`}>
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="mb-8">
+            <a href="/" className="mx-5 hover:text-amber-600 transition font-medium">Home</a>
+            <a href="/features" className="mx-5 hover:text-amber-600 transition font-medium">Features</a>
+            <a href="/pricing" className="mx-5 hover:text-amber-600 transition font-medium">Pricing</a>
+            <a href="/login" className="mx-5 hover:text-amber-600 transition font-medium">Login</a>
+            <a href="mailto:contact@autopilotai.dev" className="mx-5 hover:text-amber-600 transition font-medium">Contact</a>
+          </div>
+          <p className="text-sm">© 2025 AutopilotAI. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
 }
 
-/* ============ COMPONENTS ============ */
+/* COMPONENTS */
 
-function PriceCard({
-  plan,
-  price,
-  desc,
-  features,
-  highlight,
-  onChoose,
-  current,
-  theme,
-}: any) {
+interface PriceCardProps {
+  plan: string;
+  price: string;
+  desc: string;
+  features: string[];
+  highlight?: boolean;
+  popular?: boolean;
+  current: boolean;
+  onChoose: () => void;
+  theme: "light" | "dark";
+  isLoggedIn: boolean;
+}
+
+function PriceCard({ plan, price, desc, features, highlight, popular, current, onChoose, theme, isLoggedIn }: PriceCardProps) {
   const isDark = theme === "dark";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className={`p-10 rounded-3xl text-center shadow-xl border ${
+      className={`relative p-10 md:p-12 rounded-3xl border-2 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-3 ${
         highlight
-          ? "scale-[1.04] border-amber-500"
+          ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/10 scale-105"
           : isDark
-          ? "bg-[#0F0F14] border-gray-800"
-          : "bg-white border-gray-200"
+          ? "border-gray-800 bg-[#0F0F14]"
+          : "border-gray-200 bg-white"
       }`}
     >
-      {highlight && (
-        <div className="mb-4">
-          <span className="px-3 py-1 bg-amber-500 text-black text-xs rounded-full">
-            Most Popular
+      {popular && (
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+          <span className="px-4 py-2 bg-amber-500 text-black text-sm font-bold rounded-full">
+            MOST POPULAR
           </span>
         </div>
       )}
 
-      <h3 className="text-2xl font-bold">{plan}</h3>
-      <p className={isDark ? "text-gray-400 mt-2" : "text-gray-600 mt-2"}>
-        {desc}
-      </p>
-
-      <div className="text-5xl font-bold mt-6">
-        ${price}
-        <span className="text-lg font-normal">/mo</span>
+      <div className="text-center">
+        <h3 className="text-3xl font-extrabold">{plan}</h3>
+        <p className={`mt-3 text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}>{desc}</p>
+        <div className="mt-8">
+          <span className="text-6xl font-extrabold">${price}</span>
+          <span className="text-xl font-medium text-gray-500">/month</span>
+        </div>
       </div>
 
-      <ul className="text-left mt-8 space-y-3">
-        {features.map((f: string, idx: number) => (
-          <li
-            key={idx}
-            className={`flex items-center gap-3 ${
-              isDark ? "text-gray-300" : "text-gray-800"
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                highlight
-                  ? "bg-amber-500"
-                  : isDark
-                  ? "bg-gray-300"
-                  : "bg-black"
-              }`}
-            ></span>
-            {f}
+      <ul className="mt-10 space-y-5">
+        {features.map((feature, i) => (
+          <li key={i} className="flex items-start gap-4">
+            <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${highlight ? "bg-amber-600" : isDark ? "bg-amber-500" : "bg-black"}`} />
+            <span className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}>{feature}</span>
           </li>
         ))}
       </ul>
 
-      {current ? (
-        <div className="mt-10 font-semibold text-green-500">
-          Current Plan
-        </div>
-      ) : (
-        <button
-          onClick={onChoose}
-          className={`w-full mt-10 px-6 py-3 rounded-full text-white hover:opacity-90 transition shadow-lg ${
-            highlight
-              ? "bg-amber-500 text-black"
-              : isDark
-              ? "bg-amber-500 text-black"
-              : "bg-black"
-          }`}
-        >
-          Choose {plan}
-        </button>
-      )}
+      <div className="mt-12">
+        {current ? (
+          <div className="py-4 font-bold text-green-500 text-center text-lg">✓ Current Plan</div>
+        ) : (
+          <button
+            onClick={onChoose}
+            className={`w-full py-5 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 ${
+              highlight || isDark
+                ? "bg-amber-500 text-black hover:bg-amber-400"
+                : "bg-black text-white hover:bg-gray-900"
+            }`}
+          >
+            {isLoggedIn ? `Choose ${plan}` : "Start Free Trial"}
+          </button>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function FaqItem({ question, answer, theme }: { question: string; answer: string; theme: "light" | "dark" }) {
+  const isDark = theme === "dark";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      viewport={{ once: true }}
+      className={`border-b pb-8 ${isDark ? "border-gray-800" : "border-gray-300"}`}
+    >
+      <h4 className="text-xl md:text-2xl font-bold">{question}</h4>
+      <p className={`mt-4 text-lg leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>{answer}</p>
     </motion.div>
   );
 }
