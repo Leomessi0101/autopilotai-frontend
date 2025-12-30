@@ -19,6 +19,8 @@ export default function ContentPage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
+  const [generateImage, setGenerateImage] = useState(false); // 🔥 NEW
+
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
@@ -49,13 +51,25 @@ export default function ContentPage() {
 
     try {
       setLoading(true);
+
       const res = await api.post("/api/content/generate", {
         title: title || undefined,
         prompt: details,
+        generate_image: generateImage, // 🔥 SEND TO BACKEND
       });
-      setResult(res.data.output || "");
+
+      let output = res.data.output || "";
+
+      // ---------- LIMIT POSTS ----------
+      const posts = output.split(/\n\s*\n/);
+      const limited = generateImage ? posts.slice(0, 1) : posts.slice(0, 3);
+      output = limited.join("\n\n");
+
+      setResult(output);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
+      setError(
+        e?.response?.data?.detail || "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -85,7 +99,8 @@ export default function ContentPage() {
             Content Generator
           </h1>
           <p className="mt-6 text-xl text-gray-600">
-            Craft compelling posts, threads, and narratives tailored to your voice and audience.
+            Craft compelling posts, threads, and narratives tailored to your
+            voice and audience.
           </p>
         </motion.section>
 
@@ -99,10 +114,12 @@ export default function ContentPage() {
             className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
           >
             <div className="mb-10">
-              <p className="text-lg font-medium text-gray-700">Describe the content you need</p>
+              <p className="text-lg font-medium text-gray-700">
+                Describe the content you need
+              </p>
             </div>
 
-            {/* Title (optional) */}
+            {/* Title */}
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-600 mb-2">
                 Title or topic (optional)
@@ -129,9 +146,33 @@ export default function ContentPage() {
               />
             </div>
 
+            {/* 🔥 IMAGE TOGGLE */}
+            <div className="mb-8 flex items-center justify-between border rounded-xl px-5 py-4">
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  Generate AI Image
+                </p>
+                <p className="text-xs text-gray-500">
+                  Uses paid feature • With image only 1 post is generated
+                </p>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={generateImage}
+                  onChange={() => setGenerateImage(!generateImage)}
+                  className="sr-only peer"
+                />
+                <div className="w-12 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+              </label>
+            </div>
+
             {/* Quick Templates */}
             <div className="mb-10">
-              <p className="text-sm font-medium text-gray-600 mb-4">Quick starters</p>
+              <p className="text-sm font-medium text-gray-600 mb-4">
+                Quick starters
+              </p>
               <div className="flex flex-wrap gap-3">
                 {quickTemplates.map((template, i) => (
                   <button
@@ -145,7 +186,7 @@ export default function ContentPage() {
               </div>
             </div>
 
-            {/* Generate Button + Error */}
+            {/* Generate Button */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
@@ -171,7 +212,9 @@ export default function ContentPage() {
             className="space-y-8"
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Guidelines for stronger output</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Guidelines for stronger output
+              </h4>
               <ul className="space-y-3 text-gray-700">
                 <li className="flex items-start gap-4">
                   <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
@@ -193,9 +236,12 @@ export default function ContentPage() {
             </div>
 
             <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-2xl p-8 border border-blue-100">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Best practice</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                Best practice
+              </h4>
               <p className="text-gray-700">
-                Start specific, generate, then refine. Iteration produces the highest quality results.
+                Start specific, generate, then refine. Iteration produces the
+                highest quality results.
               </p>
             </div>
           </motion.div>
@@ -212,8 +258,12 @@ export default function ContentPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Generated Content</p>
-                  <h3 className="text-3xl font-semibold text-gray-900">Ready for review and use</h3>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                    Generated Content
+                  </p>
+                  <h3 className="text-3xl font-semibold text-gray-900">
+                    Ready for review and use
+                  </h3>
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(result)}
@@ -232,11 +282,14 @@ export default function ContentPage() {
           </motion.section>
         )}
 
-        {/* Contact Footer */}
+        {/* Footer */}
         <footer className="text-center py-12 border-t border-gray-200">
           <p className="text-gray-600">
             Questions? Reach out at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
+            <a
+              href="mailto:contact@autopilotai.dev"
+              className="font-medium text-blue-900 hover:underline"
+            >
               contact@autopilotai.dev
             </a>
           </p>
