@@ -19,7 +19,7 @@ export default function ContentPage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [generateImage, setGenerateImage] = useState(false); // 🔥 NEW
+  const [generateImage, setGenerateImage] = useState(false); // 🔥 IMAGE TOGGLE
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -62,7 +62,21 @@ export default function ContentPage() {
 
       // ---------- LIMIT POSTS ----------
       const posts = output.split(/\n\s*\n/);
-      const limited = generateImage ? posts.slice(0, 1) : posts.slice(0, 3);
+
+      // detect if backend blocked image (free user)
+      const imageBlocked =
+        res.data?.error?.toLowerCase().includes("paid") ||
+        res.data?.error?.toLowerCase().includes("upgrade");
+
+      let limited;
+      if (generateImage && !imageBlocked) {
+        // PAID + IMAGE = ONLY 1 POST
+        limited = posts.slice(0, 1);
+      } else {
+        // FREE USER OR TOGGLE OFF = 3 POSTS
+        limited = posts.slice(0, 3);
+      }
+
       output = limited.join("\n\n");
 
       setResult(output);
@@ -153,7 +167,7 @@ export default function ContentPage() {
                   Generate AI Image
                 </p>
                 <p className="text-xs text-gray-500">
-                  Uses paid feature • With image only 1 post is generated
+                  Paid feature • With image only 1 post is generated
                 </p>
               </div>
 
