@@ -19,7 +19,8 @@ export default function ContentPage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [generateImage, setGenerateImage] = useState(false); // 🔥 IMAGE TOGGLE
+  const [generateImage, setGenerateImage] = useState(false); 
+  const [showUpgradeNotice, setShowUpgradeNotice] = useState(false); // 🚨 NEW
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -40,6 +41,18 @@ export default function ContentPage() {
       });
   }, [router]);
 
+  const handleToggle = () => {
+    // ⛔ If FREE USER block toggle
+    if (!subscriptionPlan || subscriptionPlan === "free") {
+      setShowUpgradeNotice(true);
+      setGenerateImage(false);
+      return;
+    }
+
+    // Otherwise normal toggle
+    setGenerateImage(!generateImage);
+  };
+
   const handleGenerate = async () => {
     setError("");
     setResult("");
@@ -55,30 +68,24 @@ export default function ContentPage() {
       const res = await api.post("/api/content/generate", {
         title: title || undefined,
         prompt: details,
-        generate_image: generateImage, // 🔥 SEND TO BACKEND
+        generate_image: generateImage,
       });
 
       let output = res.data.output || "";
-
-      // ---------- LIMIT POSTS ----------
       const posts = output.split(/\n\s*\n/);
 
-      // detect if backend blocked image (free user)
       const imageBlocked =
-        res.data?.error?.toLowerCase().includes("paid") ||
-        res.data?.error?.toLowerCase().includes("upgrade");
+        res.data?.error?.toLowerCase()?.includes("paid") ||
+        res.data?.error?.toLowerCase()?.includes("upgrade");
 
       let limited;
       if (generateImage && !imageBlocked) {
-        // PAID + IMAGE = ONLY 1 POST
         limited = posts.slice(0, 1);
       } else {
-        // FREE USER OR TOGGLE OFF = 3 POSTS
         limited = posts.slice(0, 3);
       }
 
       output = limited.join("\n\n");
-
       setResult(output);
     } catch (e: any) {
       setError(
@@ -161,7 +168,7 @@ export default function ContentPage() {
             </div>
 
             {/* 🔥 IMAGE TOGGLE */}
-            <div className="mb-8 flex items-center justify-between border rounded-xl px-5 py-4">
+            <div className="mb-6 flex items-center justify-between border rounded-xl px-5 py-4">
               <div>
                 <p className="text-sm font-medium text-gray-700">
                   Generate AI Image
@@ -175,12 +182,29 @@ export default function ContentPage() {
                 <input
                   type="checkbox"
                   checked={generateImage}
-                  onChange={() => setGenerateImage(!generateImage)}
+                  onChange={handleToggle}
                   className="sr-only peer"
                 />
-                <div className="w-12 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+                <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
               </label>
             </div>
+
+            {/* 🚨 UPGRADE NOTICE */}
+            {showUpgradeNotice && (
+              <div className="mb-8 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl px-5 py-4">
+                <p className="text-sm font-medium mb-2">
+                  AI Image generation is a paid feature.
+                </p>
+                <button
+                  onClick={() =>
+                    window.open("https://www.autopilotai.dev/upgrade", "_blank")
+                  }
+                  className="px-5 py-2 bg-blue-900 text-white rounded-lg text-sm hover:bg-blue-800 transition"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            )}
 
             {/* Quick Templates */}
             <div className="mb-10">
@@ -218,7 +242,7 @@ export default function ContentPage() {
             </p>
           </motion.div>
 
-          {/* Tips Sidebar */}
+          {/* Sidebar (unchanged) */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
