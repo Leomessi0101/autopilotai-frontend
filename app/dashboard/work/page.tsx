@@ -47,8 +47,7 @@ export default function MyWorkPage() {
       return;
     }
 
-    api
-      .get("/api/auth/me")
+    api.get("/api/auth/me")
       .then((res) => {
         if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
         if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
@@ -58,13 +57,11 @@ export default function MyWorkPage() {
         router.push("/login");
       });
 
-    api
-      .get("/api/work")
+    api.get("/api/work")
       .then((res) => setItems(res.data.reverse()))
       .finally(() => setLoading(false));
 
-    api
-      .get("/api/images/history")
+    api.get("/api/images/history")
       .then((res) => setImages(res.data))
       .finally(() => setImageLoading(false));
 
@@ -140,7 +137,7 @@ export default function MyWorkPage() {
           )}
         </motion.section>
 
-        {/* Existing Search + Filter */}
+        {/* Search + Filters */}
         {items.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -152,7 +149,7 @@ export default function MyWorkPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your work..."
-              className="px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition w-full md:max-w-md"
+              className="px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition w-full md:max-w-md"
             />
 
             <div className="flex gap-3 flex-wrap">
@@ -160,7 +157,7 @@ export default function MyWorkPage() {
                 <button
                   key={t}
                   onClick={() => setFilter(t as any)}
-                  className={`px-6 py-3 rounded-xl font-medium transition text-sm ${
+                  className={`px-6 py-3 rounded-xl text-sm font-medium transition ${
                     filter === t
                       ? "bg-blue-900 text-white"
                       : "bg-white border border-gray-200 text-gray-700 hover:border-blue-900"
@@ -173,7 +170,7 @@ export default function MyWorkPage() {
           </motion.div>
         )}
 
-        {/* Content Section */}
+        {/* Content Items */}
         {loading ? (
           <p className="text-center text-gray-500 mt-32">Loading your work…</p>
         ) : filtered.length === 0 ? (
@@ -192,7 +189,9 @@ export default function MyWorkPage() {
         )}
 
         <AnimatePresence>
-          {selected && <WorkModal item={selected} onClose={() => setSelected(null)} />}
+          {selected && (
+            <WorkModal item={selected} onClose={() => setSelected(null)} />
+          )}
         </AnimatePresence>
 
         <AnimatePresence>
@@ -202,6 +201,7 @@ export default function MyWorkPage() {
         </AnimatePresence>
       </main>
 
+      {/* Footer */}
       <footer className="text-center py-12 border-t border-gray-200">
         <p className="text-gray-600">
           Questions? Reach out at{" "}
@@ -236,7 +236,7 @@ function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void 
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.9 }}
-        className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-4xl w-full overflow-hidden"
+        className="bg-white rounded-2xl shadow-xl border max-w-4xl w-full overflow-hidden"
       >
         <img src={image.image_url} className="w-full max-h-[70vh] object-contain" />
 
@@ -244,6 +244,7 @@ function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void 
           <p className="text-gray-700 mb-2">
             {image.text_content || "No text content saved"}
           </p>
+
           {image.image_style && (
             <p className="text-sm text-gray-500 mb-4">
               Style: {image.image_style}
@@ -253,14 +254,14 @@ function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void 
           <div className="flex justify-end gap-3">
             <button
               onClick={download}
-              className="px-8 py-3 border border-gray-300 rounded-xl font-medium hover:border-blue-900 transition"
+              className="px-8 py-3 border rounded-xl hover:border-blue-900 transition"
             >
               Download
             </button>
 
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800"
+              className="px-8 py-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800"
             >
               Close
             </button>
@@ -271,8 +272,141 @@ function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void 
   );
 }
 
-/* ------ your existing components below remain unchanged ------ */
-function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) { /* unchanged */ }
-function EmptyState({ hasItems }: { hasItems: boolean }) { /* unchanged */ }
-function WorkModal({ item, onClose }: { item: WorkItem; onClose: () => void }) { /* unchanged */ }
-function labelForType(type: WorkItem["content_type"]) { /* unchanged */ }
+/* ---------------- ORIGINAL COMPONENTS BELOW ---------------- */
+
+function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
+  const lines = item.result.split("\n").slice(0, 4);
+  const previewText = lines.join("\n");
+  const preview =
+    previewText.length > 350 ? previewText.slice(0, 350) + "…" : previewText;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="bg-white rounded-2xl shadow-sm border p-8 hover:border-blue-900 transition cursor-pointer group"
+      onClick={onOpen}
+    >
+      <div className="flex items-start justify-between gap-8">
+        <div className="flex-1">
+          <div className="flex items-center gap-4 mb-3">
+            <span className="text-sm font-medium text-teal-600 uppercase tracking-wide">
+              {labelForType(item.content_type)}
+            </span>
+            {item.created_at && (
+              <span className="text-sm text-gray-500">
+                {new Date(item.created_at).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+
+          <p className="text-gray-800 whitespace-pre-wrap line-clamp-4">
+            {preview || "(empty)"}
+          </p>
+        </div>
+
+        <span className="text-sm text-gray-500 group-hover:text-blue-900">
+          View →
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+function EmptyState({ hasItems }: { hasItems: boolean }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="text-center mt-32 max-w-2xl mx-auto"
+    >
+      <h3 className="text-3xl font-light text-gray-800 mb-6">
+        {hasItems ? "No matching results" : "Your work will appear here"}
+      </h3>
+
+      <p className="text-lg text-gray-600 mb-10">
+        {hasItems
+          ? "Try adjusting your search or filter."
+          : "Everything you generate is automatically saved here."}
+      </p>
+
+      {!hasItems && (
+        <a
+          href="/dashboard"
+          className="px-10 py-4 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition"
+        >
+          Start Generating
+        </a>
+      )}
+    </motion.div>
+  );
+}
+
+function WorkModal({ item, onClose }: { item: WorkItem; onClose: () => void }) {
+  const copy = () => navigator.clipboard.writeText(item.result);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0.9 }}
+          className="bg-white rounded-2xl border shadow-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-10"
+        >
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <p className="text-sm text-gray-500 uppercase mb-2">
+                {labelForType(item.content_type)}
+              </p>
+              <h3 className="text-2xl font-semibold">Full Output</h3>
+            </div>
+
+            <button className="text-2xl" onClick={onClose}>
+              ×
+            </button>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-8 mb-8">
+            <pre className="whitespace-pre-wrap text-gray-800">
+              {item.result}
+            </pre>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={copy}
+              className="px-8 py-4 border rounded-xl hover:border-blue-900"
+            >
+              Copy
+            </button>
+
+            <button
+              onClick={onClose}
+              className="px-8 py-4 bg-blue-900 text-white rounded-xl hover:bg-blue-800"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function labelForType(type: WorkItem["content_type"]) {
+  if (type === "content") return "Content";
+  if (type === "email") return "Email";
+  if (type === "ad") return "Ad";
+  return "AI Output";
+}
