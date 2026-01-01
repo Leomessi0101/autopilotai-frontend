@@ -23,6 +23,8 @@ export default function AdsPage() {
   const [audience, setAudience] = useState("");
 
   const [result, setResult] = useState("");
+  const [parsedAds, setParsedAds] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,6 +53,7 @@ export default function AdsPage() {
   const handleGenerate = async () => {
     setError("");
     setResult("");
+    setParsedAds([]);
 
     if (!product.trim() || !audience.trim()) {
       setError("Please provide both product and audience details.");
@@ -66,12 +69,37 @@ export default function AdsPage() {
         audience,
         prompt: `Generate ad copy for ${platform} with objective ${objective}. Product: ${product}. Audience: ${audience}.`,
       });
-      setResult(res.data.output || "");
+
+      const output = res.data.output || "";
+      setResult(output);
+      parseAds(output);
+
     } catch (e: any) {
       setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const parseAds = (text: string) => {
+    const blocks = text
+      .split(/AD\s*\d+:/gi)
+      .map((b) => b.trim())
+      .filter((b) => b.length > 0);
+
+    const ads = blocks.map((block) => {
+      const headlineMatch = block.match(/Headline:\s*(.*)/i);
+      const primaryMatch = block.match(/Primary text:\s*([\s\S]*?)CTA:/i);
+      const ctaMatch = block.match(/CTA:\s*(.*)/i);
+
+      return {
+        headline: headlineMatch?.[1]?.trim() || "Untitled Ad",
+        primary: primaryMatch?.[1]?.trim() || block,
+        cta: ctaMatch?.[1]?.trim() || "Learn More",
+      };
+    });
+
+    setParsedAds(ads);
   };
 
   return (
@@ -96,7 +124,7 @@ export default function AdsPage() {
 
         {/* Main Grid */}
         <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
-          {/* Input Area */}
+          {/* Input */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,27 +177,31 @@ export default function AdsPage() {
 
             {/* Product */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-600 mb-2">What are you promoting?</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
+                What are you promoting?
+              </label>
               <input
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
                 placeholder="e.g. Premium custom mouthguards for combat athletes"
-                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
               />
             </div>
 
             {/* Audience */}
             <div className="mb-10">
-              <label className="block text-sm font-medium text-gray-600 mb-2">Target audience</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
+                Target audience
+              </label>
               <input
                 value={audience}
                 onChange={(e) => setAudience(e.target.value)}
                 placeholder="e.g. Fighters aged 18–35 training at gyms"
-                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
               />
             </div>
 
-            {/* Generate Button + Error */}
+            {/* Button */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
@@ -187,7 +219,7 @@ export default function AdsPage() {
             </p>
           </motion.div>
 
-          {/* Tips Sidebar */}
+          {/* Sidebar */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,72 +227,75 @@ export default function AdsPage() {
             className="space-y-8"
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Guidelines for stronger ads</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Guidelines for stronger ads
+              </h4>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Lead with the primary benefit</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Hook attention in the first line</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Include one clear call-to-action</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Test multiple variations</span>
-                </li>
+                <li>Lead with the main benefit</li>
+                <li>Hook attention in the first line</li>
+                <li>Use one clear CTA</li>
+                <li>Test multiple variations</li>
               </ul>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-2xl p-8 border border-blue-100">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Best practice</h4>
-              <p className="text-gray-700">
-                The highest-performing ads speak directly to a specific audience’s desires and challenges.
-              </p>
             </div>
           </motion.div>
         </section>
 
-        {/* Result */}
-        {result && (
+        {/* RESULT — Beautiful Ad Cards */}
+        {parsedAds.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Generated Ad Copy</p>
-                  <h3 className="text-3xl font-semibold text-gray-900">Ready for review and launch</h3>
-                </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
-                >
-                  Copy to Clipboard
-                </button>
-              </div>
+            <h3 className="text-3xl font-semibold text-gray-900 mb-8">
+              Preview Your Ads
+            </h3>
 
-              <div className="bg-gray-50 rounded-xl p-10">
-                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-medium">
-                  {result}
-                </pre>
-              </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {parsedAds.map((ad, i) => (
+                <div
+                  key={i}
+                  className="bg-white border rounded-2xl shadow-sm p-6 hover:shadow-md transition"
+                >
+                  <p className="text-sm text-gray-500 mb-2">
+                    Ad Variation #{i + 1}
+                  </p>
+
+                  <h2 className="text-xl font-bold text-gray-900 mb-3">
+                    {ad.headline}
+                  </h2>
+
+                  <p className="text-gray-700 leading-relaxed mb-6">
+                    {ad.primary}
+                  </p>
+
+                  <button className="w-full py-3 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition">
+                    {ad.cta}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-right mt-10">
+              <button
+                onClick={() => navigator.clipboard.writeText(result)}
+                className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+              >
+                Copy Raw Text
+              </button>
             </div>
           </motion.section>
         )}
 
-        {/* Contact Footer */}
+        {/* Footer */}
         <footer className="text-center py-12 border-t border-gray-200">
           <p className="text-gray-600">
             Questions? Reach out at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
+            <a
+              href="mailto:contact@autopilotai.dev"
+              className="font-medium text-blue-900 hover:underline"
+            >
               contact@autopilotai.dev
             </a>
           </p>

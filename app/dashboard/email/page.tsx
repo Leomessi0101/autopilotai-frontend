@@ -13,6 +13,9 @@ export default function EmailPage() {
   const [details, setDetails] = useState("");
 
   const [result, setResult] = useState("");
+  const [parsedSubject, setParsedSubject] = useState("");
+  const [parsedBody, setParsedBody] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,6 +44,8 @@ export default function EmailPage() {
   const handleGenerate = async () => {
     setError("");
     setResult("");
+    setParsedSubject("");
+    setParsedBody("");
 
     if (!details.trim()) {
       setError("Please describe the email you’d like to create.");
@@ -49,16 +54,41 @@ export default function EmailPage() {
 
     try {
       setLoading(true);
+
       const res = await api.post("/api/email/generate", {
         subject: subject || undefined,
         prompt: details,
       });
-      setResult(res.data.output || "");
+
+      const output = res.data.output || "";
+      setResult(output);
+
+      parseEmail(output);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
+      setError(
+        e?.response?.data?.detail || "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const parseEmail = (text: string) => {
+    // Try to extract "Subject: ..."
+    const subjectMatch = text.match(/Subject:\s*(.*)/i);
+    const body = text.replace(/Subject:.*\n?/i, "").trim();
+
+    setParsedSubject(subjectMatch?.[1] || subject || "No subject");
+    setParsedBody(body || text);
+  };
+
+  const openInEmailClient = () => {
+    // Leave "to" empty so their client asks / uses default
+    const mailto = `mailto:?subject=${encodeURIComponent(
+      parsedSubject || "No subject"
+    )}&body=${encodeURIComponent(parsedBody || result || "")}`;
+
+    window.location.href = mailto;
   };
 
   const quickTemplates = [
@@ -85,7 +115,8 @@ export default function EmailPage() {
             Email Writer
           </h1>
           <p className="mt-6 text-xl text-gray-600">
-            Craft precise, professional emails — outreach, follow-ups, and client communication.
+            Craft precise, professional emails — outreach, follow-ups, and
+            client communication.
           </p>
         </motion.section>
 
@@ -99,7 +130,9 @@ export default function EmailPage() {
             className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
           >
             <div className="mb-10">
-              <p className="text-lg font-medium text-gray-700">Describe the email you need</p>
+              <p className="text-lg font-medium text-gray-700">
+                Describe the email you need
+              </p>
             </div>
 
             {/* Subject (optional) */}
@@ -134,12 +167,16 @@ export default function EmailPage() {
 
             {/* Quick Templates */}
             <div className="mb-10">
-              <p className="text-sm font-medium text-gray-600 mb-4">Quick starters</p>
+              <p className="text-sm font-medium text-gray-600 mb-4">
+                Quick starters
+              </p>
               <div className="flex flex-wrap gap-3">
                 {quickTemplates.map((template, i) => (
                   <button
                     key={i}
-                    onClick={() => setDetails(template.split(" — ")[1] || template)}
+                    onClick={() =>
+                      setDetails(template.split(" — ")[1] || template)
+                    }
                     className="px-5 py-3 rounded-xl bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-900 transition font-medium text-sm border border-transparent"
                   >
                     {template.split(" — ")[0]}
@@ -174,7 +211,9 @@ export default function EmailPage() {
             className="space-y-8"
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Guidelines for stronger emails</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Guidelines for stronger emails
+              </h4>
               <ul className="space-y-3 text-gray-700">
                 <li className="flex items-start gap-4">
                   <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
@@ -196,41 +235,68 @@ export default function EmailPage() {
             </div>
 
             <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-2xl p-8 border border-blue-100">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Best practice</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                Best practice
+              </h4>
               <p className="text-gray-700">
-                The most effective emails are concise, respectful, and focused on the recipient’s interests.
+                The most effective emails are concise, respectful, and focused
+                on the recipient’s interests.
               </p>
             </div>
           </motion.div>
         </section>
 
-        {/* Result */}
-        {result && (
+        {/* Result — Gmail-style preview + actions */}
+        {(parsedBody || parsedSubject) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Generated Email</p>
-                  <h3 className="text-3xl font-semibold text-gray-900">Ready for review and send</h3>
-                </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(result)}
-                  className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
-                >
-                  Copy to Clipboard
-                </button>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Email Header */}
+              <div className="px-8 py-6 border-b bg-gray-50">
+                <p className="text-sm text-gray-500 mb-1">Subject</p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {parsedSubject}
+                </h2>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-10">
-                <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-medium">
-                  {result}
-                </pre>
+              {/* Meta */}
+              <div className="px-8 py-6 border-b flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center text-lg font-semibold">
+                  {name}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    You — AutopilotAI
+                  </p>
+                  <p className="text-gray-500 text-sm">To recipient</p>
+                </div>
               </div>
+
+              {/* Body */}
+              <div className="px-8 py-8 leading-relaxed whitespace-pre-wrap text-gray-800 text-base">
+                {parsedBody}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-end gap-4 mt-8">
+              <button
+                onClick={() => navigator.clipboard.writeText(result)}
+                className="px-8 py-3 border border-gray-300 rounded-xl font-medium hover:border-blue-900 transition"
+              >
+                Copy Raw Text
+              </button>
+
+              <button
+                onClick={openInEmailClient}
+                className="px-8 py-3 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+              >
+                Open in Email App
+              </button>
             </div>
           </motion.section>
         )}
@@ -239,7 +305,10 @@ export default function EmailPage() {
         <footer className="text-center py-12 border-t border-gray-200">
           <p className="text-gray-600">
             Questions? Reach out at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
+            <a
+              href="mailto:contact@autopilotai.dev"
+              className="font-medium text-blue-900 hover:underline"
+            >
               contact@autopilotai.dev
             </a>
           </p>
