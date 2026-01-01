@@ -33,7 +33,8 @@ export default function ContentPage() {
       return;
     }
 
-    api.get("/api/auth/me")
+    api
+      .get("/api/auth/me")
       .then((res) => {
         if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
         if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
@@ -70,7 +71,7 @@ export default function ContentPage() {
         title: title || undefined,
         prompt: details,
         generate_image: generateImage,
-        image_style: imageStyle
+        image_style: imageStyle,
       });
 
       let output = res.data.output || "";
@@ -87,10 +88,10 @@ export default function ContentPage() {
         setResult(posts.slice(0, 3).join("\n\n"));
         setImageUrl(null);
       }
-
     } catch (e: any) {
       setError(
-        e?.response?.data?.detail || "Something went wrong. Please try again."
+        e?.response?.data?.detail ||
+          "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -103,7 +104,7 @@ export default function ContentPage() {
     await api.post("/api/images/save", {
       image_url: imageUrl,
       text_content: result,
-      image_style: imageStyle
+      image_style: imageStyle,
     });
 
     alert("Saved to My Work");
@@ -130,7 +131,6 @@ export default function ContentPage() {
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-
         {/* HEADER */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -207,7 +207,9 @@ export default function ContentPage() {
                   AI Image generation is a paid feature.
                 </p>
                 <button
-                  onClick={() => window.open("https://www.autopilotai.dev/upgrade", "_blank")}
+                  onClick={() =>
+                    window.open("https://www.autopilotai.dev/upgrade", "_blank")
+                  }
                   className="px-5 py-2 bg-blue-900 text-white rounded-lg"
                 >
                   Upgrade Plan
@@ -271,7 +273,7 @@ export default function ContentPage() {
           </motion.div>
         </section>
 
-        {/* RESULT */}
+        {/* ===== NEW VISUAL INSTAGRAM STYLE RESULT ===== */}
         {(result || imageUrl) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
@@ -279,34 +281,48 @@ export default function ContentPage() {
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="bg-white rounded-2xl border shadow-sm p-12">
-
-              {result && (
-                <div className="bg-gray-50 rounded-xl p-10 mb-10">
-                  <pre className="whitespace-pre-wrap text-gray-800">{result}</pre>
+            <div className="max-w-xl mx-auto bg-white rounded-2xl border shadow-sm overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-10 h-10 rounded-full bg-gray-300" />
+                <div>
+                  <p className="font-semibold text-gray-900">@autopilot_user</p>
+                  <p className="text-xs text-gray-500">Sponsored</p>
                 </div>
+              </div>
+
+              {/* Image */}
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  className="w-full object-cover border-t border-b"
+                />
               )}
 
+              {/* Caption */}
+              <div className="p-5">
+                <p className="whitespace-pre-wrap leading-relaxed text-gray-800 text-sm">
+                  {result}
+                </p>
+              </div>
+
+              {/* Buttons */}
               {imageUrl && (
-                <>
-                  <img src={imageUrl} className="rounded-xl border mb-6" />
+                <div className="flex justify-end gap-4 p-4">
+                  <button
+                    onClick={downloadImage}
+                    className="px-6 py-2 border rounded-xl"
+                  >
+                    Download
+                  </button>
 
-                  <div className="flex gap-4 justify-end">
-                    <button
-                      onClick={downloadImage}
-                      className="px-8 py-3 border rounded-xl"
-                    >
-                      Download
-                    </button>
-
-                    <button
-                      onClick={saveImage}
-                      className="px-8 py-3 bg-blue-900 text-white rounded-xl"
-                    >
-                      Save to My Work
-                    </button>
-                  </div>
-                </>
+                  <button
+                    onClick={saveImage}
+                    className="px-6 py-2 bg-blue-900 text-white rounded-xl"
+                  >
+                    Save to My Work
+                  </button>
+                </div>
               )}
             </div>
           </motion.section>
