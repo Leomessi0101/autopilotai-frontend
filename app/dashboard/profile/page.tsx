@@ -6,6 +6,26 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
+/* ========= TYPE FIX HERE ========= */
+interface ProfileForm {
+  full_name: string;
+  company_name: string;
+  company_website: string;
+  title: string;
+  brand_tone: string;
+  industry: string;
+  brand_description: string;
+  target_audience: string;
+  signature: string;
+  writing_style: string;
+
+  use_emojis: boolean;
+  use_hashtags: boolean;
+  length_pref: string;
+  creativity_level: number;
+  cta_style: string;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
 
@@ -20,7 +40,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     full_name: "",
     company_name: "",
     company_website: "",
@@ -31,6 +51,12 @@ export default function ProfilePage() {
     target_audience: "",
     signature: "",
     writing_style: "",
+
+    use_emojis: true,
+    use_hashtags: true,
+    length_pref: "medium",
+    creativity_level: 5,
+    cta_style: "balanced",
   });
 
   useEffect(() => {
@@ -43,7 +69,8 @@ export default function ProfilePage() {
       .get("/api/auth/me")
       .then((res) => {
         if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
+        if (res.data?.subscription)
+          setSubscriptionPlan(res.data.subscription);
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
@@ -55,13 +82,13 @@ export default function ProfilePage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        setForm(res.data);
+        setForm((prev) => ({ ...prev, ...res.data }));
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [router, token]);
 
-  const updateField = (field: string, value: string) =>
+  const updateField = (field: keyof ProfileForm, value: any) =>
     setForm((p) => ({ ...p, [field]: value }));
 
   const saveProfile = async () => {
@@ -104,11 +131,12 @@ export default function ProfilePage() {
             Profile & Preferences
           </h1>
           <p className="mt-6 text-xl text-gray-600">
-            Personalize AutopilotAI to match your brand voice and communication style.
+            Personalize AutopilotAI to match your brand voice and communication
+            style.
           </p>
         </motion.section>
 
-        {/* Billing Card */}
+        {/* Billing */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -116,7 +144,9 @@ export default function ProfilePage() {
           className="mb-20 bg-white rounded-2xl shadow-sm border border-gray-200 p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8"
         >
           <div>
-            <h3 className="text-2xl font-semibold text-gray-900">Billing & Subscription</h3>
+            <h3 className="text-2xl font-semibold text-gray-900">
+              Billing & Subscription
+            </h3>
             <p className="mt-2 text-gray-600">
               Manage your plan, payment method, and billing history.
             </p>
@@ -183,6 +213,68 @@ export default function ProfilePage() {
             onChange={updateField}
           />
 
+          {/* AI PERSONALITY */}
+          <SectionTitle title="AI Behavior & Personality" />
+
+          <div className="grid gap-10 md:grid-cols-2">
+            <Toggle
+              label="Use Emojis"
+              value={form.use_emojis}
+              onChange={(v) => updateField("use_emojis", v)}
+            />
+
+            <Toggle
+              label="Use Hashtags"
+              value={form.use_hashtags}
+              onChange={(v) => updateField("use_hashtags", v)}
+            />
+
+            <Select
+              label="Preferred Length"
+              value={form.length_pref}
+              options={[
+                { value: "short", label: "Short & punchy" },
+                { value: "medium", label: "Balanced" },
+                { value: "long", label: "Long form" },
+              ]}
+              onChange={(v) => updateField("length_pref", v)}
+            />
+
+            <Select
+              label="CTA Style"
+              value={form.cta_style}
+              options={[
+                { value: "soft", label: "Soft & friendly" },
+                { value: "balanced", label: "Balanced persuasive" },
+                { value: "aggressive", label: "Strong direct CTA" },
+              ]}
+              onChange={(v) => updateField("cta_style", v)}
+            />
+          </div>
+
+          <div className="mt-6">
+            <label className="text-sm font-medium text-gray-600">
+              Creativity Level
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={form.creativity_level}
+              onChange={(e) =>
+                updateField("creativity_level", Number(e.target.value))
+              }
+              className="w-full"
+            />
+            <p className="text-gray-600 text-sm">
+              {form.creativity_level <= 3
+                ? "Very logical & structured"
+                : form.creativity_level <= 7
+                ? "Balanced creativity"
+                : "Very creative & bold"}
+            </p>
+          </div>
+
           <div className="mt-12 pt-8 border-t border-gray-200">
             <button
               onClick={saveProfile}
@@ -194,11 +286,13 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Contact Footer */}
         <footer className="text-center py-12 border-t border-gray-200">
           <p className="text-gray-600">
             Questions? Reach out at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
+            <a
+              href="mailto:contact@autopilotai.dev"
+              className="font-medium text-blue-900 hover:underline"
+            >
               contact@autopilotai.dev
             </a>
           </p>
@@ -217,31 +311,116 @@ function SectionTitle({ title }: { title: string }) {
   );
 }
 
-function Input({ label, field, value, onChange, placeholder }: { label: string; field: string; value: string; onChange: (field: string, value: string) => void; placeholder?: string }) {
+function Input({
+  label,
+  field,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  field: keyof ProfileForm;
+  value: string;
+  onChange: (field: keyof ProfileForm, value: string) => void;
+  placeholder?: string;
+}) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-gray-600 mb-2">
+        {label}
+      </label>
       <input
         value={value || ""}
         placeholder={placeholder || ""}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
       />
     </div>
   );
 }
 
-function Textarea({ label, field, value, onChange, placeholder }: { label: string; field: string; value: string; onChange: (field: string, value: string) => void; placeholder: string }) {
+function Textarea({
+  label,
+  field,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  field: keyof ProfileForm;
+  value: string;
+  onChange: (field: keyof ProfileForm, value: string) => void;
+  placeholder: string;
+}) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-gray-600 mb-2">
+        {label}
+      </label>
       <textarea
         value={value || ""}
         placeholder={placeholder}
         onChange={(e) => onChange(field, e.target.value)}
         rows={6}
-        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 resize-none transition"
+        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 resize-none transition"
       />
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between border rounded-xl px-5 py-4">
+      <p className="text-sm font-medium text-gray-700">{label}</p>
+
+      <label className="relative inline-flex cursor-pointer">
+        <input
+          type="checkbox"
+          checked={value}
+          onChange={(e) => onChange(e.target.checked)}
+          className="sr-only peer"
+        />
+        <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+      </label>
+    </div>
+  );
+}
+
+function Select({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-2">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-5 py-4 rounded-xl border border-gray-200"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
