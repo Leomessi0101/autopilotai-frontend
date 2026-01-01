@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
-/* ========= TYPE FIX HERE ========= */
+/* ========= TYPE ========= */
 interface ProfileForm {
   full_name: string;
   company_name: string;
@@ -59,6 +59,7 @@ export default function ProfilePage() {
     cta_style: "balanced",
   });
 
+  /* ========= LOAD PROFILE ========= */
   useEffect(() => {
     if (!token) {
       router.push("/login");
@@ -91,6 +92,7 @@ export default function ProfilePage() {
   const updateField = (field: keyof ProfileForm, value: any) =>
     setForm((p) => ({ ...p, [field]: value }));
 
+  /* ========= SAVE ========= */
   const saveProfile = async () => {
     setSaving(true);
 
@@ -217,17 +219,8 @@ export default function ProfilePage() {
           <SectionTitle title="AI Behavior & Personality" />
 
           <div className="grid gap-10 md:grid-cols-2">
-            <Toggle
-              label="Use Emojis"
-              value={form.use_emojis}
-              onChange={(v) => updateField("use_emojis", v)}
-            />
-
-            <Toggle
-              label="Use Hashtags"
-              value={form.use_hashtags}
-              onChange={(v) => updateField("use_hashtags", v)}
-            />
+            <Toggle label="Use Emojis" value={form.use_emojis} onChange={(v) => updateField("use_emojis", v)} />
+            <Toggle label="Use Hashtags" value={form.use_hashtags} onChange={(v) => updateField("use_hashtags", v)} />
 
             <Select
               label="Preferred Length"
@@ -302,7 +295,7 @@ export default function ProfilePage() {
   );
 }
 
-/* COMPONENTS */
+/* ================== COMPONENTS ================== */
 function SectionTitle({ title }: { title: string }) {
   return (
     <h3 className="text-2xl font-semibold text-gray-900 mb-8 border-b border-gray-200 pb-4">
