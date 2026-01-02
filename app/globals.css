@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
+/* =======================
+   THEME VARIABLES
+======================= */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --background: #04060d;
+  --foreground: #e7ecff;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --card: rgba(255,255,255,0.06);
+  --card-border: rgba(255,255,255,0.14);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --brand1: #7C4DFF;
+  --brand2: #4F8BFF;
+  --brand3: #FF4D9A;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+/* =======================
+   GLOBAL BACKGROUND
+======================= */
+.bg-core {
+  background: radial-gradient(circle at 10% 10%, #0b1224 0%, #04060d 60%);
+}
+
+/* Animated Gradient Orbit System */
+.app-background {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.app-gradient {
+  position: absolute;
+  width: 1000px;
+  height: 1000px;
+  filter: blur(180px);
+  opacity: 0.6;
+  background: conic-gradient(from 0deg,
+    var(--brand1),
+    var(--brand2),
+    var(--brand3),
+    var(--brand1)
+  );
+  animation: rotate 18s linear infinite;
+  top: -20%;
+  left: -20%;
+}
+
+.app-gradient.delay {
+  animation-duration: 28s;
+  top: 40%;
+  left: 40%;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* =======================
+   GLASS UI
+======================= */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0px 40px 120px rgba(0,0,0,0.6);
+}
+
+/* =======================
+   BRAND BUTTON
+======================= */
+.button-brand {
+  background: linear-gradient(135deg, var(--brand1), var(--brand2), var(--brand3));
+  color: white;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 600;
+  box-shadow: 0px 20px 50px rgba(124,77,255,0.4);
+  transition: 0.3s;
+}
+
+.button-brand:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0px 30px 70px rgba(124,77,255,0.6);
 }
