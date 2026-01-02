@@ -14,21 +14,21 @@ export default function DashboardNavbar({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Convert null to undefined to satisfy TypeScript
-  const plan = subscriptionPlan ?? undefined;
+  const plan = subscriptionPlan ?? "Free";
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#05070d]/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+
         {/* Brand */}
         <h1
           onClick={() => router.push("/dashboard")}
-          className="text-2xl font-light tracking-wide cursor-pointer text-gray-900"
+          className="text-2xl font-light tracking-wide cursor-pointer text-white hover:text-[#6d8ce8] transition"
         >
           AutopilotAI
         </h1>
 
-        {/* Center Navigation */}
+        {/* Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           <NavButton label="Dashboard" onClick={() => router.push("/dashboard")} />
           <NavButton label="Content" onClick={() => router.push("/dashboard/content")} />
@@ -37,11 +37,12 @@ export default function DashboardNavbar({
           <NavButton label="My Work" onClick={() => router.push("/dashboard/work")} />
         </nav>
 
-        {/* Right — Avatar */}
+        {/* Avatar */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => setMenuOpen(true)}
-          className="relative w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center text-sm font-medium shadow-sm"
+          className="relative w-12 h-12 rounded-full bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] text-white text-sm font-semibold flex items-center justify-center shadow-[0_20px_60px_rgba(20,40,90,0.6)] border border-white/20"
         >
           {name}
         </motion.button>
@@ -58,20 +59,24 @@ export default function DashboardNavbar({
   );
 }
 
-/* Nav Button */
+/* ---------------- NAV BUTTON ---------------- */
 function NavButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <motion.button
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="px-6 py-3 rounded-xl text-sm font-medium text-gray-700 hover:text-blue-900 hover:bg-gray-100 transition"
+      className="px-6 py-3 rounded-xl text-sm font-medium 
+      text-gray-300 hover:text-white 
+      bg-white/0 hover:bg-white/5 
+      border border-transparent hover:border-white/10
+      transition"
     >
       {label}
     </motion.button>
   );
 }
 
-/* Avatar Menu */
+/* ---------------- AVATAR MENU ---------------- */
 function AvatarMenu({
   open,
   onClose,
@@ -89,51 +94,61 @@ function AvatarMenu({
     <AnimatePresence>
       {open && (
         <>
+          {/* Background dim */}
           <motion.div
-            className="fixed inset-0 bg-black/20"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
 
+          {/* Menu Panel */}
           <motion.aside
-            initial={{ opacity: 0, y: -16, scale: 0.95 }}
+            initial={{ opacity: 0, y: -16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed right-6 top-24 w-80 rounded-2xl bg-white shadow-xl border border-gray-200 z-50 overflow-hidden"
+            exit={{ opacity: 0, y: -16, scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className="fixed right-6 top-24 w-80 rounded-2xl 
+            bg-[#0b1020] border border-white/10 
+            shadow-[0_50px_150px_rgba(0,0,0,.8)]
+            text-white z-50 overflow-hidden"
           >
-            <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+            {/* Header */}
+            <div className="px-8 pt-8 pb-6 border-b border-white/10 relative">
               <button
                 onClick={onClose}
-                className="absolute right-6 top-6 text-gray-500 hover:text-gray-900 text-xl"
+                className="absolute right-6 top-6 text-gray-400 hover:text-white text-xl"
               >
                 ×
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-900 text-white flex items-center justify-center text-lg font-medium">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] text-white flex items-center justify-center text-lg font-semibold border border-white/20 shadow-[0_20px_60px_rgba(20,40,90,0.6)]">
                   {name}
                 </div>
+
                 <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide">Current Plan</p>
-                  <p className="text-xl font-semibold text-gray-900 capitalize">
-                    {subscriptionPlan ?? "Free"}
+                  <p className="text-sm text-gray-400 uppercase tracking-wide">
+                    Current Plan
+                  </p>
+                  <p className="text-xl font-semibold capitalize">
+                    {subscriptionPlan}
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Menu */}
             <div className="py-2">
               <MenuItem label="Dashboard" onClick={() => { onClose(); router.push("/dashboard"); }} />
               <MenuItem label="Profile" onClick={() => { onClose(); router.push("/dashboard/profile"); }} />
               <MenuItem label="Billing" onClick={() => { onClose(); router.push("/billing"); }} />
               <MenuItem label="Upgrade" onClick={() => { onClose(); router.push("/upgrade"); }} />
 
-              <div className="border-t border-gray-200 mt-2 pt-2">
+              <div className="border-t border-white/10 mt-2 pt-2">
                 <MenuItem
-                  label="Log out"
+                  label="Log Out"
                   danger
                   onClick={() => {
                     localStorage.removeItem("autopilot_token");
@@ -149,16 +164,25 @@ function AvatarMenu({
   );
 }
 
-/* Menu Item */
-function MenuItem({ label, onClick, danger = false }: { label: string; onClick: () => void; danger?: boolean }) {
+/* ---------------- MENU ITEM ---------------- */
+function MenuItem({
+  label,
+  onClick,
+  danger = false,
+}: {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
   return (
     <motion.button
       whileHover={{ x: 8 }}
       onClick={onClick}
-      className={`w-full px-8 py-4 text-left text-sm font-medium transition ${
+      className={`w-full px-8 py-4 text-left text-sm font-medium transition 
+      ${
         danger
-          ? "text-red-600 hover:bg-red-50"
-          : "text-gray-700 hover:bg-gray-50"
+          ? "text-red-400 hover:bg-red-900/20 hover:text-red-300"
+          : "text-gray-300 hover:bg-white/5 hover:text-white"
       }`}
     >
       {label}
