@@ -27,16 +27,16 @@ export default function HomePage() {
           className="max-w-6xl mx-auto"
         >
           <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight">
-            AI That Actually Helps You Work —
+            Work Faster.
             <br />
             <span className="text-[#d8e3ff]">
-              Not Just Another Tool.
+              With AI That Actually Helps.
             </span>
           </h1>
 
           <p className="mt-8 text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            AutopilotAI helps entrepreneurs, creators and teams scale faster
-            with focused AI systems, automation and clarity.
+            AutopilotAI helps you plan, create, communicate and stay consistent —
+            without wasting time or getting overwhelmed.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
@@ -56,7 +56,7 @@ export default function HomePage() {
           </div>
 
           <p className="mt-8 text-gray-400">
-            Trusted by thousands of creators & founders
+            Trusted by creators, founders and teams
           </p>
         </motion.div>
 
@@ -69,7 +69,7 @@ export default function HomePage() {
             className="w-full h-[280px] rounded-2xl border border-white/10 overflow-hidden"
           >
             <img
-              src="https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?q=80&w=1600&auto=format"
+              src="https://images.unsplash.com/photo-1531685250784-7569952593d2?q=80&w=1600&auto=format"
               className="w-full h-full object-cover opacity-90"
             />
           </motion.div>
@@ -84,10 +84,10 @@ export default function HomePage() {
       <section className="relative z-10 py-24 px-6 md:px-10">
         <div className="max-w-6xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-black">
-            Intelligent Systems That Work With You
+            Intelligent Systems That Help You Get Things Done
           </h2>
           <p className="text-gray-400 mt-6 text-xl max-w-3xl mx-auto">
-            Practical, focused AI experiences — not gimmicks.
+            Practical, focused AI experiences — not gimmicks or hype.
           </p>
         </div>
 
@@ -96,12 +96,12 @@ export default function HomePage() {
             {
               title: "Strategy & Execution",
               text: "Clear planning, structure, direction and output.",
-              img: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=1600&auto=format"
+              img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1600&auto=format"
             },
             {
               title: "Engineering & Problem Solving",
               text: "Technical reasoning, debugging and guidance.",
-              img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format"
+              img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1600&auto=format"
             }
           ].map((p, i) => (
             <motion.div
@@ -134,7 +134,7 @@ export default function HomePage() {
           {[
             {
               title: "Content Engine",
-              text: "High-quality posts, threads, captions and strategy."
+              text: "High-quality posts, threads, captions and ideas."
             },
             {
               title: "Smart Communication",
@@ -170,15 +170,15 @@ export default function HomePage() {
           className="max-w-4xl mx-auto"
         >
           <h2 className="text-5xl md:text-7xl font-black leading-tight">
-            Professional.
+            Simple.
             <br />
             Powerful.
             <br />
-            Built To Win.
+            Useful.
           </h2>
 
           <p className="mt-8 text-xl text-gray-300">
-            AutopilotAI helps ambitious people scale without burning out.
+            AutopilotAI is built to actually help — not just impress.
           </p>
 
           <div className="mt-12">
