@@ -5,309 +5,165 @@ import MarketingNavbar from "@/components/MarketingNavbar";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white text-black overflow-x-hidden">
-      {/* Global Navbar */}
-      <MarketingNavbar />
+    <div className="min-h-screen text-white overflow-x-hidden bg-[#04060d] relative">
+
+      {/* global animated glow */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[900px] h-[900px] bg-gradient-to-br from-purple-700 via-blue-500 to-pink-500 opacity-40 blur-[140px] rounded-full animate-pulse"/>
+        <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-gradient-to-tl from-blue-900 via-purple-700 to-pink-500 opacity-40 blur-[140px] rounded-full animate-[spin_25s_linear_infinite]"/>
+      </div>
+
+      {/* NAVBAR */}
+      <div className="relative z-10">
+        <MarketingNavbar />
+      </div>
 
       {/* HERO */}
-      <section className="pt-28 pb-32 px-6 md:px-10 text-center">
+      <section className="relative z-10 text-center pt-32 pb-28 px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="max-w-5xl mx-auto"
+          transition={{ duration: 1 }}
+          className="max-w-6xl mx-auto"
         >
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
-            Your Business
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+            The AI Platform
             <br />
-            <span className="text-blue-900">On Complete Autopilot</span>
+            <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">
+              Built For Creators & Entrepreneurs
+            </span>
           </h1>
 
-          <p className="mt-8 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            AI that writes your content, replies to leads, runs ads, and manages daily tasks —
-            so you can stop grinding and start scaling.
+          <p className="mt-8 text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto">
+            Intelligent personas, powerful automation and a living user experience —
+            AutopilotAI helps you scale without burning out.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
             <a
               href="/register"
-              className="group px-12 py-5 bg-black text-white font-semibold text-lg rounded-full hover:bg-gray-900 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
+              className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 via-blue-500 to-pink-500 font-semibold text-lg shadow-[0_20px_60px_rgba(124,77,255,0.4)] hover:shadow-[0_25px_70px_rgba(124,77,255,0.7)] transition-all"
             >
-              Start Free – No Card Required
-              <span className="ml-3 group-hover:translate-x-1 transition-transform inline-block">→</span>
+              Get Started Free
             </a>
 
             <a
               href="/features"
-              className="px-12 py-5 border-2 border-gray-300 font-semibold text-lg rounded-full hover:border-black transition-all hover:shadow-xl transform hover:-translate-y-1"
+              className="px-12 py-5 border border-white/20 hover:border-white/40 rounded-2xl text-lg font-semibold backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all"
             >
-              Explore Features
+              Explore Platform
             </a>
           </div>
 
-          <p className="mt-8 text-sm text-gray-500">
-            Join 8,000+ entrepreneurs already saving 20+ hours/week
+          <p className="mt-8 text-gray-400">
+            Already trusted by 8,000+ creators & founders
           </p>
         </motion.div>
-      </section>
 
-      {/* SOCIAL PROOF BAR */}
-      <section className="py-12 bg-gray-50 border-y border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-gray-600 font-medium">
-            Trusted by founders, creators, and teams at
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale">
-            <span className="text-2xl font-bold">StartupOS</span>
-            <span className="text-2xl font-bold">CreatorHub</span>
-            <span className="text-2xl font-bold">GrowthAgency</span>
-            <span className="text-2xl font-bold">Indie Makers</span>
-            <span className="text-2xl font-bold">ScaleFast</span>
-          </div>
-        </div>
-      </section>
-
-      {/* VALUE PROPS */}
-      <section className="py-24 px-6 md:px-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
-          <ValueCard
-            title="Reclaim Your Time"
-            text="Automate content, emails, and follow-ups. What used to take hours now happens while you sleep."
-          />
-          <ValueCard
-            title="Stay Consistent"
-            text="Never miss a post, reply, or opportunity. Show up like a pro — every single day."
-          />
-          <ValueCard
-            title="Scale Without Burnout"
-            text="Grow your audience, leads, and revenue without hiring or losing your mind."
-          />
-        </div>
-      </section>
-
-      {/* BIG FEATURE HIGHLIGHT */}
-      <section className="py-28 px-6 md:px-10 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-6xl font-extrabold">
-              One AI. Every repetitive task.
-            </h2>
-            <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-              Stop switching tools. AutopilotAI handles the entire growth workflow in one place.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {[
-              "Daily AI-generated social content",
-              "Smart replies to DMs, emails & comments",
-              "Lead nurturing & follow-up sequences",
-              "Ad copy + creative for Meta & Google",
-              "Performance reports + growth suggestions",
-              "Task automation & daily strategy briefs",
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="flex items-start gap-4 text-lg text-gray-700"
-              >
-                <span className="text-amber-600 font-bold mt-0.5">✓</span>
-                <span>{feature}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mt-16 text-center">
-            <a
-              href="/features"
-              className="inline-flex items-center px-10 py-5 bg-black text-white font-semibold text-lg rounded-full hover:bg-gray-900 transition-all shadow-xl hover:shadow-2xl"
+        {/* Persona image strip */}
+        <div className="mt-20 max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            "https://images.unsplash.com/photo-1590086782792-42dd2350140d",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9",
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde"
+          ].map((img, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="rounded-3xl overflow-hidden relative border border-white/10 shadow-xl hover:scale-[1.02] transition"
             >
-              See Everything It Does
-              <span className="ml-3">→</span>
-            </a>
-          </div>
+              <img src={img} className="w-full h-[260px] object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="py-28 px-6 md:px-10">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-16">
-            Real people. Real results.
+      {/* FEATURES */}
+      <section className="relative z-10 py-24 px-6 md:px-10">
+        <div className="max-w-7xl mx-auto text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-black">
+            A Living AI Experience
           </h2>
+          <p className="text-gray-400 mt-6 text-xl max-w-3xl mx-auto">
+            Not just tools. An evolving AI platform that feels alive, responsive and deeply human.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <Testimonial
-              quote="Saved me 25 hours/week. I finally have time to think strategically again."
-              author="Alex Rivera"
-              role="Founder, TechSaaS"
-            />
-            <Testimonial
-              quote="My content is better than when I wrote it myself. And I never miss a day."
-              author="Sarah Chen"
-              role="Creator, 120k followers"
-            />
-            <Testimonial
-              quote="Closed 3 new clients from leads I would’ve ignored. The AI replies are scary good."
-              author="Marcus Torres"
-              role="Agency Owner"
-            />
-          </div>
+        <div className="grid gap-10 md:grid-cols-3 max-w-7xl mx-auto">
+          {[
+            {
+              title: "AI Personas",
+              text: "Teacher, Coach, Coder, Strategist — intelligent personalities built to help you.",
+              img: "https://images.unsplash.com/photo-1531297484001-80022131f5a1"
+            },
+            {
+              title: "Automation Brain",
+              text: "Content, emails, growth systems and workflows handled automatically.",
+              img: "https://images.unsplash.com/photo-1535223289827-42f1e9919769"
+            },
+            {
+              title: "Creator Power",
+              text: "Designed for entrepreneurs who want power, speed and professional results.",
+              img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e"
+            }
+          ].map((block, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8 hover:scale-[1.01] transition"
+            >
+              <img src={block.img} className="rounded-2xl mb-6 h-[220px] object-cover w-full"/>
+              <h3 className="text-2xl font-bold">{block.title}</h3>
+              <p className="text-gray-300 mt-3">{block.text}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* WHO IT'S FOR */}
-      <section className="py-28 px-6 md:px-10 bg-gray-50">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-12">
-            Built for ambitious people who hate busywork
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
-            <Persona
-              title="Solopreneurs & Founders"
-              text="Run a professional operation without the overhead of a team."
-            />
-            <Persona
-              title="Content Creators"
-              text="Post every day, engage fans, and grow — without burning out."
-            />
-            <Persona
-              title="Marketers & Agencies"
-              text="Deliver more for clients, faster, with higher quality output."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section className="py-32 px-6 md:px-10 text-center">
+      {/* CTA */}
+      <section className="relative z-10 py-32 text-center px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
           className="max-w-4xl mx-auto"
         >
-          <h2 className="text-5xl md:text-7xl font-extrabold leading-tight">
-            Start running on autopilot.
+          <h2 className="text-5xl md:text-7xl font-black leading-tight">
+            Build Faster.
+            <br />
+            <span className="text-purple-400">Scale Smarter.</span>
           </h2>
 
-          <p className="mt-8 text-xl md:text-2xl text-gray-600">
-            Free to start. Cancel anytime. No credit card required.
+          <p className="mt-8 text-xl text-gray-300">
+            Your AI platform for growth, creativity and execution.
           </p>
 
           <div className="mt-12">
             <a
               href="/register"
-              className="inline-block px-16 py-7 bg-black text-white font-bold text-2xl rounded-full hover:bg-gray-900 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-2"
+              className="px-16 py-7 rounded-2xl text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-pink-500 shadow-[0_35px_120px_rgba(124,77,255,0.6)] hover:scale-[1.02] transition"
             >
               Get Started Free
             </a>
           </div>
-
-          <p className="mt-8 text-gray-500">
-            Have questions? Email us at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="underline hover:text-black">
-              contact@autopilotai.dev
-            </a>
-          </p>
         </motion.div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-gray-200 py-16 text-center">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="mb-8">
-            <a href="/features" className="mx-5 text-gray-600 hover:text-amber-600 transition font-medium">
-              Features
-            </a>
-            <a href="/pricing" className="mx-5 text-gray-600 hover:text-amber-600 transition font-medium">
-              Pricing
-            </a>
-            <a href="/login" className="mx-5 text-gray-600 hover:text-amber-600 transition font-medium">
-              Login
-            </a>
-            <a href="mailto:contact@autopilotai.dev" className="mx-5 text-gray-600 hover:text-amber-600 transition font-medium">
-              Contact
-            </a>
-          </div>
-
-          <p className="text-gray-500 text-sm">
-            © 2025 AutopilotAI. All rights reserved.
-          </p>
-        </div>
+      <footer className="border-t border-white/10 py-16 text-center relative z-10">
+        <p className="text-gray-400 text-sm">
+          © 2025 AutopilotAI — Built for ambitious people who want more.
+        </p>
       </footer>
     </div>
-  );
-}
-
-/* COMPONENTS */
-
-interface CardProps {
-  title: string;
-  text: string;
-}
-
-function ValueCard({ title, text }: CardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      viewport={{ once: true }}
-      className="p-10 bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 text-center"
-    >
-      <h3 className="text-2xl md:text-3xl font-extrabold">{title}</h3>
-      <p className="mt-4 text-lg text-gray-600 leading-relaxed">{text}</p>
-    </motion.div>
-  );
-}
-
-function Persona({ title, text }: CardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      className="p-12 bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1"
-    >
-      <h4 className="text-2xl font-bold">{title}</h4>
-      <p className="mt-5 text-lg text-gray-600 leading-relaxed">{text}</p>
-    </motion.div>
-  );
-}
-
-interface TestimonialProps {
-  quote: string;
-  author: string;
-  role: string;
-}
-
-function Testimonial({ quote, author, role }: TestimonialProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      className="p-10 bg-white border border-gray-200 rounded-3xl shadow-xl"
-    >
-      <p className="text-lg md:text-xl text-gray-700 italic leading-relaxed">“{quote}”</p>
-      <div className="mt-8">
-        <p className="font-bold">{author}</p>
-        <p className="text-gray-600 text-sm">{role}</p>
-      </div>
-    </motion.div>
   );
 }
