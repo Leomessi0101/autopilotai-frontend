@@ -129,7 +129,7 @@ export default function ContentPage() {
   return (
     <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
 
-      {/* Cinematic Background */}
+      {/* cinematic glow bg */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
         <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
@@ -146,15 +146,18 @@ export default function ContentPage() {
           transition={{ duration: 0.8 }}
           className="mb-20"
         >
-          <h1 className="text-5xl md:text-6xl font-light text-white">
+          <h1 className="text-5xl md:text-6xl font-light">
             Content Generator
           </h1>
           <p className="mt-6 text-xl text-gray-300">
-            Craft compelling posts and optionally generate a matching AI image.
+            Craft compelling posts — and optionally pair them with AI images.
           </p>
         </motion.section>
 
+        {/* MAIN GRID */}
         <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
+
+          {/* LEFT PANEL */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,13 +166,13 @@ export default function ContentPage() {
           >
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Title or topic (optional)
+                Title / Topic (optional)
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. New product launch"
-                className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20 focus:ring-2 focus:ring-[#6d8ce8]"
+                placeholder="e.g. Product announcement, mindset post, launch news"
+                className="w-full px-5 py-4 rounded-xl bg-black/20 border border-white/20 text-white focus:ring-2 focus:ring-[#6d8ce8]"
               />
             </div>
 
@@ -182,18 +185,18 @@ export default function ContentPage() {
                 onChange={(e) => setDetails(e.target.value)}
                 rows={8}
                 placeholder="Platform, tone, audience, instructions…"
-                className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20 focus:ring-2 focus:ring-[#6d8ce8] resize-none"
+                className="w-full px-5 py-4 rounded-xl bg-black/20 border border-white/20 text-white focus:ring-2 focus:ring-[#6d8ce8] resize-none"
               />
             </div>
 
             {/* IMAGE TOGGLE */}
-            <div className="mb-6 flex items-center justify-between border border-white/10 rounded-xl px-5 py-4 bg-white/5">
+            <div className="mb-6 flex items-center justify-between border border-white/20 rounded-xl px-5 py-4">
               <div>
-                <p className="text-sm font-medium text-gray-200">
+                <p className="text-sm font-medium text-white">
                   Generate AI Image
                 </p>
                 <p className="text-xs text-gray-400">
-                  Paid feature • Only 1 post when enabled
+                  Paid feature • Shows only 1 caption when enabled
                 </p>
               </div>
 
@@ -204,13 +207,12 @@ export default function ContentPage() {
                   onChange={handleToggle}
                   className="sr-only peer"
                 />
-                <div className="w-12 h-6 bg-gray-500 rounded-full peer peer-checked:bg-[#6d8ce8] after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+                <div className="w-12 h-6 bg-gray-500 rounded-full peer peer-checked:bg-[#6d8ce8] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
               </label>
             </div>
 
-            {/* UPGRADE */}
             {showUpgradeNotice && (
-              <div className="mb-6 bg-yellow-300/10 border border-yellow-300/30 text-yellow-200 rounded-xl px-5 py-4">
+              <div className="mb-6 bg-yellow-50 text-black border border-yellow-200 rounded-xl px-5 py-4">
                 <p className="text-sm font-medium mb-2">
                   AI Image generation is a paid feature.
                 </p>
@@ -218,14 +220,14 @@ export default function ContentPage() {
                   onClick={() =>
                     window.open("https://www.autopilotai.dev/upgrade", "_blank")
                   }
-                  className="px-5 py-2 bg-white text-black rounded-lg"
+                  className="px-5 py-2 bg-[#1b2f54] text-white rounded-lg"
                 >
                   Upgrade Plan
                 </button>
               </div>
             )}
 
-            {/* IMAGE STYLE */}
+            {/* STYLE SELECT */}
             {generateImage && (
               <div className="mb-10">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -234,13 +236,13 @@ export default function ContentPage() {
                 <select
                   value={imageStyle}
                   onChange={(e) => setImageStyle(e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20"
+                  className="w-full px-5 py-4 rounded-xl bg-black/20 border border-white/20 text-white"
                 >
-                  <option className="text-black" value="clean">Clean Corporate</option>
-                  <option className="text-black" value="cinematic">Cinematic Realistic</option>
-                  <option className="text-black" value="minimal">Minimal Illustration</option>
-                  <option className="text-black" value="social">Social Media Thumbnail</option>
-                  <option className="text-black" value="product">Product Showcase</option>
+                  <option value="clean">Clean Corporate</option>
+                  <option value="cinematic">Cinematic</option>
+                  <option value="minimal">Minimal Illustration</option>
+                  <option value="social">Social Media Thumbnail</option>
+                  <option value="product">Product Showcase</option>
                 </select>
               </div>
             )}
@@ -250,7 +252,7 @@ export default function ContentPage() {
                 <button
                   key={i}
                   onClick={() => setDetails(t)}
-                  className="px-5 py-3 rounded-xl bg-white/10 text-gray-200 hover:bg-white/20 transition"
+                  className="px-5 py-3 rounded-xl bg-white/10 hover:bg-[#1b2f54] transition"
                 >
                   {t.split(" — ")[0]}
                 </button>
@@ -261,7 +263,7 @@ export default function ContentPage() {
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="px-10 py-4 bg-white text-black rounded-xl disabled:opacity-60"
+                className="px-10 py-4 bg-[#6d8ce8] text-black rounded-xl disabled:opacity-60 hover:bg-white"
               >
                 {loading ? "Generating…" : "Generate"}
               </button>
@@ -270,21 +272,16 @@ export default function ContentPage() {
             </div>
           </motion.div>
 
-          {/* Right sidebar vibes */}
+          {/* RIGHT SIDEBAR */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-gray-200 space-y-6 shadow-[0_50px_120px_rgba(0,0,0,.5)]"
-          >
-            <h3 className="text-xl font-semibold">Tips</h3>
-            <p className="text-gray-300">
-              Be clear with goal, audience and tone for better output.
-            </p>
-          </motion.div>
+            className="space-y-8"
+          ></motion.div>
         </section>
 
-        {/* RESULT SECTION */}
+        {/* SOCIAL MEDIA PREVIEW */}
         {(result || imageUrl) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
@@ -292,33 +289,66 @@ export default function ContentPage() {
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="max-w-xl mx-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg overflow-hidden">
+            <div className="max-w-xl mx-auto bg-white rounded-2xl border shadow-[0_40px_90px_rgba(0,0,0,.6)] overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1b2f54] to-[#6d8ce8]" />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    autopilot.creator <span className="text-blue-500">✔</span>
+                  </p>
+                  <p className="text-xs text-gray-500">Sponsored</p>
+                </div>
+              </div>
 
               {/* Image */}
               {imageUrl && (
-                <img src={imageUrl} className="w-full object-cover border-b border-white/10" />
+                <img
+                  src={imageUrl}
+                  className="w-full object-cover max-h-[550px]"
+                />
               )}
 
+              {/* Actions */}
+              <div className="flex items-center justify-between px-4 pt-4 text-gray-700">
+                <div className="flex gap-4 text-2xl">
+                  ❤️  💬  🔁
+                </div>
+                <span className="text-lg">⭐</span>
+              </div>
+
               {/* Caption */}
-              <div className="p-6">
-                <p className="whitespace-pre-wrap leading-relaxed text-gray-100 text-sm">
-                  {result}
+              <div className="p-5">
+                <p className="text-sm">
+                  <span className="font-semibold mr-2">autopilot.creator</span>
+                  <span className="whitespace-pre-wrap leading-relaxed text-gray-800">
+                    {result}
+                  </span>
+                </p>
+
+                <p className="text-xs text-gray-500 mt-3">
+                  View all 239 comments
+                </p>
+
+                <p className="text-xs text-gray-400 mt-2">
+                  Posted just now • Powered by AutopilotAI
                 </p>
               </div>
 
               {/* Buttons */}
               {imageUrl && (
-                <div className="flex justify-end gap-4 p-4">
+                <div className="flex justify-end gap-4 p-4 border-t bg-gray-50">
                   <button
                     onClick={downloadImage}
-                    className="px-6 py-2 border border-white/20 rounded-xl"
+                    className="px-6 py-2 border rounded-xl hover:border-[#1b2f54]"
                   >
                     Download
                   </button>
 
                   <button
                     onClick={saveImage}
-                    className="px-6 py-2 bg-white text-black rounded-xl"
+                    className="px-6 py-2 bg-[#1b2f54] text-white rounded-xl hover:bg-[#2b4e8d]"
                   >
                     Save to My Work
                   </button>
