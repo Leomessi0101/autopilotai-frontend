@@ -27,16 +27,16 @@ export default function HomePage() {
           className="max-w-6xl mx-auto"
         >
           <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight">
-            AI That Feels Powerful —
+            AI That Actually Helps You Work —
             <br />
             <span className="text-[#d8e3ff]">
-              Built For Real Work.
+              Not Just Another Tool.
             </span>
           </h1>
 
           <p className="mt-8 text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             AutopilotAI helps entrepreneurs, creators and teams scale faster
-            with intelligent personas, automated workflows and a living UI experience.
+            with focused AI systems, automation and clarity.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
@@ -60,43 +60,48 @@ export default function HomePage() {
           </p>
         </motion.div>
 
-        {/* Abstract AI Visual */}
+        {/* ABSTRACT AI VISUAL */}
         <div className="mt-24 max-w-5xl mx-auto rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-10">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="w-full h-[280px] rounded-2xl bg-[radial-gradient(circle_at_20%_20%,rgba(80,110,190,0.35),transparent),radial-gradient(circle_at_80%_60%,rgba(120,160,255,0.25),transparent)] border border-white/10"
-          />
+            className="w-full h-[280px] rounded-2xl border border-white/10 overflow-hidden"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?q=80&w=1600&auto=format"
+              className="w-full h-full object-cover opacity-90"
+            />
+          </motion.div>
+
           <p className="text-gray-300 mt-6 text-lg">
-            Calm. Powerful. Designed to feel like a living intelligence — not a webpage.
+            Built for performance. Designed for real work.
           </p>
         </div>
       </section>
 
-      {/* PERSONA SECTION */}
+      {/* PERSONA / SYSTEM SECTION */}
       <section className="relative z-10 py-24 px-6 md:px-10">
         <div className="max-w-6xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-black">
-            Intelligent Personas Built To Help You
+            Intelligent Systems That Work With You
           </h2>
           <p className="text-gray-400 mt-6 text-xl max-w-3xl mx-auto">
-            Not random chatbots. Carefully designed personalities with
-            purpose, identity and expertise.
+            Practical, focused AI experiences — not gimmicks.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
           {[
             {
-              title: "Business Strategist",
-              text: "Planning, growth frameworks, marketing clarity.",
-              img: "https://images.unsplash.com/photo-1531297484001-80022131f5a1"
+              title: "Strategy & Execution",
+              text: "Clear planning, structure, direction and output.",
+              img: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=1600&auto=format"
             },
             {
-              title: "Coding Mentor",
-              text: "Technical guidance, debugging and smart engineering help.",
-              img: "https://images.unsplash.com/photo-1535223289827-42f1e9919769"
+              title: "Engineering & Problem Solving",
+              text: "Technical reasoning, debugging and guidance.",
+              img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format"
             }
           ].map((p, i) => (
             <motion.div
@@ -107,7 +112,7 @@ export default function HomePage() {
               transition={{ duration: 0.8 }}
               className="rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl"
             >
-              <img src={p.img} className="h-[260px] w-full object-cover opacity-80" />
+              <img src={p.img} className="h-[260px] w-full object-cover opacity-90" />
               <div className="p-10">
                 <h3 className="text-2xl font-bold">{p.title}</h3>
                 <p className="text-gray-300 mt-3">{p.text}</p>
@@ -123,9 +128,6 @@ export default function HomePage() {
           <h2 className="text-4xl md:text-6xl font-black">
             Everything You Need To Scale
           </h2>
-          <p className="text-gray-400 mt-6 text-xl max-w-3xl mx-auto">
-            Content. Communication. Growth systems. All in one intelligent platform.
-          </p>
         </div>
 
         <div className="grid gap-10 md:grid-cols-3 max-w-7xl mx-auto">
