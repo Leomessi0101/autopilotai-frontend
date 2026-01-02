@@ -14,16 +14,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-core text-foreground antialiased">
+        
         {/* Animated Background Glow */}
         <div className="app-background">
           <div className="app-gradient" />
           <div className="app-gradient delay" />
         </div>
 
-        {/* App Content */}
+        {/* Content */}
         <div className="relative z-10">
           {children}
         </div>
+
       </body>
     </html>
   );
