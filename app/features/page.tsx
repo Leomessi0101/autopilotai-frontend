@@ -5,32 +5,43 @@ import MarketingNavbar from "@/components/MarketingNavbar";
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-white text-black">
-      {/* Global Marketing Navbar */}
-      <MarketingNavbar />
+    <div className="min-h-screen text-white bg-[#05070d] relative overflow-x-hidden">
+
+      {/* Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[160px]" />
+        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[180px]" />
+      </div>
+
+      {/* NAV */}
+      <div className="relative z-20">
+        <MarketingNavbar />
+      </div>
 
       {/* HERO */}
-      <section className="pt-28 pb-32 px-6 md:px-10 text-center">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative z-10 pt-32 pb-28 px-6 md:px-10 text-center">
+        <div className="max-w-6xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
-            className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight"
+            transition={{ duration: 1 }}
+            className="text-5xl md:text-7xl font-black leading-tight tracking-tight"
           >
-            Everything you need
+            Everything You Need
             <br />
-            <span className="text-blue-900">to run on autopilot.</span>
+            <span className="text-[#d8e3ff]">
+              To Work Smarter.
+            </span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="mt-8 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="mt-8 text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
           >
-            AI that creates your content, replies to leads, builds ads, and guides your strategy —
-            so you can finally focus on what actually moves the needle.
+            AutopilotAI helps you plan, create, communicate and stay consistent —
+            without wasting time or burning out.
           </motion.p>
 
           <motion.div
@@ -41,15 +52,14 @@ export default function FeaturesPage() {
           >
             <a
               href="/register"
-              className="group px-12 py-5 bg-black text-white font-semibold text-lg rounded-full hover:bg-gray-900 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
+              className="px-12 py-5 rounded-2xl bg-gradient-to-r from-[#203b6a] to-[#345899] font-semibold text-lg hover:scale-[1.02] transition shadow-[0_20px_60px_rgba(15,35,85,0.5)]"
             >
-              Start Free – No Card Needed
-              <span className="ml-3 group-hover:translate-x-1 transition-transform inline-block">→</span>
+              Get Started Free
             </a>
 
             <a
               href="/pricing"
-              className="px-12 py-5 border-2 border-gray-300 font-semibold text-lg rounded-full hover:border-black transition-all hover:shadow-xl transform hover:-translate-y-1"
+              className="px-12 py-5 border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-xl rounded-2xl text-lg font-semibold transition"
             >
               View Pricing
             </a>
@@ -58,59 +68,59 @@ export default function FeaturesPage() {
       </section>
 
       {/* FEATURE GRID */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="relative z-10 py-24 px-6 md:px-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-extrabold">
-              One platform. Every growth task.
+            <h2 className="text-4xl md:text-5xl font-black">
+              One Platform. Real Results.
             </h2>
-            <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-              No more switching tools or letting things slip. AutopilotAI handles the repetitive work — consistently and intelligently.
+            <p className="mt-6 text-xl text-gray-400 max-w-3xl mx-auto">
+              No chaos. No juggling tools. Just consistent output and clarity.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <FeatureBlock
               title="AI Content Engine"
-              desc="Never stare at a blank screen again. Get daily, high-converting content that sounds exactly like you."
+              desc="Ideas, posts, captions and long-form content — ready when you are."
               highlights={[
-                "Full social posts & captions (Instagram, LinkedIn, X, etc.)",
-                "On-brand tone & voice automatically applied",
-                "Engagement-optimized ideas and hooks",
-                "Schedule-ready content every single day",
+                "High-quality content in your voice",
+                "Platform-optimized writing",
+                "Hook-driven outputs",
+                "Daily, consistent creation"
               ]}
             />
 
             <FeatureBlock
-              title="Smart Lead & Email Replies"
-              desc="Turn every inquiry into a conversation. AI responds instantly with personalized, human-like messages."
+              title="Smart Replies & Communication"
+              desc="Fast, helpful responses for leads, emails and conversations."
               highlights={[
-                "Replies to DMs, emails, and contact forms",
-                "Smart follow-ups that nurture leads",
-                "Professional yet conversational tone",
-                "Closes more deals while you sleep",
+                "Instant professional replies",
+                "Lead nurturing & follow-ups",
+                "Human-like tone",
+                "Never miss an opportunity"
               ]}
             />
 
             <FeatureBlock
-              title="Ad Campaign Builder"
-              desc="Launch winning ads in minutes. AI writes copy, generates angles, and structures full campaigns."
+              title="Ad & Campaign Builder"
+              desc="Winning ad copy and structured campaigns — without the headache."
               highlights={[
-                "Meta (Facebook/Instagram) ad copy & creatives",
-                "Google Search & Performance Max scripts",
-                "A/B test variations ready to deploy",
-                "Proven frameworks built-in",
+                "Meta & Google campaign support",
+                "Multiple proven angles",
+                "A/B variations",
+                "Ready to launch outputs"
               ]}
             />
 
             <FeatureBlock
-              title="Daily Strategy & Focus Guidance"
-              desc="More than a tool — a thinking partner. Get clear direction on what to prioritize every day."
+              title="Daily Strategy & Focus"
+              desc="Clear direction so you always know what matters most."
               highlights={[
-                "Personalized daily action plans",
-                "Growth suggestions based on your goals",
-                "Eliminate decision fatigue",
-                "Stay focused on high-impact work",
+                "Personalized daily guidance",
+                "Simple prioritized plans",
+                "Remove decision fatigue",
+                "Stay focused on impact"
               ]}
             />
           </div>
@@ -118,34 +128,34 @@ export default function FeaturesPage() {
       </section>
 
       {/* PERSONAS */}
-      <section className="py-28 px-6 md:px-10 bg-gray-50">
+      <section className="relative z-10 py-28 px-6 md:px-10">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-16">
-            Built for ambitious people who hate wasting time
+          <h2 className="text-4xl md:text-5xl font-black mb-16">
+            Built For People Who Want To Move Faster
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <PersonaCard
-              title="Solopreneurs & Founders"
-              text="Run a full marketing engine without hiring a team or burning out."
+              title="Founders"
+              text="Run smarter without endless manual work."
             />
             <PersonaCard
-              title="Creators & Personal Brands"
-              text="Post daily, engage fans, and grow your audience — consistently and effortlessly."
+              title="Creators"
+              text="Stay consistent without burning out."
             />
             <PersonaCard
               title="Marketers & Agencies"
-              text="10x your output. Deliver better results for clients without scaling headcount."
+              text="Do more without increasing workload."
             />
           </div>
         </div>
       </section>
 
-      {/* COMPARISON TABLE */}
-      <section className="py-28 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-16">
-            Doing it yourself vs. AutopilotAI
+      {/* COMPARISON */}
+      <section className="relative z-10 py-28 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-black text-center mb-16">
+            With AutopilotAI vs Doing It Yourself
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -153,11 +163,11 @@ export default function FeaturesPage() {
               title="Doing It Yourself"
               good={false}
               points={[
-                "Inconsistent posting & communication",
-                "Leads slip through the cracks",
-                "Hours wasted on repetitive tasks",
-                "Decision fatigue and burnout",
-                "Slow, unpredictable growth",
+                "Inconsistent output",
+                "Missed leads",
+                "Too much manual work",
+                "Overthinking & fatigue",
+                "Slow progress"
               ]}
             />
 
@@ -165,91 +175,48 @@ export default function FeaturesPage() {
               title="With AutopilotAI"
               good={true}
               points={[
-                "Daily consistent output — guaranteed",
-                "Every lead gets a fast, smart response",
-                "Hours reclaimed every week",
-                "Clear direction and focus",
-                "Faster, more predictable growth",
+                "Consistent daily output",
+                "Every lead handled",
+                "Time back in your day",
+                "Clarity and focus",
+                "Faster, predictable progress"
               ]}
             />
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-28 px-6 md:px-10 bg-gray-50">
+      {/* CTA */}
+      <section className="relative z-10 py-32 text-center px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-16">
-            Got questions? We've got answers.
-          </h2>
-
-          <div className="space-y-8">
-            <Faq
-              question="Do I need any technical skills?"
-              answer="None at all. If you can send an email, you can use AutopilotAI effectively from day one."
-            />
-            <Faq
-              question="Is the output actually good — or just generic AI slop?"
-              answer="Our engine is fine-tuned for real-world marketing. Users consistently say the content and replies are better than what they’d write themselves."
-            />
-            <Faq
-              question="What platforms does it support?"
-              answer="Instagram, LinkedIn, X (Twitter), Facebook, Google Ads, email platforms, contact forms — and more coming."
-            />
-            <Faq
-              question="Can I cancel anytime?"
-              answer="Yes — no contracts, no hidden fees. Cancel directly from your dashboard in seconds."
-            />
-            <Faq
-              question="Is my data safe?"
-              answer="We never train on your private data. Everything stays yours, and we use bank-level encryption."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section className="py-32 px-6 md:px-10 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-7xl font-extrabold leading-tight">
-            Stop grinding.
+          <h2 className="text-5xl md:text-7xl font-black leading-tight">
+            Simple.
             <br />
-            Start scaling.
+            Powerful.
+            <br />
+            Useful.
           </h2>
 
-          <p className="mt-8 text-xl md:text-2xl text-gray-600">
-            Join thousands already running their business on autopilot.
+          <p className="mt-8 text-xl text-gray-300">
+            Built to actually help — not just impress.
           </p>
 
           <div className="mt-12">
             <a
               href="/register"
-              className="inline-block px-16 py-7 bg-black text-white font-bold text-2xl rounded-full hover:bg-gray-900 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-2"
+              className="px-16 py-7 rounded-2xl text-2xl font-bold bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] shadow-[0_35px_120px_rgba(20,40,90,0.6)] hover:scale-[1.02] transition"
             >
               Get Started Free
             </a>
           </div>
-
-          <p className="mt-10 text-gray-500">
-            Questions? Reach out anytime at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="underline hover:text-black">
-              contact@autopilotai.dev
-            </a>
-          </p>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-gray-200 py-16 text-center text-gray-500">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="mb-8">
-            <a href="/" className="mx-5 hover:text-amber-600 transition font-medium">Home</a>
-            <a href="/features" className="mx-5 hover:text-amber-600 transition font-medium">Features</a>
-            <a href="/pricing" className="mx-5 hover:text-amber-600 transition font-medium">Pricing</a>
-            <a href="/login" className="mx-5 hover:text-amber-600 transition font-medium">Login</a>
-          </div>
-          <p className="text-sm">© 2025 AutopilotAI. All rights reserved.</p>
-        </div>
+      <footer className="border-t border-white/10 py-16 text-center relative z-10">
+        <p className="text-gray-400 text-sm">
+          © 2025 AutopilotAI — Built for ambitious people.
+        </p>
       </footer>
     </div>
   );
@@ -270,12 +237,10 @@ function FeatureBlock({ title, desc, highlights }: FeatureBlockProps) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}
       viewport={{ once: true }}
-      className="p-10 md:p-12 bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2"
+      className="p-10 md:p-12 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl"
     >
-      <h3 className="text-3xl md:text-4xl font-extrabold leading-tight">{title}</h3>
-      <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-        {desc}
-      </p>
+      <h3 className="text-3xl font-bold">{title}</h3>
+      <p className="mt-4 text-lg text-gray-300">{desc}</p>
 
       <ul className="mt-8 space-y-4">
         {highlights.map((item, i) => (
@@ -285,9 +250,9 @@ function FeatureBlock({ title, desc, highlights }: FeatureBlockProps) {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
             viewport={{ once: true }}
-            className="flex items-start gap-4 text-lg text-gray-700"
+            className="flex items-start gap-4 text-lg text-gray-300"
           >
-            <span className="mt-1 w-2 h-2 rounded-full bg-black flex-shrink-0" />
+            <span className="mt-1 w-2 h-2 rounded-full bg-[#6d8ce8]" />
             {item}
           </motion.li>
         ))}
@@ -303,10 +268,10 @@ function PersonaCard({ title, text }: { title: string; text: string }) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
-      className="p-12 bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1"
+      className="p-12 border border-white/10 bg-white/5 backdrop-blur-xl rounded-3xl shadow-xl"
     >
       <h4 className="text-2xl font-bold">{title}</h4>
-      <p className="mt-5 text-lg text-gray-600 leading-relaxed">{text}</p>
+      <p className="mt-5 text-lg text-gray-300">{text}</p>
     </motion.div>
   );
 }
@@ -318,36 +283,25 @@ function CompareCard({ title, points, good }: { title: string; points: string[];
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
-      className={`p-10 rounded-3xl border-2 shadow-xl ${
+      className={`p-10 rounded-3xl border shadow-xl ${
         good
-          ? "border-amber-500 bg-amber-50"
-          : "border-gray-200 bg-white"
+          ? "border-[#2b4e8d] bg-[#0b1424]"
+          : "border-white/10 bg-white/5"
       }`}
     >
-      <h4 className="text-2xl font-extrabold mb-8">{title}</h4>
+      <h4 className="text-2xl font-bold mb-8">{title}</h4>
       <ul className="space-y-5">
         {points.map((p, i) => (
           <li key={i} className="flex items-start gap-4">
-            <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${good ? "bg-amber-600" : "bg-gray-400"}`} />
-            <span className="text-lg text-gray-700">{p}</span>
+            <span
+              className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                good ? "bg-[#6d8ce8]" : "bg-gray-400"
+              }`}
+            />
+            <span className="text-lg text-gray-300">{p}</span>
           </li>
         ))}
       </ul>
-    </motion.div>
-  );
-}
-
-function Faq({ question, answer }: { question: string; answer: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-      className="border-b border-gray-300 pb-8"
-    >
-      <h4 className="text-xl md:text-2xl font-bold">{question}</h4>
-      <p className="mt-4 text-lg text-gray-600 leading-relaxed">{answer}</p>
     </motion.div>
   );
 }
