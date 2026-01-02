@@ -62,11 +62,11 @@ export default function EmailPage() {
 
       const output = res.data.output || "";
       setResult(output);
-
       parseEmail(output);
     } catch (e: any) {
       setError(
-        e?.response?.data?.detail || "Something went wrong. Please try again."
+        e?.response?.data?.detail ||
+          "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -74,7 +74,6 @@ export default function EmailPage() {
   };
 
   const parseEmail = (text: string) => {
-    // Try to extract "Subject: ..."
     const subjectMatch = text.match(/Subject:\s*(.*)/i);
     const body = text.replace(/Subject:.*\n?/i, "").trim();
 
@@ -83,7 +82,6 @@ export default function EmailPage() {
   };
 
   const openInEmailClient = () => {
-    // Leave "to" empty so their client asks / uses default
     const mailto = `mailto:?subject=${encodeURIComponent(
       parsedSubject || "No subject"
     )}&body=${encodeURIComponent(parsedBody || result || "")}`;
@@ -122,20 +120,14 @@ export default function EmailPage() {
 
         {/* Main Grid */}
         <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
-          {/* Input Area */}
+          {/* Input */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
           >
-            <div className="mb-10">
-              <p className="text-lg font-medium text-gray-700">
-                Describe the email you need
-              </p>
-            </div>
-
-            {/* Subject (optional) */}
+            {/* Subject */}
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-600 mb-2">
                 Subject line (optional)
@@ -144,24 +136,21 @@ export default function EmailPage() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="e.g. Exploring a potential collaboration"
-                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
               />
-              <p className="mt-2 text-sm text-gray-500">
-                Leave blank to let the AI suggest an effective subject.
-              </p>
             </div>
 
             {/* Details */}
             <div className="mb-10">
               <label className="block text-sm font-medium text-gray-600 mb-2">
-                Details
+                Email details
               </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={9}
-                placeholder="Recipient, purpose, tone, key points, desired outcome."
-                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900 resize-none transition text-base"
+                placeholder="Recipient, tone, purpose, details..."
+                className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 resize-none transition text-base"
               />
             </div>
 
@@ -177,7 +166,7 @@ export default function EmailPage() {
                     onClick={() =>
                       setDetails(template.split(" — ")[1] || template)
                     }
-                    className="px-5 py-3 rounded-xl bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-900 transition font-medium text-sm border border-transparent"
+                    className="px-5 py-3 rounded-xl bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-900 transition font-medium text-sm"
                   >
                     {template.split(" — ")[0]}
                   </button>
@@ -185,25 +174,21 @@ export default function EmailPage() {
               </div>
             </div>
 
-            {/* Generate Button + Error */}
+            {/* Button */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition disabled:opacity-60"
               >
                 {loading ? "Generating…" : "Generate Email"}
               </button>
 
               {error && <p className="text-red-600 ml-4">{error}</p>}
             </div>
-
-            <p className="mt-6 text-sm text-gray-500">
-              All generated emails are automatically saved in My Work.
-            </p>
           </motion.div>
 
-          {/* Tips Sidebar */}
+          {/* Sidebar */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -215,38 +200,16 @@ export default function EmailPage() {
                 Guidelines for stronger emails
               </h4>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>State purpose early and clearly</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Lead with value for the recipient</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Include one clear next step</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
-                  <span>Keep length appropriate to context</span>
-                </li>
+                <li>Be clear early</li>
+                <li>Lead with value</li>
+                <li>One clear next step</li>
+                <li>Respect the reader’s time</li>
               </ul>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-2xl p-8 border border-blue-100">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                Best practice
-              </h4>
-              <p className="text-gray-700">
-                The most effective emails are concise, respectful, and focused
-                on the recipient’s interests.
-              </p>
             </div>
           </motion.div>
         </section>
 
-        {/* Result — Gmail-style preview + actions */}
+        {/* Output */}
         {(parsedBody || parsedSubject) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
@@ -255,7 +218,6 @@ export default function EmailPage() {
             className="mb-24"
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Email Header */}
               <div className="px-8 py-6 border-b bg-gray-50">
                 <p className="text-sm text-gray-500 mb-1">Subject</p>
                 <h2 className="text-2xl font-semibold text-gray-900">
@@ -263,56 +225,28 @@ export default function EmailPage() {
                 </h2>
               </div>
 
-              {/* Meta */}
-              <div className="px-8 py-6 border-b flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center text-lg font-semibold">
-                  {name}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    You — AutopilotAI
-                  </p>
-                  <p className="text-gray-500 text-sm">To recipient</p>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="px-8 py-8 leading-relaxed whitespace-pre-wrap text-gray-800 text-base">
+              <div className="px-8 py-8 whitespace-pre-wrap text-gray-800 text-base">
                 {parsedBody}
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap justify-end gap-4 mt-8">
+            <div className="flex justify-end gap-4 mt-8">
               <button
                 onClick={() => navigator.clipboard.writeText(result)}
-                className="px-8 py-3 border border-gray-300 rounded-xl font-medium hover:border-blue-900 transition"
+                className="px-8 py-3 border rounded-xl"
               >
-                Copy Raw Text
+                Copy Text
               </button>
 
               <button
                 onClick={openInEmailClient}
-                className="px-8 py-3 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+                className="px-8 py-3 bg-blue-900 text-white rounded-xl"
               >
                 Open in Email App
               </button>
             </div>
           </motion.section>
         )}
-
-        {/* Contact Footer */}
-        <footer className="text-center py-12 border-t border-gray-200">
-          <p className="text-gray-600">
-            Questions? Reach out at{" "}
-            <a
-              href="mailto:contact@autopilotai.dev"
-              className="font-medium text-blue-900 hover:underline"
-            >
-              contact@autopilotai.dev
-            </a>
-          </p>
-        </footer>
       </main>
     </div>
   );

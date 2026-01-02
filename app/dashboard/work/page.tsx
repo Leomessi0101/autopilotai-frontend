@@ -80,6 +80,7 @@ export default function MyWorkPage() {
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+
         {/* Header */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -100,7 +101,7 @@ export default function MyWorkPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-20"
+          className="mb-20 bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-3xl font-semibold text-gray-900">
@@ -118,7 +119,7 @@ export default function MyWorkPage() {
                 <motion.div
                   key={img.id}
                   whileHover={{ scale: 1.02 }}
-                  className="bg-white border rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:border-blue-900"
+                  className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:border-blue-900 transition"
                   onClick={() => setSelectedImage(img)}
                 >
                   <img
@@ -149,7 +150,7 @@ export default function MyWorkPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your work..."
-              className="px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition w-full md:max-w-md"
+              className="px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition w-full md:max-w-md bg-white"
             />
 
             <div className="flex gap-3 flex-wrap">
@@ -159,7 +160,7 @@ export default function MyWorkPage() {
                   onClick={() => setFilter(t as any)}
                   className={`px-6 py-3 rounded-xl text-sm font-medium transition ${
                     filter === t
-                      ? "bg-blue-900 text-white"
+                      ? "bg-blue-900 text-white shadow-sm"
                       : "bg-white border border-gray-200 text-gray-700 hover:border-blue-900"
                   }`}
                 >
@@ -214,7 +215,7 @@ export default function MyWorkPage() {
   );
 }
 
-/* ---------------- IMAGE MODAL ---------------- */
+/* IMAGE MODAL */
 function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void }) {
   const download = () => {
     const a = document.createElement("a");
@@ -272,8 +273,7 @@ function ImageModal({ image, onClose }: { image: ImageItem; onClose: () => void 
   );
 }
 
-/* ---------------- ORIGINAL COMPONENTS BELOW ---------------- */
-
+/* CONTENT ROW */
 function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
   const lines = item.result.split("\n").slice(0, 4);
   const previewText = lines.join("\n");
@@ -286,7 +286,7 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl shadow-sm border p-8 hover:border-blue-900 transition cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:border-blue-900 hover:shadow-md transition cursor-pointer group"
       onClick={onOpen}
     >
       <div className="flex items-start justify-between gap-8">
@@ -315,6 +315,7 @@ function WorkRow({ item, onOpen }: { item: WorkItem; onOpen: () => void }) {
   );
 }
 
+/* EMPTY STATE */
 function EmptyState({ hasItems }: { hasItems: boolean }) {
   return (
     <motion.div
@@ -345,6 +346,7 @@ function EmptyState({ hasItems }: { hasItems: boolean }) {
   );
 }
 
+/* MODAL */
 function WorkModal({ item, onClose }: { item: WorkItem; onClose: () => void }) {
   const copy = () => navigator.clipboard.writeText(item.result);
 

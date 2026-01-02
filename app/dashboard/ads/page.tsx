@@ -14,6 +14,12 @@ const PLATFORMS = [
 
 const OBJECTIVES = ["Leads", "Sales", "Traffic", "Brand Awareness"];
 
+type ParsedAd = {
+  headline: string;
+  primary: string;
+  cta: string;
+};
+
 export default function AdsPage() {
   const router = useRouter();
 
@@ -23,7 +29,7 @@ export default function AdsPage() {
   const [audience, setAudience] = useState("");
 
   const [result, setResult] = useState("");
-  const [parsedAds, setParsedAds] = useState<any[]>([]);
+  const [parsedAds, setParsedAds] = useState<ParsedAd[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,20 +68,22 @@ export default function AdsPage() {
 
     try {
       setLoading(true);
+
       const res = await api.post("/api/ads/generate", {
         platform,
         objective,
         product,
         audience,
-        prompt: `Generate ad copy for ${platform} with objective ${objective}. Product: ${product}. Audience: ${audience}.`,
+        prompt: `Generate ${platform} ad copy with objective: ${objective}. Product: ${product}. Audience: ${audience}.`,
       });
 
       const output = res.data.output || "";
       setResult(output);
       parseAds(output);
-
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
+      setError(
+        e?.response?.data?.detail || "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -87,7 +95,7 @@ export default function AdsPage() {
       .map((b) => b.trim())
       .filter((b) => b.length > 0);
 
-    const ads = blocks.map((block) => {
+    const ads: ParsedAd[] = blocks.map((block) => {
       const headlineMatch = block.match(/Headline:\s*(.*)/i);
       const primaryMatch = block.match(/Primary text:\s*([\s\S]*?)CTA:/i);
       const ctaMatch = block.match(/CTA:\s*(.*)/i);
@@ -122,7 +130,7 @@ export default function AdsPage() {
           </p>
         </motion.section>
 
-        {/* Main Grid */}
+        {/* Main */}
         <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
           {/* Input */}
           <motion.div
@@ -131,13 +139,11 @@ export default function AdsPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10"
           >
-            <div className="mb-10">
-              <p className="text-lg font-medium text-gray-700">Define your campaign</p>
-            </div>
-
             {/* Platform */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-600 mb-3">Platform</label>
+              <label className="block text-sm font-medium text-gray-600 mb-3">
+                Platform
+              </label>
               <div className="flex flex-wrap gap-3">
                 {PLATFORMS.map((p) => (
                   <button
@@ -146,7 +152,7 @@ export default function AdsPage() {
                     className={`px-6 py-3 rounded-xl font-medium transition ${
                       platform === p.key
                         ? "bg-blue-900 text-white"
-                        : "bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-900"
+                        : "bg-gray-100 hover:bg-blue-50 hover:text-blue-900"
                     }`}
                   >
                     {p.label}
@@ -157,7 +163,9 @@ export default function AdsPage() {
 
             {/* Objective */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-600 mb-3">Objective</label>
+              <label className="block text-sm font-medium text-gray-600 mb-3">
+                Objective
+              </label>
               <div className="flex flex-wrap gap-3">
                 {OBJECTIVES.map((o) => (
                   <button
@@ -166,7 +174,7 @@ export default function AdsPage() {
                     className={`px-6 py-3 rounded-xl font-medium transition ${
                       objective === o
                         ? "bg-teal-600 text-white"
-                        : "bg-gray-100 text-gray-800 hover:bg-teal-50 hover:text-teal-900"
+                        : "bg-gray-100 hover:bg-teal-50 hover:text-teal-900"
                     }`}
                   >
                     {o}
@@ -183,8 +191,8 @@ export default function AdsPage() {
               <input
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
-                placeholder="e.g. Premium custom mouthguards for combat athletes"
                 className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
+                placeholder="e.g. Premium custom mouthguards for fighters"
               />
             </div>
 
@@ -196,27 +204,22 @@ export default function AdsPage() {
               <input
                 value={audience}
                 onChange={(e) => setAudience(e.target.value)}
-                placeholder="e.g. Fighters aged 18–35 training at gyms"
                 className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
+                placeholder="e.g. Combat athletes ages 18–35"
               />
             </div>
 
-            {/* Button */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition disabled:opacity-60"
               >
                 {loading ? "Generating…" : "Generate Ad Copy"}
               </button>
 
               {error && <p className="text-red-600 ml-4">{error}</p>}
             </div>
-
-            <p className="mt-6 text-sm text-gray-500">
-              All generated ads are automatically saved in My Work.
-            </p>
           </motion.div>
 
           {/* Sidebar */}
@@ -228,19 +231,19 @@ export default function AdsPage() {
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
               <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                Guidelines for stronger ads
+                Tips for better ads
               </h4>
               <ul className="space-y-3 text-gray-700">
-                <li>Lead with the main benefit</li>
+                <li>Lead with the biggest benefit</li>
                 <li>Hook attention in the first line</li>
-                <li>Use one clear CTA</li>
+                <li>Use one strong CTA</li>
                 <li>Test multiple variations</li>
               </ul>
             </div>
           </motion.div>
         </section>
 
-        {/* RESULT — Beautiful Ad Cards */}
+        {/* Results */}
         {parsedAds.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
@@ -280,26 +283,13 @@ export default function AdsPage() {
             <div className="text-right mt-10">
               <button
                 onClick={() => navigator.clipboard.writeText(result)}
-                className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+                className="px-8 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition"
               >
                 Copy Raw Text
               </button>
             </div>
           </motion.section>
         )}
-
-        {/* Footer */}
-        <footer className="text-center py-12 border-t border-gray-200">
-          <p className="text-gray-600">
-            Questions? Reach out at{" "}
-            <a
-              href="mailto:contact@autopilotai.dev"
-              className="font-medium text-blue-900 hover:underline"
-            >
-              contact@autopilotai.dev
-            </a>
-          </p>
-        </footer>
       </main>
     </div>
   );
