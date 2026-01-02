@@ -69,7 +69,7 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500">
+      <div className="min-h-screen bg-[#05070d] flex items-center justify-center text-gray-400">
         Loading billing details…
       </div>
     );
@@ -77,17 +77,27 @@ export default function BillingPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Unable to load billing information. Please try again later.</p>
+      <div className="min-h-screen bg-[#05070d] flex items-center justify-center">
+        <p className="text-gray-300">
+          Unable to load billing information. Please try again later.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
+
+      {/* Background Glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
+        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
+      </div>
+
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan ?? undefined} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+
         {/* Header */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -95,40 +105,43 @@ export default function BillingPage() {
           transition={{ duration: 0.8 }}
           className="mb-20"
         >
-          <h1 className="text-5xl md:text-6xl font-light text-gray-800">
+          <h1 className="text-5xl md:text-6xl font-light">
             Billing & Subscription
           </h1>
-          <p className="mt-6 text-xl text-gray-600">
+          <p className="mt-6 text-xl text-gray-300">
             Manage your plan, view usage, and update payment details.
           </p>
         </motion.section>
 
-        {/* Plan & Usage Grid */}
+        {/* Plan + Usage Grid */}
         <section className="grid gap-10 md:grid-cols-[2fr,1fr] mb-20">
+
           {/* Current Plan */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-12 shadow-[0_50px_120px_rgba(0,0,0,.55)]"
           >
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">Current Plan</h3>
-            <p className="text-gray-600 mb-8">
-              Account: <span className="font-medium">{data.email}</span>
+            <h3 className="text-2xl font-semibold mb-4 text-white">Current Plan</h3>
+
+            <p className="text-gray-300 mb-8">
+              Account: <span className="font-medium text-white">{data.email}</span>
             </p>
 
             <div className="mb-10">
-              <p className="text-4xl font-semibold text-gray-900">
+              <p className="text-4xl font-semibold">
                 {planLabel(data.subscription)}
               </p>
+
               {data.subscription?.toLowerCase() === "free" && (
-                <span className="inline-block mt-3 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium">
+                <span className="inline-block mt-3 px-4 py-2 bg-white/10 text-gray-200 rounded-xl text-sm font-medium border border-white/10">
                   Free Tier
                 </span>
               )}
             </div>
 
-            <p className="text-gray-600 mb-10">
+            <p className="text-gray-300 mb-10">
               {data.subscription === "free"
                 ? "Limited access to get started. Upgrade for full capabilities."
                 : data.subscription === "basic"
@@ -141,7 +154,7 @@ export default function BillingPage() {
             {data.subscription?.toLowerCase() === "free" ? (
               <button
                 onClick={() => router.push("/pricing")}
-                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+                className="px-10 py-4 bg-white text-[#1b2f54] rounded-xl font-medium hover:bg-gray-200 transition"
               >
                 Upgrade Plan
               </button>
@@ -149,7 +162,7 @@ export default function BillingPage() {
               <button
                 onClick={openStripePortal}
                 disabled={portalLoading}
-                className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+                className="px-10 py-4 bg-white text-[#1b2f54] rounded-xl font-medium hover:bg-gray-200 transition disabled:opacity-60"
               >
                 {portalLoading ? "Opening portal…" : "Manage Subscription"}
               </button>
@@ -161,16 +174,19 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-12 shadow-[0_50px_120px_rgba(0,0,0,.55)]"
           >
-            <h3 className="text-2xl font-semibold text-gray-900 mb-6">Usage This Month</h3>
-            <p className="text-3xl font-medium text-gray-900 mb-8">
+            <h3 className="text-2xl font-semibold text-white mb-6">
+              Usage This Month
+            </h3>
+
+            <p className="text-3xl font-medium mb-8">
               {usageText(data)}
             </p>
 
             {data.monthly_limit !== null && (
               <>
-                <div className="h-4 bg-gray-200 rounded-full overflow-hidden mb-6">
+                <div className="h-4 bg-white/10 rounded-full overflow-hidden mb-6">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{
@@ -180,31 +196,33 @@ export default function BillingPage() {
                       )}%`,
                     }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-blue-900 to-teal-600"
+                    className="h-full bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d]"
                   />
                 </div>
-                <p className="text-gray-600">
+
+                <p className="text-gray-300">
                   {data.remaining_generations} generations remaining
                 </p>
               </>
             )}
 
             {data.last_reset && (
-              <p className="mt-8 text-sm text-gray-500">
+              <p className="mt-8 text-sm text-gray-400">
                 Last reset: {new Date(data.last_reset).toLocaleDateString()}
               </p>
             )}
           </motion.div>
         </section>
 
-        {/* Contact Footer */}
-        <footer className="text-center py-12 border-t border-gray-200">
-          <p className="text-gray-600">
-            Questions? Reach out at{" "}
-            <a href="mailto:contact@autopilotai.dev" className="font-medium text-blue-900 hover:underline">
-              contact@autopilotai.dev
-            </a>
-          </p>
+        {/* Footer */}
+        <footer className="text-center py-12 border-t border-white/10 text-gray-400">
+          Questions? Email{" "}
+          <a
+            href="mailto:contact@autopilotai.dev"
+            className="text-[#6d8ce8] hover:underline"
+          >
+            contact@autopilotai.dev
+          </a>
         </footer>
       </main>
     </div>

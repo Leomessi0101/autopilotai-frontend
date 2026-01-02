@@ -111,17 +111,25 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
+      <div className="min-h-screen flex items-center justify-center text-gray-400 bg-[#05070d]">
         Loading profile…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
+
+      {/* Background Glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
+        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
+      </div>
+
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+
         {/* Header */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -129,46 +137,47 @@ export default function ProfilePage() {
           transition={{ duration: 0.8 }}
           className="mb-20"
         >
-          <h1 className="text-5xl md:text-6xl font-light text-gray-800">
+          <h1 className="text-5xl md:text-6xl font-light">
             Profile & Preferences
           </h1>
-          <p className="mt-6 text-xl text-gray-600">
-            Personalize AutopilotAI to match your brand voice and communication
-            style.
+          <p className="mt-6 text-xl text-gray-300">
+            Personalize AutopilotAI to match your brand voice and communication style.
           </p>
         </motion.section>
 
-        {/* Billing */}
+        {/* Billing Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mb-20 bg-white rounded-2xl shadow-sm border border-gray-200 p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8"
+          className="mb-20 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_50px_120px_rgba(0,0,0,.5)] flex flex-col md:flex-row md:items-center md:justify-between gap-8"
         >
           <div>
-            <h3 className="text-2xl font-semibold text-gray-900">
+            <h3 className="text-2xl font-semibold text-white">
               Billing & Subscription
             </h3>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-gray-300">
               Manage your plan, payment method, and billing history.
             </p>
           </div>
+
           <button
             onClick={() => router.push("/billing")}
-            className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm"
+            className="px-10 py-4 bg-white text-[#1b2f54] rounded-xl font-medium hover:bg-gray-200 transition"
           >
             Open Billing
           </button>
         </motion.div>
 
-        {/* Profile Form */}
+        {/* FORM PANEL */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 mb-24"
+          className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-12 mb-24 shadow-[0_50px_120px_rgba(0,0,0,.55)]"
         >
           <SectionTitle title="Personal Information" />
+
           <div className="grid gap-8 md:grid-cols-2">
             <Input label="Full Name" field="full_name" value={form.full_name} onChange={updateField} />
             <Input label="Your Title" field="title" value={form.title} placeholder="e.g. Founder, Marketing Director" onChange={updateField} />
@@ -177,6 +186,7 @@ export default function ProfilePage() {
           </div>
 
           <SectionTitle title="Brand Voice & Positioning" />
+
           <div className="grid gap-8 md:grid-cols-2">
             <Input label="Industry" field="industry" value={form.industry} placeholder="e.g. Fitness, SaaS, E-commerce" onChange={updateField} />
             <Input label="Brand Tone" field="brand_tone" value={form.brand_tone} placeholder="e.g. Professional, Confident, Approachable" onChange={updateField} />
@@ -199,6 +209,7 @@ export default function ProfilePage() {
           />
 
           <SectionTitle title="Email Preferences" />
+
           <Textarea
             label="Default Email Signature"
             field="signature"
@@ -215,7 +226,6 @@ export default function ProfilePage() {
             onChange={updateField}
           />
 
-          {/* AI PERSONALITY */}
           <SectionTitle title="AI Behavior & Personality" />
 
           <div className="grid gap-10 md:grid-cols-2">
@@ -246,7 +256,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-6">
-            <label className="text-sm font-medium text-gray-600">
+            <label className="text-sm font-medium text-gray-300">
               Creativity Level
             </label>
             <input
@@ -259,7 +269,7 @@ export default function ProfilePage() {
               }
               className="w-full"
             />
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               {form.creativity_level <= 3
                 ? "Very logical & structured"
                 : form.creativity_level <= 7
@@ -268,27 +278,25 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="mt-12 pt-8 border-t border-white/10">
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="px-10 py-4 bg-blue-900 text-white rounded-xl font-medium hover:bg-blue-800 transition shadow-sm disabled:opacity-60"
+              className="px-10 py-4 bg-white text-[#1b2f54] rounded-xl font-medium hover:bg-gray-200 transition disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save Profile"}
             </button>
           </div>
         </motion.div>
 
-        <footer className="text-center py-12 border-t border-gray-200">
-          <p className="text-gray-600">
-            Questions? Reach out at{" "}
-            <a
-              href="mailto:contact@autopilotai.dev"
-              className="font-medium text-blue-900 hover:underline"
-            >
-              contact@autopilotai.dev
-            </a>
-          </p>
+        <footer className="text-center py-12 border-t border-white/10 text-gray-400">
+          Questions? Email{" "}
+          <a
+            href="mailto:contact@autopilotai.dev"
+            className="text-[#6d8ce8] hover:underline"
+          >
+            contact@autopilotai.dev
+          </a>
         </footer>
       </main>
     </div>
@@ -298,7 +306,7 @@ export default function ProfilePage() {
 /* ================== COMPONENTS ================== */
 function SectionTitle({ title }: { title: string }) {
   return (
-    <h3 className="text-2xl font-semibold text-gray-900 mb-8 border-b border-gray-200 pb-4">
+    <h3 className="text-2xl font-semibold text-white mb-8 border-b border-white/10 pb-4">
       {title}
     </h3>
   );
@@ -319,14 +327,14 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-2">
+      <label className="block text-sm font-medium text-gray-300 mb-2">
         {label}
       </label>
       <input
         value={value || ""}
         placeholder={placeholder || ""}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 transition"
+        className="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white focus:ring-2 focus:ring-[#6d8ce8]"
       />
     </div>
   );
@@ -347,7 +355,7 @@ function Textarea({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-2">
+      <label className="block text-sm font-medium text-gray-300 mb-2">
         {label}
       </label>
       <textarea
@@ -355,7 +363,7 @@ function Textarea({
         placeholder={placeholder}
         onChange={(e) => onChange(field, e.target.value)}
         rows={6}
-        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-900 resize-none transition"
+        className="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white focus:ring-2 focus:ring-[#6d8ce8] resize-none"
       />
     </div>
   );
@@ -371,8 +379,8 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between border rounded-xl px-5 py-4">
-      <p className="text-sm font-medium text-gray-700">{label}</p>
+    <div className="flex items-center justify-between border border-white/10 bg-black/20 rounded-xl px-5 py-4">
+      <p className="text-sm font-medium text-gray-200">{label}</p>
 
       <label className="relative inline-flex cursor-pointer">
         <input
@@ -381,7 +389,7 @@ function Toggle({
           onChange={(e) => onChange(e.target.checked)}
           className="sr-only peer"
         />
-        <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+        <div className="w-12 h-6 bg-gray-500 rounded-full peer peer-checked:bg-[#6d8ce8] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
       </label>
     </div>
   );
@@ -400,16 +408,16 @@ function Select({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-2">
+      <label className="block text-sm font-medium text-gray-300 mb-2">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-5 py-4 rounded-xl border border-gray-200"
+        className="w-full px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-white"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value}>
+          <option key={o.value} value={o.value} className="text-black">
             {o.label}
           </option>
         ))}
