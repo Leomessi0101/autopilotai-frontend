@@ -127,7 +127,14 @@ export default function ContentPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b1020] text-white">
+    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
+
+      {/* Cinematic Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
+        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
+      </div>
+
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
@@ -142,54 +149,51 @@ export default function ContentPage() {
           <h1 className="text-5xl md:text-6xl font-light text-white">
             Content Generator
           </h1>
-          <p className="mt-6 text-xl text-gray-300 max-w-3xl">
-            Describe what you want. Get powerful social posts — with optional AI images.
+          <p className="mt-6 text-xl text-gray-300">
+            Craft compelling posts and optionally generate a matching AI image.
           </p>
         </motion.section>
 
-        {/* MAIN LAYOUT */}
-        <section className="grid gap-10 lg:grid-cols-[1fr,370px] mb-20">
-
-          {/* LEFT PANEL */}
+        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-[#0f162d] border border-white/10 rounded-2xl p-10 shadow-[0_40px_120px_rgba(0,0,0,0.5)]"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_50px_120px_rgba(0,0,0,.5)]"
           >
-            {/* TITLE */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Title / Topic (optional)
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Title or topic (optional)
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Product launch, testimonial, announcement…"
-                className="w-full px-5 py-4 rounded-xl bg-[#0b1020] border border-white/10 text-white focus:ring-2 focus:ring-blue-600 outline-none"
+                placeholder="e.g. New product launch"
+                className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20 focus:ring-2 focus:ring-[#6d8ce8]"
               />
             </div>
 
-            {/* DETAILS */}
             <div className="mb-10">
-              <label className="block text-sm font-medium text-gray-400 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Details
               </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={8}
-                placeholder="Platform • Tone • Audience • Desired outcome…"
-                className="w-full px-5 py-4 rounded-xl bg-[#0b1020] border border-white/10 text-white focus:ring-2 focus:ring-blue-600 resize-none outline-none"
+                placeholder="Platform, tone, audience, instructions…"
+                className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20 focus:ring-2 focus:ring-[#6d8ce8] resize-none"
               />
             </div>
 
             {/* IMAGE TOGGLE */}
-            <div className="mb-6 flex items-center justify-between border border-white/10 rounded-xl px-5 py-4 bg-[#0b1020]">
+            <div className="mb-6 flex items-center justify-between border border-white/10 rounded-xl px-5 py-4 bg-white/5">
               <div>
-                <p className="text-sm font-medium">Generate AI Image</p>
+                <p className="text-sm font-medium text-gray-200">
+                  Generate AI Image
+                </p>
                 <p className="text-xs text-gray-400">
-                  Paid feature • If enabled: 1 post only
+                  Paid feature • Only 1 post when enabled
                 </p>
               </div>
 
@@ -200,19 +204,21 @@ export default function ContentPage() {
                   onChange={handleToggle}
                   className="sr-only peer"
                 />
-                <div className="w-12 h-6 bg-gray-600 rounded-full peer peer-checked:bg-blue-700 after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
+                <div className="w-12 h-6 bg-gray-500 rounded-full peer peer-checked:bg-[#6d8ce8] after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
               </label>
             </div>
 
-            {/* UPGRADE NOTICE */}
+            {/* UPGRADE */}
             {showUpgradeNotice && (
-              <div className="mb-6 bg-yellow-100/10 border border-yellow-400/30 rounded-xl px-5 py-4 text-yellow-300">
+              <div className="mb-6 bg-yellow-300/10 border border-yellow-300/30 text-yellow-200 rounded-xl px-5 py-4">
                 <p className="text-sm font-medium mb-2">
-                  AI Image generation is for paid plans.
+                  AI Image generation is a paid feature.
                 </p>
                 <button
-                  onClick={() => window.open("/pricing", "_blank")}
-                  className="px-6 py-2 bg-yellow-400 text-black rounded-lg font-medium"
+                  onClick={() =>
+                    window.open("https://www.autopilotai.dev/upgrade", "_blank")
+                  }
+                  className="px-5 py-2 bg-white text-black rounded-lg"
                 >
                   Upgrade Plan
                 </button>
@@ -222,72 +228,63 @@ export default function ContentPage() {
             {/* IMAGE STYLE */}
             {generateImage && (
               <div className="mb-10">
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Image Style
                 </label>
                 <select
                   value={imageStyle}
                   onChange={(e) => setImageStyle(e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl bg-[#0b1020] border border-white/10 text-white"
+                  className="w-full px-5 py-4 rounded-xl bg-white/10 text-white border border-white/20"
                 >
-                  <option value="clean">Clean Corporate</option>
-                  <option value="cinematic">Cinematic Realistic</option>
-                  <option value="minimal">Minimal Illustration</option>
-                  <option value="social">Social Media Thumbnail</option>
-                  <option value="product">Product Showcase</option>
+                  <option className="text-black" value="clean">Clean Corporate</option>
+                  <option className="text-black" value="cinematic">Cinematic Realistic</option>
+                  <option className="text-black" value="minimal">Minimal Illustration</option>
+                  <option className="text-black" value="social">Social Media Thumbnail</option>
+                  <option className="text-black" value="product">Product Showcase</option>
                 </select>
               </div>
             )}
 
-            {/* QUICK TEMPLATES */}
             <div className="mb-8 flex flex-wrap gap-3">
               {quickTemplates.map((t, i) => (
                 <button
                   key={i}
                   onClick={() => setDetails(t)}
-                  className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm"
+                  className="px-5 py-3 rounded-xl bg-white/10 text-gray-200 hover:bg-white/20 transition"
                 >
                   {t.split(" — ")[0]}
                 </button>
               ))}
             </div>
 
-            {/* GENERATE BUTTON */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="px-10 py-4 bg-blue-700 hover:bg-blue-600 text-white rounded-xl disabled:opacity-60"
+                className="px-10 py-4 bg-white text-black rounded-xl disabled:opacity-60"
               >
                 {loading ? "Generating…" : "Generate"}
               </button>
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && <p className="text-red-400">{error}</p>}
             </div>
           </motion.div>
 
-          {/* SIDE INFO */}
+          {/* Right sidebar vibes */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="space-y-8"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-gray-200 space-y-6 shadow-[0_50px_120px_rgba(0,0,0,.5)]"
           >
-            <div className="bg-[#0f162d] border border-white/10 rounded-2xl p-8 text-gray-300">
-              <h3 className="text-xl font-semibold mb-3 text-white">
-                Tips for Best Results
-              </h3>
-              <ul className="space-y-3 text-sm leading-relaxed">
-                <li>• Tell it the platform (IG / X / LinkedIn)</li>
-                <li>• Describe your audience</li>
-                <li>• Explain the goal of the content</li>
-                <li>• Add tone: bold • calm • professional • salesy</li>
-              </ul>
-            </div>
+            <h3 className="text-xl font-semibold">Tips</h3>
+            <p className="text-gray-300">
+              Be clear with goal, audience and tone for better output.
+            </p>
           </motion.div>
         </section>
 
-        {/* RESULT PREVIEW */}
+        {/* RESULT SECTION */}
         {(result || imageUrl) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
@@ -295,27 +292,15 @@ export default function ContentPage() {
             transition={{ duration: 0.8 }}
             className="mb-24"
           >
-            <div className="max-w-xl mx-auto bg-[#0f162d] rounded-2xl border border-white/10 shadow-lg overflow-hidden">
-
-              {/* Fake Social Header */}
-              <div className="flex items-center gap-3 p-4 border-b border-white/10">
-                <div className="w-10 h-10 rounded-full bg-white/20" />
-                <div>
-                  <p className="font-semibold">@autopilot_user</p>
-                  <p className="text-xs text-gray-400">Sponsored</p>
-                </div>
-              </div>
+            <div className="max-w-xl mx-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg overflow-hidden">
 
               {/* Image */}
               {imageUrl && (
-                <img
-                  src={imageUrl}
-                  className="w-full object-cover border-b border-white/10"
-                />
+                <img src={imageUrl} className="w-full object-cover border-b border-white/10" />
               )}
 
-              {/* Text */}
-              <div className="p-5">
+              {/* Caption */}
+              <div className="p-6">
                 <p className="whitespace-pre-wrap leading-relaxed text-gray-100 text-sm">
                   {result}
                 </p>
@@ -333,7 +318,7 @@ export default function ContentPage() {
 
                   <button
                     onClick={saveImage}
-                    className="px-6 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-xl"
+                    className="px-6 py-2 bg-white text-black rounded-xl"
                   >
                     Save to My Work
                   </button>
