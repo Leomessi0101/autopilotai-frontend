@@ -139,7 +139,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
-
       {/* Cinematic Background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
@@ -149,7 +148,6 @@ export default function DashboardPage() {
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-
         {/* Greeting */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -210,6 +208,11 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-medium mb-10">Tools</h2>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <ToolCard
+              title="One-Click Growth Pack"
+              description="Generate content, emails & ads in one pass"
+              href="/dashboard/growth-pack"
+            />
             <ToolCard
               title="Generate Content"
               description="Posts, threads, and narratives"
