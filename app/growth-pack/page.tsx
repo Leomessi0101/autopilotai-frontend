@@ -24,8 +24,10 @@ export default function GrowthPackPage() {
   const [socialPosts, setSocialPosts] = useState("");
   const [emailCopy, setEmailCopy] = useState("");
   const [adCopy, setAdCopy] = useState("");
+  const [adImage, setAdImage] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [regenLoading, setRegenLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const [name, setName] = useState("U");
@@ -34,9 +36,10 @@ export default function GrowthPackPage() {
   const [generateImage, setGenerateImage] = useState(false);
   const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
 
-  const isPaid = useMemo(() => {
-    return !!subscriptionPlan && subscriptionPlan !== "free";
-  }, [subscriptionPlan]);
+  const isPaid = useMemo(
+    () => !!subscriptionPlan && subscriptionPlan !== "free",
+    [subscriptionPlan]
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -70,65 +73,66 @@ Requirements:
 - Natural CTA`;
   };
 
-  const handleToggleImage = () => {
-    if (!isPaid) {
-      setShowUpgradeNotice(true);
-      setGenerateImage(false);
-      return;
-    }
-    setGenerateImage((v) => !v);
-  };
-
   const handleGenerate = async () => {
     setError("");
-    setSocialPosts("");
-    setEmailCopy("");
-    setAdCopy("");
-
-    if (!description.trim()) {
-      setError("Please describe your business or product.");
-      return;
-    }
+    setLoading(true);
+    setAdImage(null);
 
     try {
-      setLoading(true);
-
-      const prompt = buildPrompt();
-
       const res = await api.post("/api/growth-pack/generate", {
-        prompt,
+        prompt: buildPrompt(),
+        generate_image: generateImage,
       });
 
-      setSocialPosts(res.data?.content || "");
-      setEmailCopy(res.data?.email || "");
-      setAdCopy(res.data?.ads || "");
+      setSocialPosts(res.data.content || "");
+      setEmailCopy(res.data.email || "");
+      setAdCopy(res.data.ads || "");
+      setAdImage(res.data.image || null);
     } catch (e: any) {
       setError(
         e?.response?.data?.detail ||
           e?.response?.data?.error ||
-          "Something went wrong. Please try again."
+          "Generation failed."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const copyText = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const regenerateSection = async (section: "social" | "email" | "ads") => {
+    setRegenLoading(section);
+    setError("");
+
+    try {
+      const res = await api.post("/api/growth-pack/regenerate", {
+        section,
+        prompt: buildPrompt(),
+        generate_image: section === "ads" ? generateImage : false,
+      });
+
+      if (section === "social") setSocialPosts(res.data.output);
+      if (section === "email") setEmailCopy(res.data.output);
+      if (section === "ads") {
+        setAdCopy(res.data.output);
+        setAdImage(res.data.image || null);
+      }
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.detail ||
+          e?.response?.data?.error ||
+          "Regeneration failed."
+      );
+    } finally {
+      setRegenLoading(null);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
-      {/* cinematic glow */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
-        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
-      </div>
-
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-        {/* HEADER */}
+        {/* Header */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -139,105 +143,106 @@ Requirements:
             One-Click Growth Pack
           </h1>
           <p className="mt-6 text-xl text-gray-300 max-w-3xl">
-            Generate social posts, emails, and ads in one pass — tuned to your
-            brand voice.
+            Generate social posts, emails, and ads in one premium pass.
           </p>
         </motion.section>
 
-        {/* MAIN GRID */}
-        <section className="grid gap-12 lg:grid-cols-[1fr,360px] mb-24">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_60px_140px_rgba(0,0,0,.6)]"
-          >
-            <div className="mb-10">
-              <p className="text-sm text-gray-400 mb-4">
-                Choose a brand voice
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {BRAND_VOICES.map((v) => {
-                  const active = brandVoice === v;
-                  return (
-                    <button
-                      key={v}
-                      onClick={() => setBrandVoice(v)}
-                      className={`px-5 py-2 rounded-full text-sm transition-all
-                        ${
-                          active
-                            ? "bg-[#6d8ce8] text-black shadow-[0_0_30px_rgba(109,140,232,.6)]"
-                            : "bg-white/10 text-gray-300 hover:bg-white/20"
-                        }`}
-                    >
-                      {v}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mb-10">
-              <label className="block text-sm font-medium text-gray-300 mb-3">
-                Business description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={8}
-                placeholder="Who is it for, what problem it solves, and why it’s better…"
-                className="w-full px-6 py-5 rounded-2xl bg-black/30 border border-white/20 text-white resize-none focus:ring-2 focus:ring-[#6d8ce8]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
+        {/* Input */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-10 mb-16">
+          <div className="mb-8 flex flex-wrap gap-3">
+            {BRAND_VOICES.map((v) => (
               <button
-                onClick={handleGenerate}
-                disabled={loading}
-                className="px-12 py-4 bg-[#6d8ce8] text-black rounded-2xl text-lg font-medium hover:bg-white disabled:opacity-60"
+                key={v}
+                onClick={() => setBrandVoice(v)}
+                className={`px-5 py-2 rounded-full text-sm transition
+                  ${
+                    brandVoice === v
+                      ? "bg-[#6d8ce8] text-black"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
               >
-                {loading ? "Generating…" : "Generate Growth Pack"}
+                {v}
               </button>
+            ))}
+          </div>
 
-              {error && <p className="text-red-400">{error}</p>}
-            </div>
-          </motion.div>
-        </section>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={6}
+            placeholder="Describe your business, audience, and offer..."
+            className="w-full bg-black/30 border border-white/20 rounded-2xl p-6 resize-none"
+          />
 
+          <div className="mt-6 flex items-center justify-between">
+            <label className="flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={generateImage}
+                onChange={() =>
+                  isPaid
+                    ? setGenerateImage(!generateImage)
+                    : setShowUpgradeNotice(true)
+                }
+              />
+              Generate AI image for ads (paid)
+            </label>
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="px-10 py-4 bg-[#6d8ce8] text-black rounded-2xl hover:bg-white"
+            >
+              {loading ? "Generating…" : "Generate Growth Pack"}
+            </button>
+          </div>
+
+          {error && <p className="mt-4 text-red-400">{error}</p>}
+        </div>
+
+        {/* Results */}
         {(socialPosts || emailCopy || adCopy) && (
-          <motion.section
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="grid gap-10 lg:grid-cols-3"
-          >
+          <div className="grid gap-10 lg:grid-cols-3">
             {[
-              ["Social Posts", socialPosts, setSocialPosts],
-              ["Email", emailCopy, setEmailCopy],
-              ["Ad Copy", adCopy, setAdCopy],
-            ].map(([title, value, setter]: any) => (
+              ["Social Posts", socialPosts, "social"],
+              ["Email", emailCopy, "email"],
+              ["Ads", adCopy, "ads"],
+            ].map(([title, value, key]: any) => (
               <div
-                key={title}
+                key={key}
                 className="rounded-3xl border border-white/10 bg-white/5 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium">{title}</h3>
+                <div className="flex justify-between mb-4">
+                  <h3 className="text-lg">{title}</h3>
                   <button
-                    onClick={() => copyText(value)}
-                    className="text-sm text-[#6d8ce8] hover:text-white"
+                    onClick={() => regenerateSection(key)}
+                    disabled={regenLoading === key}
+                    className="text-sm text-[#6d8ce8]"
                   >
-                    Copy
+                    {regenLoading === key ? "Regenerating…" : "Regenerate"}
                   </button>
                 </div>
+
                 <textarea
                   value={value}
-                  onChange={(e) => setter(e.target.value)}
+                  onChange={(e) => {
+                    if (key === "social") setSocialPosts(e.target.value);
+                    if (key === "email") setEmailCopy(e.target.value);
+                    if (key === "ads") setAdCopy(e.target.value);
+                  }}
                   rows={12}
-                  className="w-full bg-black/30 border border-white/20 rounded-2xl p-4 text-sm resize-none"
+                  className="w-full bg-black/30 border border-white/20 rounded-2xl p-4 resize-none"
                 />
+
+                {key === "ads" && adImage && (
+                  <img
+                    src={adImage}
+                    className="mt-4 rounded-xl border border-white/10"
+                  />
+                )}
               </div>
             ))}
-          </motion.section>
+          </div>
         )}
       </main>
     </div>
