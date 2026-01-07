@@ -211,7 +211,7 @@ export default function DashboardPage() {
             <ToolCard
               title="One-Click Growth Pack"
               description="Generate content, emails & ads in one pass"
-              href="/dashboard/growth-pack"
+              href="/growth-pack"
             />
             <ToolCard
               title="Generate Content"
