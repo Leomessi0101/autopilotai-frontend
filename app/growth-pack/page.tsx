@@ -92,20 +92,16 @@ Requirements:
 
     try {
       setLoading(true);
+
       const prompt = buildPrompt();
 
-      const contentRes = await api.post("/api/content/generate", {
-        title: "Growth Pack – Social",
+      const res = await api.post("/api/growth-pack/generate", {
         prompt,
-        generate_image: false,
       });
 
-      const emailRes = await api.post("/api/email/generate", { prompt });
-      const adsRes = await api.post("/api/ads/generate", { prompt });
-
-      setSocialPosts(contentRes.data?.output || "");
-      setEmailCopy(emailRes.data?.output || "");
-      setAdCopy(adsRes.data?.output || "");
+      setSocialPosts(res.data?.content || "");
+      setEmailCopy(res.data?.email || "");
+      setAdCopy(res.data?.ads || "");
     } catch (e: any) {
       setError(
         e?.response?.data?.detail ||
@@ -150,14 +146,12 @@ Requirements:
 
         {/* MAIN GRID */}
         <section className="grid gap-12 lg:grid-cols-[1fr,360px] mb-24">
-          {/* LEFT */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15 }}
             className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_60px_140px_rgba(0,0,0,.6)]"
           >
-            {/* BRAND VOICE PILLS */}
             <div className="mb-10">
               <p className="text-sm text-gray-400 mb-4">
                 Choose a brand voice
@@ -183,7 +177,6 @@ Requirements:
               </div>
             </div>
 
-            {/* DESCRIPTION */}
             <div className="mb-10">
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Business description
@@ -197,42 +190,6 @@ Requirements:
               />
             </div>
 
-            {/* IMAGE TOGGLE */}
-            <div className="mb-8 flex items-center justify-between border border-white/20 rounded-2xl px-6 py-4 bg-black/20">
-              <div>
-                <p className="text-sm font-medium">AI Image (Paid)</p>
-                <p className="text-xs text-gray-400">
-                  Premium add-on for visuals
-                </p>
-              </div>
-
-              <label className="relative inline-flex cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={generateImage}
-                  onChange={handleToggleImage}
-                  className="sr-only peer"
-                />
-                <div className="w-12 h-6 bg-gray-600 rounded-full peer peer-checked:bg-[#6d8ce8] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
-              </label>
-            </div>
-
-            {showUpgradeNotice && (
-              <div className="mb-6 bg-yellow-50 text-black border border-yellow-200 rounded-2xl px-6 py-4">
-                <p className="text-sm font-medium mb-2">
-                  AI image generation is a paid feature.
-                </p>
-                <button
-                  onClick={() =>
-                    window.open("https://www.autopilotai.dev/upgrade", "_blank")
-                  }
-                  className="px-5 py-2 bg-[#1b2f54] text-white rounded-lg"
-                >
-                  Upgrade Plan
-                </button>
-              </div>
-            )}
-
             <div className="flex items-center justify-between">
               <button
                 onClick={handleGenerate}
@@ -245,26 +202,8 @@ Requirements:
               {error && <p className="text-red-400">{error}</p>}
             </div>
           </motion.div>
-
-          {/* RIGHT */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.25 }}
-            className="space-y-8"
-          >
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <p className="text-sm text-gray-300">
-                Strong inputs = better output.
-              </p>
-              <p className="text-xs text-gray-400 mt-3">
-                Include audience, offer, and outcome for best results.
-              </p>
-            </div>
-          </motion.div>
         </section>
 
-        {/* RESULTS */}
         {(socialPosts || emailCopy || adCopy) && (
           <motion.section
             initial={{ opacity: 0, y: 40 }}
