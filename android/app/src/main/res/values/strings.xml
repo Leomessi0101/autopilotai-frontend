@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AutopilotAI</string>
+    <string name="title_activity_main">AutopilotAI</string>
+    <string name="package_name">com.autopilotai.app</string>
+    <string name="custom_url_scheme">com.autopilotai.app</string>
+</resources>
