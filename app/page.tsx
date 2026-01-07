@@ -7,184 +7,198 @@ export default function HomePage() {
   return (
     <div className="min-h-screen text-white bg-[#05070d] relative overflow-x-hidden">
 
-      {/* Background Atmosphere */}
+      {/* ====== DEEP ATMOSPHERIC BACKGROUND ====== */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[160px]" />
-        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[180px]" />
+        <div className="absolute -top-60 -left-60 w-[1100px] h-[1100px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0e1f44] via-[#0a1630] to-transparent blur-[200px]" />
+        <div className="absolute top-[30%] right-[-20%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,#1c3a7a,transparent_70%)] blur-[220px]" />
+        <div className="absolute bottom-[-30%] left-[10%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,#0f2a5f,transparent_70%)] blur-[240px]" />
       </div>
 
-      {/* NAV */}
-      <div className="relative z-20">
+      {/* ====== NAV ====== */}
+      <div className="relative z-30">
         <MarketingNavbar />
       </div>
 
-      {/* HERO */}
-      <section className="relative z-10 pt-32 pb-28 px-6 md:px-10 text-center">
+      {/* ====== HERO ====== */}
+      <section className="relative z-10 pt-36 pb-40 px-6 md:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="max-w-6xl mx-auto"
+          className="max-w-7xl mx-auto text-center"
         >
-          <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight">
-            Work Faster.
+          <span className="inline-block mb-6 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-sm tracking-wide text-gray-300">
+            Built for real work. Not demos.
+          </span>
+
+          <h1 className="text-6xl md:text-8xl font-black leading-tight tracking-tight">
+            The AI Workspace
             <br />
-            <span className="text-[#d8e3ff]">
-              With AI That Actually Helps.
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d8e3ff] to-[#6d8ce8]">
+              That Actually Delivers
             </span>
           </h1>
 
-          <p className="mt-8 text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            AutopilotAI helps you plan, create, communicate and stay consistent —
-            without wasting time or getting overwhelmed.
+          <p className="mt-10 text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            AutopilotAI helps you think, plan, create and communicate —
+            faster, clearer, and without mental overload.
           </p>
 
-          <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
+          <div className="mt-16 flex flex-col sm:flex-row justify-center gap-6">
             <a
               href="/register"
-              className="px-12 py-5 rounded-2xl bg-gradient-to-r from-[#203b6a] to-[#345899] font-semibold text-lg hover:scale-[1.02] transition shadow-[0_20px_60px_rgba(15,35,85,0.5)]"
+              className="px-14 py-6 rounded-2xl bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] text-xl font-bold shadow-[0_30px_100px_rgba(30,60,140,0.6)] hover:scale-[1.03] transition"
             >
               Get Started Free
             </a>
 
             <a
               href="/features"
-              className="px-12 py-5 border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-xl rounded-2xl text-lg font-semibold transition"
+              className="px-14 py-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl text-xl font-semibold hover:bg-white/10 transition"
             >
               Explore Platform
             </a>
           </div>
 
-          <p className="mt-8 text-gray-400">
-            Trusted by creators, founders and teams
+          <p className="mt-10 text-gray-400">
+            Used by founders, creators, solo operators and teams
           </p>
         </motion.div>
 
-        {/* ABSTRACT AI VISUAL */}
-        <div className="mt-24 max-w-5xl mx-auto rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-10">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="w-full h-[280px] rounded-2xl border border-white/10 overflow-hidden"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1531685250784-7569952593d2?q=80&w=1600&auto=format"
-              className="w-full h-full object-cover opacity-90"
-            />
-          </motion.div>
-
-          <p className="text-gray-300 mt-6 text-lg">
-            Built for performance. Designed for real work.
-          </p>
-        </div>
+        {/* ====== HERO VISUAL ====== */}
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 1 }}
+          className="mt-32 max-w-6xl mx-auto rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_80px_200px_rgba(0,0,0,.7)] overflow-hidden"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2000&auto=format"
+            className="w-full h-[420px] object-cover opacity-95"
+          />
+          <div className="p-10 text-left">
+            <p className="text-lg text-gray-300">
+              A focused system for content, communication, planning and execution.
+            </p>
+          </div>
+        </motion.div>
       </section>
 
-      {/* PERSONA / SYSTEM SECTION */}
-      <section className="relative z-10 py-24 px-6 md:px-10">
-        <div className="max-w-6xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-black">
-            Intelligent Systems That Help You Get Things Done
+      {/* ====== PHILOSOPHY ====== */}
+      <section className="relative z-10 py-32 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto text-center mb-20">
+          <h2 className="text-5xl md:text-7xl font-black">
+            Designed For People Who Build
           </h2>
-          <p className="text-gray-400 mt-6 text-xl max-w-3xl mx-auto">
-            Practical, focused AI experiences — not gimmicks or hype.
+          <p className="mt-8 text-xl text-gray-400 max-w-3xl mx-auto">
+            No fluff. No distractions. Just intelligent systems that move work forward.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto">
           {[
             {
-              title: "Strategy & Execution",
-              text: "Clear planning, structure, direction and output.",
-              img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1600&auto=format"
+              title: "Clarity Over Chaos",
+              text: "Turn scattered thoughts into structured action.",
+              img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1600&auto=format",
             },
             {
-              title: "Engineering & Problem Solving",
-              text: "Technical reasoning, debugging and guidance.",
-              img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1600&auto=format"
-            }
-          ].map((p, i) => (
+              title: "Execution First",
+              text: "Every tool exists to help you finish, not brainstorm forever.",
+              img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format",
+            },
+            {
+              title: "Built To Scale",
+              text: "From solo operators to growing teams — same system, more leverage.",
+              img: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1600&auto=format",
+            },
+          ].map((item, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl"
+              className="rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_50px_140px_rgba(0,0,0,.6)]"
             >
-              <img src={p.img} className="h-[260px] w-full object-cover opacity-90" />
+              <img
+                src={item.img}
+                className="h-[240px] w-full object-cover opacity-90"
+              />
               <div className="p-10">
-                <h3 className="text-2xl font-bold">{p.title}</h3>
-                <p className="text-gray-300 mt-3">{p.text}</p>
+                <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                <p className="text-gray-300">{item.text}</p>
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="py-24 relative z-10 px-6 md:px-10">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-black">
-            Everything You Need To Scale
+      {/* ====== FEATURES ====== */}
+      <section className="relative z-10 py-32 px-6 md:px-10">
+        <div className="max-w-7xl mx-auto text-center mb-20">
+          <h2 className="text-5xl md:text-7xl font-black">
+            One System. Many Capabilities.
           </h2>
         </div>
 
         <div className="grid gap-10 md:grid-cols-3 max-w-7xl mx-auto">
           {[
             {
-              title: "Content Engine",
-              text: "High-quality posts, threads, captions and ideas."
+              title: "Content & Copy",
+              text: "Posts, emails, ads and messaging that sound human and convert.",
             },
             {
               title: "Smart Communication",
-              text: "Reply to leads, emails & comments intelligently."
+              text: "Respond faster, cleaner and more confidently — every time.",
             },
             {
-              title: "Automation Brain",
-              text: "Daily planning, execution and growth optimization."
-            }
+              title: "Execution Engine",
+              text: "Plan, prioritize and move work forward without friction.",
+            },
           ].map((f, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-              className="rounded-3xl p-10 border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl"
+              transition={{ duration: 0.8 }}
+              className="rounded-3xl p-12 border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,.55)]"
             >
-              <h3 className="text-2xl font-bold">{f.title}</h3>
-              <p className="text-gray-300 mt-4">{f.text}</p>
+              <h3 className="text-2xl font-bold mb-4">{f.title}</h3>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                {f.text}
+              </p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative z-10 py-32 text-center px-6 md:px-10">
+      {/* ====== FINAL CTA ====== */}
+      <section className="relative z-10 py-40 text-center px-6 md:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9 }}
           className="max-w-4xl mx-auto"
         >
-          <h2 className="text-5xl md:text-7xl font-black leading-tight">
-            Simple.
+          <h2 className="text-6xl md:text-8xl font-black leading-tight">
+            Work Smarter.
             <br />
-            Powerful.
+            Stay Focused.
             <br />
-            Useful.
+            Execute Better.
           </h2>
 
-          <p className="mt-8 text-xl text-gray-300">
-            AutopilotAI is built to actually help — not just impress.
+          <p className="mt-10 text-xl text-gray-300">
+            AutopilotAI is built to be useful — every single day.
           </p>
 
-          <div className="mt-12">
+          <div className="mt-16">
             <a
               href="/register"
-              className="px-16 py-7 rounded-2xl text-2xl font-bold bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] shadow-[0_35px_120px_rgba(20,40,90,0.6)] hover:scale-[1.02] transition"
+              className="px-20 py-8 rounded-2xl text-2xl font-black bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] shadow-[0_40px_160px_rgba(20,40,100,0.7)] hover:scale-[1.03] transition"
             >
               Get Started Free
             </a>
@@ -192,10 +206,10 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* FOOTER */}
+      {/* ====== FOOTER ====== */}
       <footer className="border-t border-white/10 py-16 text-center relative z-10">
         <p className="text-gray-400 text-sm">
-          © 2025 AutopilotAI — Built for ambitious creators, founders and teams.
+          © 2025 AutopilotAI — Built for people who actually build.
         </p>
       </footer>
     </div>
