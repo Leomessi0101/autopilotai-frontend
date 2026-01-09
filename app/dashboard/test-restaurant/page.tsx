@@ -11,6 +11,7 @@ export default function TestRestaurantPage() {
   const generate = async () => {
     setLoading(true);
     setError(null);
+    setResult(null);
 
     try {
       const res = await api.post("/api/restaurants/generate", {
@@ -24,37 +25,42 @@ export default function TestRestaurantPage() {
 
       setResult(res.data);
     } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ||
-          "Something went wrong generating the website"
-      );
+      console.error("Restaurant generation error:", err);
+
+      if (err?.response?.data) {
+        setError(JSON.stringify(err.response.data, null, 2));
+      } else if (err?.message) {
+        setError(err.message);
+      } else {
+        setError("Unknown error while generating website");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-8 text-white">
-      <h1 className="text-3xl font-bold mb-4">
+    <div className="min-h-screen bg-[#0b0b0b] text-white p-8">
+      <h1 className="text-3xl font-bold mb-6">
         Test Restaurant Website Generation
       </h1>
 
       <button
         onClick={generate}
         disabled={loading}
-        className="bg-orange-500 text-black px-6 py-3 rounded font-semibold"
+        className="bg-[#e4b363] text-black px-6 py-3 rounded font-semibold hover:opacity-90 transition"
       >
         {loading ? "Generating..." : "Generate Restaurant Website"}
       </button>
 
       {error && (
-        <div className="mt-6 text-red-400">
+        <div className="mt-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300 whitespace-pre-wrap text-sm">
           ❌ {error}
         </div>
       )}
 
       {result && (
-        <pre className="mt-6 bg-black/50 p-4 rounded text-sm overflow-auto max-h-[500px]">
+        <pre className="mt-6 max-h-[500px] overflow-auto rounded-lg bg-black/60 p-4 text-sm text-white border border-white/10">
           {JSON.stringify(result, null, 2)}
         </pre>
       )}
