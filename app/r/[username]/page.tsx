@@ -7,7 +7,7 @@ async function getRestaurant(username: string) {
   );
 
   if (!res.ok) {
-    throw new Error("Restaurant not found");
+    return null;
   }
 
   return res.json();
@@ -19,6 +19,20 @@ export default async function RestaurantPage({
   params: { username: string };
 }) {
   const data = await getRestaurant(params.username);
+
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Restaurant not found</h1>
+          <p className="text-gray-400">
+            This restaurant page does not exist yet.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   const content = JSON.parse(data.content_json);
 
   const hours: Record<string, string> = content.hours || {
@@ -80,7 +94,6 @@ export default async function RestaurantPage({
       {/* OPENING HOURS + CONTACT */}
       <section className="border-t border-white/10 px-6 py-20">
         <div className="mx-auto max-w-5xl grid gap-12 md:grid-cols-2">
-          {/* HOURS */}
           <div>
             <h3 className="text-2xl font-semibold text-[#e4b363] mb-6">
               Opening Hours
@@ -99,7 +112,6 @@ export default async function RestaurantPage({
             </ul>
           </div>
 
-          {/* CONTACT */}
           <div>
             <h3 className="text-2xl font-semibold text-[#e4b363] mb-6">
               Contact Us
