@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import React from "react";
 
 async function getRestaurant(username: string) {
@@ -47,14 +49,12 @@ export default async function RestaurantPage({
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
-      {/* PROMO BAR */}
       {content.promo?.text && (
         <div className="bg-[#e4b363] text-black text-center py-2 text-sm font-medium">
           {content.promo.text}
         </div>
       )}
 
-      {/* HERO */}
       <section className="flex min-h-[80vh] items-center justify-center px-6">
         <div className="max-w-3xl text-center">
           <span className="mb-4 inline-block text-sm tracking-widest text-[#e4b363]">
@@ -77,21 +77,6 @@ export default async function RestaurantPage({
         </div>
       </section>
 
-      {/* ABOUT */}
-      <section className="border-t border-white/10 px-6 py-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-semibold text-[#e4b363]">
-            Our Story
-          </h2>
-
-          <p className="mt-6 text-lg text-[#b5b5b5]">
-            {content.about?.text ||
-              "We focus on quality ingredients, warm atmosphere, and food you’ll remember long after the last bite."}
-          </p>
-        </div>
-      </section>
-
-      {/* OPENING HOURS + CONTACT */}
       <section className="border-t border-white/10 px-6 py-20">
         <div className="mx-auto max-w-5xl grid gap-12 md:grid-cols-2">
           <div>
