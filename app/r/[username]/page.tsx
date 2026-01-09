@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type RestaurantData = {
-  content_json: string;
+  content_json: string | Record<string, any>;
 };
 
 export default function RestaurantPage() {
@@ -57,7 +57,25 @@ export default function RestaurantPage() {
     );
   }
 
-  const content = JSON.parse(data.content_json);
+  // ✅ SAFE PARSING (FIX)
+  let content: any;
+  try {
+    content =
+      typeof data.content_json === "string"
+        ? JSON.parse(data.content_json)
+        : data.content_json;
+  } catch {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Invalid restaurant data</h1>
+          <p className="text-gray-400">
+            This restaurant page exists but could not be loaded.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   const hours: Record<string, string> = content.hours || {
     monday: "10:00 – 22:00",
@@ -129,11 +147,15 @@ export default function RestaurantPage() {
             </p>
 
             {content.contact?.email && (
-              <p className="text-[#b5b5b5] mb-3">✉️ {content.contact.email}</p>
+              <p className="text-[#b5b5b5] mb-3">
+                ✉️ {content.contact.email}
+              </p>
             )}
 
             {content.contact?.address && (
-              <p className="text-[#b5b5b5]">📍 {content.contact.address}</p>
+              <p className="text-[#b5b5b5]">
+                📍 {content.contact.address}
+              </p>
             )}
           </div>
         </div>
