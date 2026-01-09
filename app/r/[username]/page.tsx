@@ -1,95 +1,62 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import React from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-async function getRestaurantWithDebug(username: string) {
-  const url = `https://autopilotai-api.onrender.com/api/websites/restaurant/${encodeURIComponent(
-    username
-  )}`;
+type RestaurantData = {
+  content_json: string;
+};
 
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    const text = await res.text();
+export default function RestaurantPage() {
+  const params = useParams();
+  const username = params?.username as string | undefined;
 
-    // Try to parse JSON if possible
-    let json: any = null;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = null;
-    }
+  const [data, setData] = useState<RestaurantData | null>(null);
+  const [error, setError] = useState(false);
 
-    return {
-      ok: res.ok,
-      status: res.status,
-      url,
-      raw: text,
-      json,
-    };
-  } catch (err: any) {
-    return {
-      ok: false,
-      status: 0,
-      url,
-      raw: String(err?.message || err),
-      json: null,
-    };
-  }
-}
+  useEffect(() => {
+    if (!username) return;
 
-export default async function RestaurantPage({
-  params,
-}: {
-  params: { username: string };
-}) {
-  const result = await getRestaurantWithDebug(params.username);
+    fetch(
+      `https://autopilotai-api.onrender.com/api/websites/restaurant/${username}`
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then(setData)
+      .catch(() => setError(true));
+  }, [username]);
 
-  // If backend fetch failed, show a clear debug panel
-  if (!result.ok) {
+  if (!username) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-        <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h1 className="text-2xl font-bold">Restaurant not found (debug)</h1>
-          <p className="mt-2 text-white/70">
-            The page tried to load the restaurant from your API but got a non-200
-            response.
-          </p>
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading…
+      </main>
+    );
+  }
 
-          <div className="mt-6 space-y-2 text-sm">
-            <div>
-              <span className="text-white/60">URL:</span>{" "}
-              <span className="break-all">{result.url}</span>
-            </div>
-            <div>
-              <span className="text-white/60">Status:</span>{" "}
-              <span>{result.status}</span>
-            </div>
-            <div className="mt-4">
-              <span className="text-white/60">Body:</span>
-              <pre className="mt-2 max-h-[260px] overflow-auto rounded-xl bg-black/60 p-4 text-white/80 border border-white/10">
-                {result.raw}
-              </pre>
-            </div>
-          </div>
-
-          <p className="mt-6 text-white/60 text-sm">
-            If Status is 404: backend says username doesn’t exist (but you proved
-            it does in browser, so then it’s likely the frontend isn’t actually
-            hitting the same URL or it’s being blocked/rewritten).
-            <br />
-            If Status is 0 or shows a network error: Vercel can’t reach Render.
-            <br />
-            If Status is 403/401: auth or middleware is blocking.
-            <br />
-            If Status is 500: server error on Render.
+  if (error) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Restaurant not found</h1>
+          <p className="text-gray-400">
+            This restaurant page does not exist yet.
           </p>
         </div>
       </main>
     );
   }
 
-  // If it worked, render the site (same design)
-  const data = result.json;
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading…
+      </main>
+    );
+  }
+
   const content = JSON.parse(data.content_json);
 
   const hours: Record<string, string> = content.hours || {
@@ -117,7 +84,7 @@ export default async function RestaurantPage({
           </span>
 
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            {content.hero?.headline || params.username}
+            {content.hero?.headline || username}
           </h1>
 
           <p className="mt-6 text-xl text-[#b5b5b5]">
