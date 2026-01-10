@@ -48,19 +48,33 @@ export default function RestaurantPage() {
 
         setMenu(parsed.menu || []);
 
-        if (editRequested) {
+        // 🔒 OWNER CHECK (FIXED)
+        if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
 
-          const meRes = await fetch(
-            "https://autopilotai-api.onrender.com/api/auth/me",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          try {
+            const meRes = await fetch(
+              "https://autopilotai-api.onrender.com/api/auth/me",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
-          if (!meRes.ok) return;
-          setCanEdit(true);
+            if (!meRes.ok) return;
+
+            const me = await meRes.json();
+
+            if (me?.email && me?.name && me?.subscription && me?.used_generations !== undefined) {
+              if (res.user_id === me.id) {
+                setCanEdit(true);
+              }
+            }
+          } catch {
+            // silent
+          }
         }
       });
   }, [username, editRequested]);
@@ -69,32 +83,42 @@ export default function RestaurantPage() {
 
   const content = useMemo(() => {
     if (!data) return null;
-    return typeof data.content_json === "string"
-      ? JSON.parse(data.content_json)
-      : data.content_json;
+    try {
+      return typeof data.content_json === "string"
+        ? JSON.parse(data.content_json)
+        : data.content_json;
+    } catch {
+      return null;
+    }
   }, [data]);
 
   async function saveMenu() {
     if (!username) return;
+
     const token = localStorage.getItem("autopilot_token");
     if (!token) return;
 
     setSaving(true);
 
-    await fetch(
-      `https://autopilotai-api.onrender.com/api/restaurants/${username}/menu`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ menu }),
-      }
-    );
+    try {
+      await fetch(
+        `https://autopilotai-api.onrender.com/api/restaurants/${username}/menu`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ menu }),
+        }
+      );
 
-    setSaving(false);
-    alert("Menu saved");
+      alert("Menu saved");
+    } catch {
+      alert("Save failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!username || !content) {
@@ -131,12 +155,25 @@ export default function RestaurantPage() {
           <p className="mt-6 text-xl text-[#b5b5b5]">
             {content.hero?.subheadline}
           </p>
+
+          {menu.length > 0 && (
+            <button
+              onClick={() =>
+                menuRef.current?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="mt-10 bg-[#e4b363] text-black px-8 py-3 rounded-full font-semibold"
+            >
+              View Menu
+            </button>
+          )}
         </div>
       </section>
 
       {/* MENU */}
       <section ref={menuRef} className="px-6 py-24 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-16">Our Menu</h2>
+
           {menu.map((cat, cIdx) => (
             <div key={cIdx} className="mb-16">
               {editMode ? (
@@ -172,6 +209,7 @@ export default function RestaurantPage() {
                           }}
                           className="font-semibold bg-transparent border-b border-white/20 w-full mb-2"
                         />
+
                         <input
                           value={item.price}
                           onChange={(e) => {
@@ -181,6 +219,7 @@ export default function RestaurantPage() {
                           }}
                           className="text-[#e4b363] bg-transparent border-b border-white/20 w-full mb-2"
                         />
+
                         <textarea
                           value={item.description}
                           onChange={(e) => {
