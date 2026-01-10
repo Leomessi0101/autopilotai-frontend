@@ -101,9 +101,21 @@ export default function RestaurantPage() {
 
           {menu.map((cat, cIdx) => (
             <div key={cIdx} className="mb-16">
-              <h3 className="text-2xl font-semibold text-[#e4b363] mb-6">
-                {cat.title}
-              </h3>
+              {editMode ? (
+                <input
+                  value={cat.title}
+                  onChange={(e) => {
+                    const copy = structuredClone(menu);
+                    copy[cIdx].title = e.target.value;
+                    setMenu(copy);
+                  }}
+                  className="text-2xl font-semibold text-[#e4b363] bg-transparent border-b border-white/20 mb-6 outline-none"
+                />
+              ) : (
+                <h3 className="text-2xl font-semibold text-[#e4b363] mb-6">
+                  {cat.title}
+                </h3>
+              )}
 
               <div className="grid md:grid-cols-2 gap-6">
                 {cat.items.map((item, iIdx) => (
@@ -130,7 +142,7 @@ export default function RestaurantPage() {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           const url = URL.createObjectURL(file);
-                          const copy = [...menu];
+                          const copy = structuredClone(menu);
                           copy[cIdx].items[iIdx].image = url;
                           setMenu(copy);
                         }}
@@ -138,18 +150,87 @@ export default function RestaurantPage() {
                       />
                     )}
 
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-semibold">{item.name}</h4>
-                      <span className="text-[#e4b363]">{item.price}</span>
-                    </div>
-                    <p className="text-sm text-[#b5b5b5]">
-                      {item.description}
-                    </p>
+                    {editMode ? (
+                      <>
+                        <input
+                          value={item.name}
+                          onChange={(e) => {
+                            const copy = structuredClone(menu);
+                            copy[cIdx].items[iIdx].name = e.target.value;
+                            setMenu(copy);
+                          }}
+                          className="font-semibold bg-transparent border-b border-white/20 w-full mb-2 outline-none"
+                        />
+
+                        <input
+                          value={item.price}
+                          onChange={(e) => {
+                            const copy = structuredClone(menu);
+                            copy[cIdx].items[iIdx].price = e.target.value;
+                            setMenu(copy);
+                          }}
+                          className="text-[#e4b363] bg-transparent border-b border-white/20 w-full mb-2 outline-none"
+                        />
+
+                        <textarea
+                          value={item.description}
+                          onChange={(e) => {
+                            const copy = structuredClone(menu);
+                            copy[cIdx].items[iIdx].description = e.target.value;
+                            setMenu(copy);
+                          }}
+                          className="text-sm text-[#b5b5b5] bg-transparent border border-white/10 w-full p-2 rounded outline-none"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between mb-2">
+                          <h4 className="font-semibold">{item.name}</h4>
+                          <span className="text-[#e4b363]">
+                            {item.price}
+                          </span>
+                        </div>
+                        <p className="text-sm text-[#b5b5b5]">
+                          {item.description}
+                        </p>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {editMode && (
+                <button
+                  onClick={() => {
+                    const copy = structuredClone(menu);
+                    copy[cIdx].items.push({
+                      name: "New item",
+                      description: "",
+                      price: "",
+                    });
+                    setMenu(copy);
+                  }}
+                  className="mt-4 text-sm text-[#e4b363]"
+                >
+                  + Add item
+                </button>
+              )}
             </div>
           ))}
+
+          {editMode && (
+            <button
+              onClick={() =>
+                setMenu([
+                  ...menu,
+                  { title: "New category", items: [] },
+                ])
+              }
+              className="mt-10 text-sm text-[#e4b363]"
+            >
+              + Add category
+            </button>
+          )}
         </div>
       </section>
     </main>
