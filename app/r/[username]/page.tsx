@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type RestaurantData = {
   content_json: string | Record<string, any>;
@@ -13,6 +13,8 @@ export default function RestaurantPage() {
 
   const [data, setData] = useState<RestaurantData | null>(null);
   const [error, setError] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -63,14 +65,14 @@ export default function RestaurantPage() {
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
-      {/* Promo bar */}
+      {/* PROMO */}
       {content.promo?.text && (
         <div className="bg-[#e4b363] text-black text-center py-2 text-sm font-medium">
           {content.promo.text}
         </div>
       )}
 
-      {/* Hero */}
+      {/* HERO */}
       <section className="flex min-h-[80vh] items-center justify-center px-6">
         <div className="max-w-3xl text-center">
           <span className="mb-4 inline-block text-sm tracking-widest text-[#e4b363]">
@@ -85,17 +87,27 @@ export default function RestaurantPage() {
             {content.hero?.subheadline || "Amazing food, unforgettable taste"}
           </p>
 
-          <div className="mt-10">
-            <button className="rounded-full bg-[#e4b363] px-8 py-3 text-black font-semibold hover:opacity-90 transition">
-              View Menu
-            </button>
-          </div>
+          {menu.length > 0 && (
+            <div className="mt-10">
+              <button
+                onClick={() =>
+                  menuRef.current?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="rounded-full bg-[#e4b363] px-8 py-3 text-black font-semibold hover:opacity-90 transition"
+              >
+                View Menu
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* MENU SECTION */}
+      {/* MENU */}
       {menu.length > 0 && (
-        <section className="border-t border-white/10 px-6 py-24">
+        <section
+          ref={menuRef}
+          className="border-t border-white/10 px-6 py-24"
+        >
           <div className="mx-auto max-w-6xl">
             <h2 className="text-4xl font-bold text-center mb-14">
               Our Menu
