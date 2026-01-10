@@ -37,7 +37,7 @@ export default function RestaurantPage() {
     }
   }, [data]);
 
-  if (!username) {
+  if (!username || !data) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading…
@@ -45,7 +45,7 @@ export default function RestaurantPage() {
     );
   }
 
-  if (error) {
+  if (error || !content) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -58,36 +58,8 @@ export default function RestaurantPage() {
     );
   }
 
-  if (!data) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading…
-      </main>
-    );
-  }
-
-  if (!content) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4">Invalid restaurant data</h1>
-          <p className="text-gray-400">
-            This restaurant exists but its content could not be loaded.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const hours: Record<string, string> = content.hours || {
-    monday: "10:00 – 22:00",
-    tuesday: "10:00 – 22:00",
-    wednesday: "10:00 – 22:00",
-    thursday: "10:00 – 22:00",
-    friday: "10:00 – 23:00",
-    saturday: "12:00 – 23:00",
-    sunday: "Closed",
-  };
+  const hours: Record<string, string> = content.hours || {};
+  const menu: any[] = content.menu || [];
 
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
@@ -121,7 +93,52 @@ export default function RestaurantPage() {
         </div>
       </section>
 
-      {/* Hours + Contact */}
+      {/* MENU SECTION */}
+      {menu.length > 0 && (
+        <section className="border-t border-white/10 px-6 py-24">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-4xl font-bold text-center mb-14">
+              Our Menu
+            </h2>
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {menu.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-black/40 rounded-2xl overflow-hidden border border-white/10 hover:border-[#e4b363]/40 transition"
+                >
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-48 w-full object-cover"
+                    />
+                  )}
+
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-semibold">
+                        {item.name}
+                      </h3>
+                      {item.price && (
+                        <span className="text-[#e4b363] font-semibold">
+                          {item.price}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[#b5b5b5] text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* HOURS + CONTACT */}
       <section className="border-t border-white/10 px-6 py-20">
         <div className="mx-auto max-w-5xl grid gap-12 md:grid-cols-2">
           <div>
@@ -152,11 +169,15 @@ export default function RestaurantPage() {
             </p>
 
             {content.contact?.email && (
-              <p className="text-[#b5b5b5] mb-3">✉️ {content.contact.email}</p>
+              <p className="text-[#b5b5b5] mb-3">
+                ✉️ {content.contact.email}
+              </p>
             )}
 
             {content.contact?.address && (
-              <p className="text-[#b5b5b5]">📍 {content.contact.address}</p>
+              <p className="text-[#b5b5b5]">
+                📍 {content.contact.address}
+              </p>
             )}
           </div>
         </div>
