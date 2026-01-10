@@ -20,6 +20,15 @@ type MenuCategory = {
   items: MenuItem[];
 };
 
+function getUserIdFromToken(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function RestaurantPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -38,7 +47,7 @@ export default function RestaurantPage() {
 
     fetch(`https://autopilotai-api.onrender.com/api/restaurants/${username}`)
       .then((res) => res.json())
-      .then(async (res) => {
+      .then((res) => {
         setData(res);
 
         const parsed =
@@ -48,32 +57,15 @@ export default function RestaurantPage() {
 
         setMenu(parsed.menu || []);
 
-        // 🔒 OWNER CHECK (FIXED)
+        // 🔒 FINAL OWNER CHECK (JWT → user_id)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
 
-          try {
-            const meRes = await fetch(
-              "https://autopilotai-api.onrender.com/api/auth/me",
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
+          const tokenUserId = getUserIdFromToken(token);
 
-            if (!meRes.ok) return;
-
-            const me = await meRes.json();
-
-            if (me?.email && me?.name && me?.subscription && me?.used_generations !== undefined) {
-              if (res.user_id === me.id) {
-                setCanEdit(true);
-              }
-            }
-          } catch {
-            // silent
+          if (tokenUserId && tokenUserId === res.user_id) {
+            setCanEdit(true);
           }
         }
       });
@@ -155,17 +147,6 @@ export default function RestaurantPage() {
           <p className="mt-6 text-xl text-[#b5b5b5]">
             {content.hero?.subheadline}
           </p>
-
-          {menu.length > 0 && (
-            <button
-              onClick={() =>
-                menuRef.current?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="mt-10 bg-[#e4b363] text-black px-8 py-3 rounded-full font-semibold"
-            >
-              View Menu
-            </button>
-          )}
         </div>
       </section>
 
