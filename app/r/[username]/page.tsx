@@ -39,6 +39,7 @@ export default function RestaurantPage() {
   const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [canEdit, setCanEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -57,13 +58,11 @@ export default function RestaurantPage() {
 
         setMenu(parsed.menu || []);
 
-        // 🔒 FINAL OWNER CHECK (JWT → user_id)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
 
           const tokenUserId = getUserIdFromToken(token);
-
           if (tokenUserId && tokenUserId === res.user_id) {
             setCanEdit(true);
           }
@@ -113,6 +112,36 @@ export default function RestaurantPage() {
     }
   }
 
+  async function uploadImage(
+    file: File,
+    cIdx: number,
+    iIdx: number
+  ) {
+    setUploading(true);
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await fetch("https://upload.autopilotai.dev/upload", {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json();
+
+      if (!data.url) throw new Error("No URL returned");
+
+      const copy = structuredClone(menu);
+      copy[cIdx].items[iIdx].image = data.url;
+      setMenu(copy);
+    } catch (err) {
+      alert("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (!username || !content) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -153,7 +182,9 @@ export default function RestaurantPage() {
       {/* MENU */}
       <section ref={menuRef} className="px-6 py-24 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">Our Menu</h2>
+          <h2 className="text-4xl font-bold text-center mb-16">
+            Our Menu
+          </h2>
 
           {menu.map((cat, cIdx) => (
             <div key={cIdx} className="mb-16">
@@ -179,6 +210,26 @@ export default function RestaurantPage() {
                     key={iIdx}
                     className="border border-white/10 rounded-xl p-5 bg-black/40"
                   >
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        className="h-40 w-full object-cover rounded mb-3"
+                      />
+                    )}
+
+                    {editMode && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) uploadImage(file, cIdx, iIdx);
+                        }}
+                        className="mb-3 text-sm"
+                      />
+                    )}
+
                     {editMode ? (
                       <>
                         <input
@@ -215,7 +266,9 @@ export default function RestaurantPage() {
                     ) : (
                       <>
                         <div className="flex justify-between mb-2">
-                          <h4 className="font-semibold">{item.name}</h4>
+                          <h4 className="font-semibold">
+                            {item.name}
+                          </h4>
                           <span className="text-[#e4b363]">
                             {item.price}
                           </span>
