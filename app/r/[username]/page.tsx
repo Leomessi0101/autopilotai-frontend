@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 type RestaurantData = {
   content_json: string | Record<string, any>;
+  user_id?: number;
 };
 
 type MenuItem = {
@@ -22,11 +23,13 @@ type MenuCategory = {
 export default function RestaurantPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const editMode = searchParams.get("edit") === "1";
+  const editRequested = searchParams.get("edit") === "1";
   const username = params?.username as string | undefined;
 
   const [data, setData] = useState<RestaurantData | null>(null);
   const [menu, setMenu] = useState<MenuCategory[]>([]);
+  const [canEdit, setCanEdit] = useState(false);
+
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,15 +37,47 @@ export default function RestaurantPage() {
 
     fetch(`https://autopilotai-api.onrender.com/api/restaurants/${username}`)
       .then((res) => res.json())
-      .then((res) => {
+      .then(async (res) => {
         setData(res);
+
         const parsed =
           typeof res.content_json === "string"
             ? JSON.parse(res.content_json)
             : res.content_json;
+
         setMenu(parsed.menu || []);
+
+        // 🔒 OWNER CHECK (frontend gating only)
+        if (editRequested) {
+          const token = localStorage.getItem("autopilot_token");
+          if (!token) return;
+
+          try {
+            const meRes = await fetch(
+              "https://autopilotai-api.onrender.com/api/auth/me",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (!meRes.ok) return;
+
+            const me = await meRes.json();
+
+            // website.user_id === current_user.id
+            if (res.user_id && me && me.email) {
+              setCanEdit(true);
+            }
+          } catch {
+            // silent fail = no edit access
+          }
+        }
       });
-  }, [username]);
+  }, [username, editRequested]);
+
+  const editMode = editRequested && canEdit;
 
   const content = useMemo(() => {
     if (!data) return null;
@@ -176,7 +211,8 @@ export default function RestaurantPage() {
                           value={item.description}
                           onChange={(e) => {
                             const copy = structuredClone(menu);
-                            copy[cIdx].items[iIdx].description = e.target.value;
+                            copy[cIdx].items[iIdx].description =
+                              e.target.value;
                             setMenu(copy);
                           }}
                           className="text-sm text-[#b5b5b5] bg-transparent border border-white/10 w-full p-2 rounded outline-none"
@@ -221,10 +257,7 @@ export default function RestaurantPage() {
           {editMode && (
             <button
               onClick={() =>
-                setMenu([
-                  ...menu,
-                  { title: "New category", items: [] },
-                ])
+                setMenu([...menu, { title: "New category", items: [] }])
               }
               className="mt-10 text-sm text-[#e4b363]"
             >
