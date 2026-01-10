@@ -26,29 +26,22 @@ export default function RestaurantPage() {
   const username = params?.username as string | undefined;
 
   const [data, setData] = useState<RestaurantData | null>(null);
-  const [error, setError] = useState(false);
   const [menu, setMenu] = useState<MenuCategory[]>([]);
-
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!username) return;
 
     fetch(`https://autopilotai-api.onrender.com/api/restaurants/${username}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((res) => {
         setData(res);
         const parsed =
           typeof res.content_json === "string"
             ? JSON.parse(res.content_json)
             : res.content_json;
-
         setMenu(parsed.menu || []);
-      })
-      .catch(() => setError(true));
+      });
   }, [username]);
 
   const content = useMemo(() => {
@@ -62,7 +55,7 @@ export default function RestaurantPage() {
     }
   }, [data]);
 
-  if (!username || !data) {
+  if (!username || !content) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading…
@@ -70,26 +63,18 @@ export default function RestaurantPage() {
     );
   }
 
-  if (error || !content) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Restaurant not found
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-white relative">
+    <main className="min-h-screen bg-[#0b0b0b] text-white">
       {editMode && (
-        <div className="fixed top-4 right-4 z-50 rounded-full bg-[#e4b363] px-4 py-2 text-sm font-semibold text-black">
+        <div className="fixed top-4 right-4 z-50 bg-[#e4b363] text-black px-4 py-2 rounded-full text-sm font-semibold">
           Edit mode active
         </div>
       )}
 
       {/* HERO */}
       <section className="flex min-h-[70vh] items-center justify-center px-6">
-        <div className="max-w-3xl text-center">
-          <h1 className="text-5xl md:text-6xl font-bold">
+        <div className="text-center max-w-3xl">
+          <h1 className="text-5xl font-bold">
             {content.hero?.headline || username}
           </h1>
           <p className="mt-6 text-xl text-[#b5b5b5]">
@@ -101,7 +86,7 @@ export default function RestaurantPage() {
               onClick={() =>
                 menuRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="mt-10 rounded-full bg-[#e4b363] px-8 py-3 font-semibold text-black"
+              className="mt-10 bg-[#e4b363] text-black px-8 py-3 rounded-full font-semibold"
             >
               View Menu
             </button>
@@ -110,128 +95,61 @@ export default function RestaurantPage() {
       </section>
 
       {/* MENU */}
-      <section ref={menuRef} className="border-t border-white/10 px-6 py-24">
-        <div className="mx-auto max-w-6xl">
+      <section ref={menuRef} className="px-6 py-24 border-t border-white/10">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16">Our Menu</h2>
 
           {menu.map((cat, cIdx) => (
             <div key={cIdx} className="mb-16">
-              <div className="flex items-center justify-between mb-6">
-                {editMode ? (
-                  <input
-                    value={cat.title}
-                    onChange={(e) => {
-                      const copy = [...menu];
-                      copy[cIdx].title = e.target.value;
-                      setMenu(copy);
-                    }}
-                    className="bg-transparent border-b border-[#e4b363] text-2xl font-semibold outline-none"
-                  />
-                ) : (
-                  <h3 className="text-2xl font-semibold text-[#e4b363]">
-                    {cat.title}
-                  </h3>
-                )}
+              <h3 className="text-2xl font-semibold text-[#e4b363] mb-6">
+                {cat.title}
+              </h3>
 
-                {editMode && (
-                  <button
-                    onClick={() => {
-                      const copy = [...menu];
-                      copy.splice(cIdx, 1);
-                      setMenu(copy);
-                    }}
-                    className="text-sm text-red-400"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid md:grid-cols-2 gap-6">
                 {cat.items.map((item, iIdx) => (
                   <div
                     key={iIdx}
-                    className="rounded-xl border border-white/10 bg-black/40 p-5"
+                    className="border border-white/10 rounded-xl p-5 bg-black/40"
                   >
-                    {editMode ? (
-                      <>
-                        <input
-                          value={item.name}
-                          placeholder="Item name"
-                          onChange={(e) => {
-                            const copy = [...menu];
-                            copy[cIdx].items[iIdx].name = e.target.value;
-                            setMenu(copy);
-                          }}
-                          className="w-full bg-transparent font-semibold mb-2 outline-none"
-                        />
-
-                        <textarea
-                          value={item.description}
-                          placeholder="Description"
-                          onChange={(e) => {
-                            const copy = [...menu];
-                            copy[cIdx].items[iIdx].description = e.target.value;
-                            setMenu(copy);
-                          }}
-                          className="w-full bg-transparent text-sm text-[#b5b5b5] outline-none mb-2"
-                        />
-
-                        <input
-                          value={item.price}
-                          placeholder="$12"
-                          onChange={(e) => {
-                            const copy = [...menu];
-                            copy[cIdx].items[iIdx].price = e.target.value;
-                            setMenu(copy);
-                          }}
-                          className="w-24 bg-transparent text-[#e4b363] outline-none"
-                        />
-                      </>
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        className="h-40 w-full object-cover rounded mb-4"
+                      />
                     ) : (
-                      <>
-                        <div className="flex justify-between mb-2">
-                          <h4 className="font-semibold">{item.name}</h4>
-                          <span className="text-[#e4b363]">{item.price}</span>
-                        </div>
-                        <p className="text-sm text-[#b5b5b5]">
-                          {item.description}
-                        </p>
-                      </>
+                      <div className="h-40 flex items-center justify-center text-white/30 border border-dashed border-white/20 rounded mb-4">
+                        No image
+                      </div>
                     )}
+
+                    {editMode && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const url = URL.createObjectURL(file);
+                          const copy = [...menu];
+                          copy[cIdx].items[iIdx].image = url;
+                          setMenu(copy);
+                        }}
+                        className="mb-3 text-sm"
+                      />
+                    )}
+
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-semibold">{item.name}</h4>
+                      <span className="text-[#e4b363]">{item.price}</span>
+                    </div>
+                    <p className="text-sm text-[#b5b5b5]">
+                      {item.description}
+                    </p>
                   </div>
                 ))}
               </div>
-
-              {editMode && (
-                <button
-                  onClick={() => {
-                    const copy = [...menu];
-                    copy[cIdx].items.push({
-                      name: "",
-                      description: "",
-                      price: "",
-                    });
-                    setMenu(copy);
-                  }}
-                  className="mt-4 text-sm text-[#e4b363]"
-                >
-                  + Add item
-                </button>
-              )}
             </div>
           ))}
-
-          {editMode && (
-            <button
-              onClick={() =>
-                setMenu([...menu, { title: "New Category", items: [] }])
-              }
-              className="mt-10 rounded-full border border-[#e4b363] px-6 py-2 text-[#e4b363]"
-            >
-              + Add category
-            </button>
-          )}
         </div>
       </section>
     </main>
