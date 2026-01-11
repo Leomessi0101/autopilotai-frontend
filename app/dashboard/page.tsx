@@ -1,14 +1,29 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
 /* =========================
+   TYPES
+========================= */
+
+type WebsiteMeResponse =
+  | { exists: false }
+  | { exists: true; username: string; template: string };
+
+type CreateWebsiteResponse = {
+  ok?: boolean;
+  username?: string;
+  redirect?: string;
+};
+
+/* =========================
    QUOTES & DAILY FOCUS
 ========================= */
+
 const QUOTES = [
   { text: "Excellence is not an act, but a habit.", author: "Aristotle" },
   { text: "The work is the reward.", author: "Unknown" },
@@ -70,26 +85,32 @@ function getGreeting() {
   return "Good evening";
 }
 
-function normalizePlan(p: any): string {
-  const s = String(p || "free").toLowerCase();
+function cx(...c: Array<string | false | null | undefined>) {
+  return c.filter(Boolean).join(" ");
+}
+
+/* =========================
+   WEBSITE BUILDER HELPERS
+========================= */
+
+function normalizeSlug(input: string) {
+  // lowercase, remove invalid chars, collapse spaces to hyphens
+  let s = (input || "").trim().toLowerCase();
+  s = s.replace(/\s+/g, "-");
+  s = s.replace(/[^a-z0-9-]/g, "");
+  s = s.replace(/-+/g, "-");
+  s = s.replace(/^-+/, "").replace(/-+$/, "");
   return s;
 }
 
-function formatPlan(p: string | null) {
-  const s = normalizePlan(p);
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function isValidSlug(slug: string) {
+  // match backend: 3–30 chars, lowercase letters, numbers, hyphens only
+  return /^[a-z0-9-]{3,30}$/.test(slug);
 }
 
-// Slug helper: lowercase, keep a-z0-9-, collapse spaces to -, trim dashes.
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-]/g, "")
-    .replace(/\-+/g, "-")
-    .replace(/^\-+|\-+$/g, "");
-}
+/* =========================
+   PAGE
+========================= */
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -102,43 +123,25 @@ export default function DashboardPage() {
   const [limit, setLimit] = useState<number | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
 
-  /* =========================
-     WEBSITE BUILDER STATE
-  ========================= */
+  // Website Builder state
   const [websiteLoading, setWebsiteLoading] = useState(true);
-  const [websiteExists, setWebsiteExists] = useState(false);
-  const [websiteUsername, setWebsiteUsername] = useState<string | null>(null);
-  const [websiteTemplate, setWebsiteTemplate] = useState<string | null>(null);
-
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<"restaurant" | "business" | null>(null);
-
-  const [newUsername, setNewUsername] = useState("");
-  const [creatingWebsite, setCreatingWebsite] = useState(false);
+  const [website, setWebsite] = useState<WebsiteMeResponse | null>(null);
   const [websiteError, setWebsiteError] = useState<string | null>(null);
+
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    "restaurant" | "business"
+  >("restaurant");
+
+  const [desiredUsername, setDesiredUsername] = useState<string>("");
+  const [creatingWebsite, setCreatingWebsite] = useState(false);
+
+  const [siteToast, setSiteToast] = useState<
+    null | { type: "ok" | "err"; msg: string }
+  >(null);
 
   const quote = getDailyItem(QUOTES);
   const focus = getDailyItem(AI_DAILY_FOCUS);
   const greeting = getGreeting();
-
-  const plan = normalizePlan(subscriptionPlan);
-  const isPaid = plan !== "free";
-
-  const websiteTemplateLabel =
-    websiteTemplate
-      ? websiteTemplate.charAt(0).toUpperCase() + websiteTemplate.slice(1)
-      : "";
-
-  const progress =
-    used !== null && limit !== null && limit > 0
-      ? Math.min(100, (used / limit) * 100)
-      : 0;
-
-  const remaining =
-    used !== null && limit !== null ? Math.max(0, limit - used) : null;
-
-  const slugPreview = useMemo(() => slugify(newUsername), [newUsername]);
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -147,6 +150,7 @@ export default function DashboardPage() {
       return;
     }
 
+    // ME
     api
       .get("/api/auth/me")
       .then((res) => {
@@ -154,13 +158,16 @@ export default function DashboardPage() {
           setInitial(res.data.name.charAt(0).toUpperCase());
           setFullName(res.data.name.split(" ")[0] || res.data.name);
         }
-        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
+        if (res.data?.subscription) {
+          setSubscriptionPlan(res.data.subscription);
+        }
       })
       .catch(() => {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
       });
 
+    // USAGE
     api
       .get("/api/auth/usage")
       .then((res) => {
@@ -183,90 +190,136 @@ export default function DashboardPage() {
         setLimit(limitValue);
       })
       .finally(() => setUsageLoading(false));
-  }, [router]);
 
-  /* =========================
-     FETCH MY WEBSITE (PAID USERS ONLY)
-     If free user, we don't call (avoids pointless 403s).
-  ========================= */
-  useEffect(() => {
-    if (!subscriptionPlan) return;
-
-    if (!isPaid) {
-      setWebsiteLoading(false);
-      setWebsiteExists(false);
-      return;
-    }
-
+    // WEBSITE ME
     api
       .get("/api/dashboard/websites/me")
       .then((res) => {
-        if (res.data?.exists) {
-          setWebsiteExists(true);
-          setWebsiteUsername(res.data.username);
-          setWebsiteTemplate(res.data.template);
-        } else {
-          setWebsiteExists(false);
+        const d = res.data as WebsiteMeResponse;
+        setWebsite(d);
+        setWebsiteError(null);
+
+        // if user already has a site, prefill for nicer UI
+        if (d && (d as any).exists === true && (d as any).username) {
+          setDesiredUsername((d as any).username);
         }
       })
-      .catch(() => {
-        // If backend not available or route mismatch, show a friendly state.
-        setWebsiteExists(false);
+      .catch((err) => {
+        setWebsite(null);
+        if (err?.response?.status === 401) {
+          // token missing/expired
+          localStorage.removeItem("autopilot_token");
+          router.push("/login");
+          return;
+        }
+        setWebsiteError("Failed to load website status");
       })
       .finally(() => setWebsiteLoading(false));
-  }, [subscriptionPlan, isPaid]);
+  }, [router]);
 
-  /* =========================
-     CREATE WEBSITE
-  ========================= */
-  const handleCreateWebsite = async () => {
+  const progress = useMemo(() => {
+    return used !== null && limit !== null && limit > 0
+      ? Math.min(100, (used / limit) * 100)
+      : 0;
+  }, [used, limit]);
+
+  const remaining = useMemo(() => {
+    return used !== null && limit !== null ? Math.max(0, limit - used) : null;
+  }, [used, limit]);
+
+  const isPaid = (subscriptionPlan || "free").toLowerCase() !== "free";
+
+  const cleanedSlug = useMemo(
+    () => normalizeSlug(desiredUsername),
+    [desiredUsername]
+  );
+
+  const slugValid = useMemo(() => isValidSlug(cleanedSlug), [cleanedSlug]);
+
+  async function refreshWebsiteMe() {
+    setWebsiteLoading(true);
     setWebsiteError(null);
+    try {
+      const res = await api.get("/api/dashboard/websites/me");
+      setWebsite(res.data as WebsiteMeResponse);
+    } catch {
+      setWebsite(null);
+      setWebsiteError("Failed to refresh website status");
+    } finally {
+      setWebsiteLoading(false);
+    }
+  }
 
+  async function createWebsite() {
     if (!isPaid) {
-      setWebsiteError("Upgrade to create a website.");
+      router.push("/upgrade");
       return;
     }
 
-    if (!selectedTemplate) {
-      setWebsiteError("Please choose a template.");
-      return;
-    }
+    const slug = normalizeSlug(desiredUsername);
 
-    const usernameSlug = slugify(newUsername);
-    if (!usernameSlug) {
-      setWebsiteError("Please choose a website username (3–30 chars).");
+    if (!slugValid) {
+      setSiteToast({
+        type: "err",
+        msg: "Choose a username (3–30 chars, lowercase letters/numbers/hyphens)",
+      });
+      setTimeout(() => setSiteToast(null), 2600);
       return;
     }
 
     setCreatingWebsite(true);
+    setSiteToast(null);
 
     try {
       const res = await api.post("/api/dashboard/websites/create", {
-        username: usernameSlug,
+        username: slug,
         template: selectedTemplate,
       });
 
-      if (res.data?.redirect) {
-        router.push(res.data.redirect);
-        return;
-      }
+      const data = (res.data || {}) as CreateWebsiteResponse;
 
-      // fallback: if backend returns username but no redirect
-      if (res.data?.username) {
-        router.push(`/r/${res.data.username}?edit=1`);
-        return;
-      }
+      const redirect =
+        data.redirect ||
+        (data.username ? `/r/${data.username}?edit=1` : `/r/${slug}?edit=1`);
 
-      setWebsiteError("Created, but no redirect returned.");
+      setSiteToast({ type: "ok", msg: "Website created" });
+      setTimeout(() => setSiteToast(null), 1500);
+
+      // refresh local state for card UI (optional but nice)
+      await refreshWebsiteMe();
+
+      // go edit
+      router.push(redirect);
     } catch (err: any) {
-      setWebsiteError(
-        err?.response?.data?.detail ||
-          "Failed to create website. Please try again."
-      );
+      const status = err?.response?.status;
+
+      if (status === 403) {
+        // free or already has site
+        const detail =
+          err?.response?.data?.detail ||
+          "Upgrade your plan to create a website";
+        setSiteToast({ type: "err", msg: String(detail) });
+        setTimeout(() => setSiteToast(null), 2800);
+        return;
+      }
+
+      if (status === 400) {
+        const detail = err?.response?.data?.detail || "Invalid request";
+        setSiteToast({ type: "err", msg: String(detail) });
+        setTimeout(() => setSiteToast(null), 2800);
+        return;
+      }
+
+      setSiteToast({ type: "err", msg: "Failed to create website" });
+      setTimeout(() => setSiteToast(null), 2800);
     } finally {
       setCreatingWebsite(false);
     }
-  };
+  }
+
+  const hasWebsite = website && (website as any).exists === true;
+  const existingUsername = hasWebsite ? (website as any).username : null;
+  const existingTemplate = hasWebsite ? (website as any).template : null;
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
@@ -278,13 +331,29 @@ export default function DashboardPage() {
 
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
+      {/* Website toast */}
+      {siteToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[90]">
+          <div
+            className={cx(
+              "px-4 py-2 rounded-full text-sm font-semibold border shadow-lg shadow-black/30",
+              siteToast.type === "ok"
+                ? "bg-white text-black border-white/20"
+                : "bg-red-500/15 text-red-100 border-red-500/25"
+            )}
+          >
+            {siteToast.msg}
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
         {/* Greeting */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-16"
+          className="mb-20"
         >
           <h1 className="text-5xl md:text-6xl font-light">
             {greeting}
@@ -296,123 +365,202 @@ export default function DashboardPage() {
         </motion.section>
 
         {/* =========================
-            WEBSITE BUILDER (ABOVE TOOLS)
+            WEBSITE BUILDER (BIG PREMIUM CARD) — ABOVE TOOLS
         ========================= */}
         <motion.section
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.05 }}
-          className="mb-20 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_50px_120px_rgba(0,0,0,.5)]"
+          transition={{ duration: 0.9, delay: 0.05 }}
+          className="mb-20 rounded-3xl border border-[#2b4e8d]/60 bg-gradient-to-br from-[#111b2d] to-[#1b2f54] text-white p-10 md:p-12 shadow-[0_50px_120px_rgba(0,0,0,.6)]"
         >
-          <div className="flex items-start justify-between gap-8">
-            <div>
-              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+            <div className="max-w-2xl">
+              <p className="text-sm font-medium uppercase tracking-wide opacity-80">
                 Website Builder
               </p>
-              <h2 className="text-3xl font-semibold mt-2">Your Website</h2>
-
-              <p className="mt-3 text-gray-300 max-w-2xl">
-                Build a real website from templates.{" "}
-                <span className="text-gray-400">
-                  One website per paid account (for now).
-                </span>
+              <h2 className="text-3xl md:text-4xl font-semibold mt-3">
+                Build a premium website in minutes
+              </h2>
+              <p className="mt-4 text-gray-200/90 leading-relaxed">
+                Create a clean, high-converting website with built-in editing,
+                autosave, image uploads, and mobile-friendly layouts.
               </p>
-            </div>
 
-            {/* Right side badge */}
-            <div className="hidden md:flex items-center gap-3">
-              <div className="px-4 py-2 rounded-full border border-white/10 bg-black/30 text-sm text-gray-300">
-                Plan:{" "}
-                <span className="text-white font-medium">{formatPlan(subscriptionPlan)}</span>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Badge>Templates</Badge>
+                <Badge>In-place editing</Badge>
+                <Badge>Autosave</Badge>
+                <Badge>Mobile optimized</Badge>
+                <Badge>Instant publish</Badge>
               </div>
             </div>
-          </div>
 
-          {/* FREE PLAN LOCKED STATE */}
-          {!isPaid && (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
-                <div className="text-lg font-semibold">Website Builder is locked</div>
-                <div className="text-sm text-gray-400 mt-1">
-                  Upgrade to Basic/Growth/Pro to create your first website.
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => router.push("/upgrade")}
-                  className="px-6 py-3 rounded-xl bg-white text-[#1b2f54] font-medium hover:bg-gray-200 transition"
-                >
-                  Upgrade Plan
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* PAID USERS */}
-          {isPaid && (
-            <div className="mt-8">
+            <div className="md:w-[420px] w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
               {websiteLoading ? (
-                <div className="text-gray-400">Loading website…</div>
-              ) : websiteExists ? (
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div>
-                    <div className="text-lg font-semibold">
-                      /r/{websiteUsername}
-                    </div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      Template: {websiteTemplateLabel}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Tip: share your live link with customers — edits are private until you save inside the editor.
-                    </div>
+                <div className="space-y-3">
+                  <div className="h-4 w-40 bg-white/10 rounded" />
+                  <div className="h-10 w-full bg-white/10 rounded-xl" />
+                  <div className="h-10 w-full bg-white/10 rounded-xl" />
+                  <div className="h-10 w-2/3 bg-white/10 rounded-xl" />
+                </div>
+              ) : websiteError ? (
+                <div>
+                  <div className="text-sm text-red-200 font-semibold">
+                    {websiteError}
+                  </div>
+                  <button
+                    onClick={refreshWebsiteMe}
+                    className="mt-4 w-full py-3 rounded-xl border border-white/15 bg-white/10 hover:bg-white/15 transition font-medium"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : !isPaid ? (
+                <div>
+                  <div className="text-sm text-white/80 font-semibold">
+                    Locked on Free plan
+                  </div>
+                  <div className="mt-2 text-sm text-white/65 leading-relaxed">
+                    Upgrade to Basic / Growth / Pro to create your first website.
+                    Paid plans include <span className="font-semibold">1 site</span>.
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => router.push("/upgrade")}
+                    className="mt-5 w-full py-3.5 rounded-xl bg-white text-[#1b2f54] font-semibold hover:bg-gray-100 transition"
+                  >
+                    Upgrade to unlock
+                  </button>
+
+                  <div className="mt-3 text-xs text-white/45">
+                    You can still explore templates after upgrading.
+                  </div>
+                </div>
+              ) : hasWebsite && existingUsername ? (
+                <div>
+                  <div className="text-sm text-white/75">Your website</div>
+                  <div className="mt-1 text-xl font-semibold">
+                    /r/{existingUsername}
+                  </div>
+
+                  <div className="mt-2 text-sm text-white/65">
+                    Template:{" "}
+                    <span className="font-semibold text-white">
+                      {String(existingTemplate || "unknown")}
+                    </span>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
-                      onClick={() => router.push(`/r/${websiteUsername}?edit=1`)}
-                      className="px-6 py-3 rounded-xl bg-white text-[#1b2f54] font-medium hover:bg-gray-200 transition"
+                      onClick={() => router.push(`/r/${existingUsername}?edit=1`)}
+                      className="py-3 rounded-xl bg-white text-[#1b2f54] font-semibold hover:bg-gray-100 transition"
                     >
-                      Edit Website
+                      Edit website
                     </button>
                     <button
-                      onClick={() => router.push(`/r/${websiteUsername}`)}
-                      className="px-6 py-3 rounded-xl border border-white/20 text-white hover:bg-white/10 transition"
+                      onClick={() =>
+                        window.open(`/r/${existingUsername}`, "_blank")
+                      }
+                      className="py-3 rounded-xl border border-white/15 bg-white/10 hover:bg-white/15 transition font-semibold"
                     >
-                      View Live
+                      Preview
                     </button>
+                  </div>
+
+                  <div className="mt-4 text-xs text-white/45 leading-relaxed">
+                    Tip: use <span className="font-semibold">Edit</span> to change
+                    text/images, and <span className="font-semibold">Preview</span>{" "}
+                    to see what guests see.
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div>
-                    <div className="text-lg font-semibold">No website yet</div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      Choose a template and publish your first site.
+                <div>
+                  <div className="text-sm text-white/80 font-semibold">
+                    Create your website
+                  </div>
+                  <div className="mt-2 text-sm text-white/65 leading-relaxed">
+                    Choose a template and a username. Your website will live at{" "}
+                    <span className="font-semibold text-white">
+                      /r/username
+                    </span>
+                    .
+                  </div>
+
+                  {/* Username */}
+                  <div className="mt-5">
+                    <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                      Website username
+                    </div>
+                    <input
+                      value={desiredUsername}
+                      onChange={(e) => setDesiredUsername(e.target.value)}
+                      placeholder="my-restaurant"
+                      className={cx(
+                        "w-full rounded-xl px-4 py-3 bg-black/25 border outline-none text-white placeholder:text-white/35",
+                        slugValid || desiredUsername.length === 0
+                          ? "border-white/10 focus:border-white/20"
+                          : "border-red-500/30 focus:border-red-500/40"
+                      )}
+                    />
+                    <div className="mt-2 text-xs text-white/45">
+                      Slug preview:{" "}
+                      <span
+                        className={cx(
+                          "font-semibold",
+                          cleanedSlug
+                            ? slugValid
+                              ? "text-white"
+                              : "text-red-200"
+                            : "text-white/60"
+                        )}
+                      >
+                        /r/{cleanedSlug || "username"}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setWebsiteError(null);
-                        setSelectedTemplate(null);
-                        setNewUsername("");
-                        setShowTemplateModal(true);
-                      }}
-                      className="px-7 py-3 rounded-xl bg-gradient-to-r from-[#1c2f57] to-[#2b4e8d] font-medium hover:brightness-110 transition"
-                    >
-                      Create Website
-                    </button>
+                  {/* Template chooser */}
+                  <div className="mt-5">
+                    <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                      Template
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <TemplateOption
+                        label="Restaurant"
+                        subtitle="Menu + hours + location"
+                        active={selectedTemplate === "restaurant"}
+                        onClick={() => setSelectedTemplate("restaurant")}
+                      />
+                      <TemplateOption
+                        label="Business"
+                        subtitle="Services + CTA layout"
+                        active={selectedTemplate === "business"}
+                        onClick={() => setSelectedTemplate("business")}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={createWebsite}
+                    disabled={creatingWebsite}
+                    className={cx(
+                      "mt-6 w-full py-3.5 rounded-xl font-semibold transition",
+                      creatingWebsite
+                        ? "bg-white/70 text-[#1b2f54] cursor-not-allowed"
+                        : "bg-white text-[#1b2f54] hover:bg-gray-100"
+                    )}
+                  >
+                    {creatingWebsite ? "Creating…" : "Create website"}
+                  </button>
+
+                  <div className="mt-3 text-xs text-white/45 leading-relaxed">
+                    You can edit instantly after creation. Changes autosave inside the editor.
                   </div>
                 </div>
               )}
             </div>
-          )}
-
-          {websiteError && (
-            <div className="mt-4 text-sm text-red-400">{websiteError}</div>
-          )}
+          </div>
         </motion.section>
 
         {/* Usage */}
@@ -570,162 +718,55 @@ export default function DashboardPage() {
           </a>
         </footer>
       </main>
-
-      {/* =========================
-          TEMPLATE MODAL
-      ========================= */}
-      <AnimatePresence>
-        {showTemplateModal && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-black/70 backdrop-blur flex items-center justify-center px-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => {
-              if (!creatingWebsite) setShowTemplateModal(false);
-            }}
-          >
-            <motion.div
-              className="w-full max-w-3xl bg-[#0b0f1a] border border-white/10 rounded-2xl p-8 shadow-[0_60px_160px_rgba(0,0,0,.65)]"
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-6">
-                <div>
-                  <h3 className="text-2xl font-semibold">Create your website</h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Pick a template, choose your URL, then start editing immediately.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (!creatingWebsite) setShowTemplateModal(false);
-                  }}
-                  className="px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 transition"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="mt-7 grid md:grid-cols-2 gap-4">
-                {/* Restaurant */}
-                <button
-                  onClick={() => setSelectedTemplate("restaurant")}
-                  className={[
-                    "p-5 rounded-xl border transition text-left",
-                    selectedTemplate === "restaurant"
-                      ? "border-[#6d8ce8] bg-white/10"
-                      : "border-white/10 hover:bg-white/5",
-                  ].join(" ")}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">Restaurant</div>
-                    <div className="text-xs px-2 py-1 rounded-full bg-[#6d8ce8]/15 text-[#a9baff] border border-[#6d8ce8]/25">
-                      Live
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Hero image, menu editor, food photos, contact & hours.
-                  </div>
-                </button>
-
-                {/* Business */}
-                <button
-                  onClick={() => setSelectedTemplate("business")}
-                  className={[
-                    "p-5 rounded-xl border transition text-left",
-                    selectedTemplate === "business"
-                      ? "border-[#6d8ce8] bg-white/10"
-                      : "border-white/10 hover:bg-white/5",
-                  ].join(" ")}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">Business</div>
-                    <div className="text-xs px-2 py-1 rounded-full bg-[#6d8ce8]/15 text-[#a9baff] border border-[#6d8ce8]/25">
-                      Live
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Services, about section, CTA, contact + clean brand style.
-                  </div>
-                </button>
-
-                {/* Coming soon tiles */}
-                <div className="p-5 rounded-xl border border-white/10 bg-white/5 text-left opacity-60">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">Gym</div>
-                    <div className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10">
-                      Coming soon
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Class schedule, coaches, pricing, testimonials.
-                  </div>
-                </div>
-
-                <div className="p-5 rounded-xl border border-white/10 bg-white/5 text-left opacity-60">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">Barber</div>
-                    <div className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10">
-                      Coming soon
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Services, gallery, booking button, location & hours.
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-7">
-                <div className="text-xs uppercase tracking-wide text-gray-400">
-                  Website URL (username)
-                </div>
-
-                <div className="mt-2 flex flex-col md:flex-row gap-3 md:items-center">
-                  <div className="flex-1">
-                    <input
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      placeholder="your-business-name"
-                      className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 outline-none focus:border-[#6d8ce8]"
-                    />
-                    <div className="mt-2 text-xs text-gray-500">
-                      Preview:{" "}
-                      <span className="text-gray-300">
-                        /r/{slugPreview || "your-business-name"}
-                      </span>{" "}
-                      <span className="text-gray-600">(lowercase, numbers, hyphens)</span>
-                    </div>
-                  </div>
-
-                  <button
-                    disabled={!selectedTemplate || creatingWebsite}
-                    onClick={handleCreateWebsite}
-                    className="px-7 py-3 rounded-xl bg-white text-[#1b2f54] font-medium hover:bg-gray-200 transition disabled:opacity-50 disabled:hover:bg-white"
-                  >
-                    {creatingWebsite ? "Creating…" : "Create & Edit"}
-                  </button>
-                </div>
-
-                {websiteError && (
-                  <div className="mt-3 text-sm text-red-400">{websiteError}</div>
-                )}
-
-                {!selectedTemplate && (
-                  <div className="mt-3 text-sm text-gray-400">
-                    Choose a template above to continue.
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
+  );
+}
+
+/* =========================
+   SMALL UI PIECES
+========================= */
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80">
+      {children}
+    </span>
+  );
+}
+
+function TemplateOption({
+  label,
+  subtitle,
+  active,
+  onClick,
+}: {
+  label: string;
+  subtitle: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cx(
+        "text-left rounded-xl border p-4 transition",
+        active
+          ? "bg-white text-[#1b2f54] border-white/20"
+          : "bg-white/5 border-white/10 hover:bg-white/10"
+      )}
+    >
+      <div className={cx("font-semibold", active ? "text-[#1b2f54]" : "text-white")}>
+        {label}
+      </div>
+      <div
+        className={cx(
+          "mt-1 text-xs",
+          active ? "text-[#1b2f54]/80" : "text-white/60"
+        )}
+      >
+        {subtitle}
+      </div>
+    </button>
   );
 }
 
