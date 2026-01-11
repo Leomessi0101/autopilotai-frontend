@@ -58,11 +58,13 @@ export default function RestaurantPage() {
 
         setMenu(parsed.menu || []);
 
+        // 🔒 FINAL OWNER CHECK (JWT → user_id)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
 
           const tokenUserId = getUserIdFromToken(token);
+
           if (tokenUserId && tokenUserId === res.user_id) {
             setCanEdit(true);
           }
@@ -112,11 +114,7 @@ export default function RestaurantPage() {
     }
   }
 
-  async function uploadImage(
-    file: File,
-    cIdx: number,
-    iIdx: number
-  ) {
+  async function uploadImage(file: File, cIdx: number, iIdx: number) {
     setUploading(true);
 
     try {
@@ -128,18 +126,27 @@ export default function RestaurantPage() {
         body: form,
       });
 
-      const data = await res.json();
+      const out = await res.json();
 
-      if (!data.url) throw new Error("No URL returned");
+      if (!out?.url) throw new Error("No URL returned");
 
       const copy = structuredClone(menu);
-      copy[cIdx].items[iIdx].image = data.url;
+      copy[cIdx].items[iIdx].image = out.url;
       setMenu(copy);
-    } catch (err) {
+    } catch {
       alert("Image upload failed");
     } finally {
       setUploading(false);
     }
+  }
+
+  // ✅ NEW: drag & drop helper (menu item images)
+  function handleDroppedFile(file: File, cIdx: number, iIdx: number) {
+    if (!file.type.startsWith("image/")) {
+      alert("Please drop an image file.");
+      return;
+    }
+    uploadImage(file, cIdx, iIdx);
   }
 
   if (!username || !content) {
@@ -182,9 +189,7 @@ export default function RestaurantPage() {
       {/* MENU */}
       <section ref={menuRef} className="px-6 py-24 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">
-            Our Menu
-          </h2>
+          <h2 className="text-4xl font-bold text-center mb-16">Our Menu</h2>
 
           {menu.map((cat, cIdx) => (
             <div key={cIdx} className="mb-16">
@@ -210,24 +215,67 @@ export default function RestaurantPage() {
                     key={iIdx}
                     className="border border-white/10 rounded-xl p-5 bg-black/40"
                   >
-                    {item.image && (
-                      <img
-                        src={item.image}
-                        className="h-40 w-full object-cover rounded mb-3"
-                      />
-                    )}
+                    {/* ✅ NEW: Drag & Drop image zone */}
+                    <div
+                      className={[
+                        "mb-3 rounded-lg overflow-hidden",
+                        editMode
+                          ? "border border-dashed border-white/20 bg-black/30"
+                          : "border border-white/10 bg-black/30",
+                        editMode ? "cursor-copy" : "",
+                      ].join(" ")}
+                      onDragOver={(e) => {
+                        if (!editMode) return;
+                        e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        if (!editMode) return;
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) handleDroppedFile(file, cIdx, iIdx);
+                      }}
+                      title={editMode ? "Drag & drop an image here" : undefined}
+                    >
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          className="h-44 w-full object-cover"
+                          alt=""
+                        />
+                      ) : (
+                        <div className="h-44 flex flex-col items-center justify-center text-white/40">
+                          <div className="text-sm font-semibold">
+                            No image
+                          </div>
+                          {editMode && (
+                            <div className="text-xs mt-1 text-white/30">
+                              Drag & drop an image here
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
+                    {/* Keep your existing file picker (still works) */}
                     {editMode && (
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={uploading}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) uploadImage(file, cIdx, iIdx);
-                        }}
-                        className="mb-3 text-sm"
-                      />
+                      <div className="mb-3 flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            uploadImage(file, cIdx, iIdx);
+                          }}
+                          className="text-sm"
+                        />
+                        {uploading && (
+                          <span className="text-xs text-white/40">
+                            Uploading…
+                          </span>
+                        )}
+                      </div>
                     )}
 
                     {editMode ? (
@@ -256,8 +304,7 @@ export default function RestaurantPage() {
                           value={item.description}
                           onChange={(e) => {
                             const copy = structuredClone(menu);
-                            copy[cIdx].items[iIdx].description =
-                              e.target.value;
+                            copy[cIdx].items[iIdx].description = e.target.value;
                             setMenu(copy);
                           }}
                           className="text-sm bg-transparent border border-white/10 w-full p-2 rounded"
@@ -266,12 +313,8 @@ export default function RestaurantPage() {
                     ) : (
                       <>
                         <div className="flex justify-between mb-2">
-                          <h4 className="font-semibold">
-                            {item.name}
-                          </h4>
-                          <span className="text-[#e4b363]">
-                            {item.price}
-                          </span>
+                          <h4 className="font-semibold">{item.name}</h4>
+                          <span className="text-[#e4b363]">{item.price}</span>
                         </div>
                         <p className="text-sm text-[#b5b5b5]">
                           {item.description}
