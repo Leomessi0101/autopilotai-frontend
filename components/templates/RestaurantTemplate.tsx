@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+const TEMPLATE_VERSION = 1;
+
 /* ======================================================
    TYPES
 ====================================================== */
@@ -86,6 +88,44 @@ function emptyItem(): MenuItem {
 
 function emptyCategory(): MenuCategory {
   return { title: "New category", items: [emptyItem()] };
+}
+
+/**
+ * Deterministic stringify for dirty-check snapshots.
+ * - Sorts object keys
+ * - Preserves array order
+ * This avoids false “dirty” signals due to key ordering.
+ */
+function stableStringify(value: any): string {
+  const seen = new WeakSet();
+
+  const stringifyInner = (v: any): any => {
+    if (v === null || typeof v !== "object") return v;
+
+    if (seen.has(v)) return null; // avoid circular crashes (should not happen here)
+    seen.add(v);
+
+    if (Array.isArray(v)) return v.map(stringifyInner);
+
+    const out: Record<string, any> = {};
+    Object.keys(v)
+      .sort()
+      .forEach((k) => {
+        out[k] = stringifyInner(v[k]);
+      });
+    return out;
+  };
+
+  try {
+    return JSON.stringify(stringifyInner(value));
+  } catch {
+    // Fallback: never block UI if something unexpected happens
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
 }
 
 /* ======================================================
@@ -314,6 +354,117 @@ export default function RestaurantTemplate({
   const hasMenu = useMemo(() => content.menu.length > 0, [content.menu.length]);
 
   /* ======================================================
+     DIRTY STATE + TAB CLOSE PROTECTION (IMPORTANT)
+     - Only active in editMode
+     - Dirty = content differs from lastSavedSnapshot
+     - beforeunload guard prevents accidental refresh/close
+  ====================================================== */
+
+  // Snapshot of the last saved content (server-aligned fields only)
+  const lastSavedSnapshotRef = useRef<string>("");
+
+  // We keep this state so UI can reflect it (and beforeunload can depend on it)
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Defines exactly what we consider “saved”
+  const buildSavePayload = (c: ContentState) => ({
+    template_version: TEMPLATE_VERSION,
+    menu: c.menu,
+    hero: c.hero,
+    contact: c.contact,
+    location: c.location,
+    hours: c.hours,
+  });
+
+  // Set initial snapshot on mount + whenever username changes (new site)
+  useEffect(() => {
+    const normalized = normalizeContent(initialContent, username);
+    // Ensure state stays normalized if parent passed different content_json later
+    setContent(normalized);
+
+    const initialSnap = stableStringify(buildSavePayload(normalized));
+    lastSavedSnapshotRef.current = initialSnap;
+    setIsDirty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]); // intentional: treat username as “site identity”
+
+  // If initialContent changes for same username (rare, but possible), resync safely.
+  // This prevents weirdness if gatekeeper refetches and passes updated content.
+  useEffect(() => {
+    const normalized = normalizeContent(initialContent, username);
+    setContent(normalized);
+
+    const initialSnap = stableStringify(buildSavePayload(normalized));
+    lastSavedSnapshotRef.current = initialSnap;
+    setIsDirty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialContent]);
+
+  // Compute dirty whenever content changes (only in editMode)
+  useEffect(() => {
+    if (!editMode) {
+      setIsDirty(false);
+      return;
+    }
+    const currentSnap = stableStringify(buildSavePayload(content));
+    setIsDirty(currentSnap !== lastSavedSnapshotRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, editMode]);
+
+  // Tab close / refresh protection
+  useEffect(() => {
+    if (!editMode) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      // Don't block if saving/uploading OR not dirty
+      if (!isDirty) return;
+      if (saving || uploading) return;
+
+      e.preventDefault();
+      // Chrome requires returnValue to be set
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [editMode, isDirty, saving, uploading]);
+
+  /* ======================================================
+     AUTOSAVE (DEBOUNCED) – SAFE + SIMPLE
+     - Only runs in editMode
+     - Only runs when dirty
+     - Skips while uploading
+     - Skips if already saving
+  ====================================================== */
+
+  const autosaveTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!editMode) return;
+    if (!isDirty) return;
+    if (uploading) return; // avoid racing payload while image upload is mid-flight
+    if (saving) return;
+
+    // Debounce autosave
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      // Use a silent save: no “Saved” toast, but still updates snapshot on success
+      void saveAll({ silent: true });
+    }, 900);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, editMode, isDirty, uploading]);
+
+  /* ======================================================
      UPLOAD HELPERS
   ====================================================== */
 
@@ -417,16 +568,30 @@ export default function RestaurantTemplate({
      SAVE
   ====================================================== */
 
-  async function saveAll() {
+  async function saveAll(opts?: { silent?: boolean }) {
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
-      setToast({ type: "err", msg: "Not logged in" });
-      setTimeout(() => setToast(null), 2000);
+      if (!opts?.silent) {
+        setToast({ type: "err", msg: "Not logged in" });
+        setTimeout(() => setToast(null), 2000);
+      }
+      return;
+    }
+
+    // If nothing changed, don't spam backend
+    const payload = buildSavePayload(content);
+    const snap = stableStringify(payload);
+    if (snap === lastSavedSnapshotRef.current) {
+      if (!opts?.silent) {
+        setToast({ type: "ok", msg: "Already saved" });
+        setTimeout(() => setToast(null), 1200);
+      }
+      setIsDirty(false);
       return;
     }
 
     setSaving(true);
-    setToast(null);
+    if (!opts?.silent) setToast(null);
 
     try {
       const res = await fetch(
@@ -437,22 +602,29 @@ export default function RestaurantTemplate({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            menu: content.menu,
-            hero: content.hero,
-            contact: content.contact,
-            location: content.location,
-            hours: content.hours,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       if (!res.ok) throw new Error("Save failed");
-      setToast({ type: "ok", msg: "Saved" });
-      setTimeout(() => setToast(null), 2000);
+
+      // Update “last saved” snapshot on success
+      lastSavedSnapshotRef.current = snap;
+      setIsDirty(false);
+
+      if (!opts?.silent) {
+        setToast({ type: "ok", msg: "Saved" });
+        setTimeout(() => setToast(null), 2000);
+      }
     } catch {
-      setToast({ type: "err", msg: "Save failed" });
-      setTimeout(() => setToast(null), 2500);
+      if (!opts?.silent) {
+        setToast({ type: "err", msg: "Save failed" });
+        setTimeout(() => setToast(null), 2500);
+      } else {
+        // Silent failures should still surface gently (optional):
+        // We keep it minimal to avoid annoying spam.
+        // If you want, we can add a tiny “Autosave failed” badge later.
+      }
     } finally {
       setSaving(false);
     }
@@ -489,14 +661,32 @@ export default function RestaurantTemplate({
 
       {/* Desktop edit bar */}
       {editMode && (
-        <div className="fixed top-4 right-4 z-[85] hidden md:flex gap-3">
+        <div className="fixed top-4 right-4 z-[85] hidden md:flex gap-3 items-center">
+          {/* Unsaved badge (subtle, but super useful) */}
+          <div
+            className={cx(
+              "px-3 py-2 rounded-full text-xs font-semibold border shadow-lg shadow-black/30",
+              isDirty
+                ? "bg-white/5 text-white/80 border-white/15"
+                : "bg-white/5 text-white/50 border-white/10"
+            )}
+            title={
+              isDirty
+                ? "You have unsaved changes (autosave will run). Closing the tab will warn you."
+                : "All changes saved"
+            }
+          >
+            {isDirty ? "Unsaved changes" : "All saved"}
+          </div>
+
           <PillButton
             variant="primary"
-            onClick={saveAll}
-            disabled={saving || uploading}
+            onClick={() => saveAll({ silent: false })}
+            disabled={saving || uploading || !isDirty}
           >
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? "Saving…" : isDirty ? "Save changes" : "Saved"}
           </PillButton>
+
           <div className="bg-[#e4b363] text-black px-4 py-2 rounded-full text-sm font-semibold border border-[#e4b363]/30 shadow-lg shadow-black/30">
             Edit mode
           </div>
@@ -508,18 +698,23 @@ export default function RestaurantTemplate({
         <div className="fixed bottom-0 inset-x-0 z-[85] md:hidden border-t border-white/10 bg-black/80 backdrop-blur px-4 py-3">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
             <div className="text-xs text-white/70 flex-1">
-              Edit mode active
+              Edit mode active{" "}
+              <span className="text-white/40">
+                {isDirty ? "• Unsaved changes" : "• All saved"}
+              </span>
               <div className="text-[11px] text-white/40">
-                Changes are local until you save
+                {isDirty
+                  ? "Autosave will run. Closing the tab will warn you."
+                  : "Changes are saved."}
               </div>
             </div>
             <PillButton
               variant="primary"
-              onClick={saveAll}
-              disabled={saving || uploading}
+              onClick={() => saveAll({ silent: false })}
+              disabled={saving || uploading || !isDirty}
               className="px-6"
             >
-              {saving ? "Saving…" : "Save"}
+              {saving ? "Saving…" : isDirty ? "Save" : "Saved"}
             </PillButton>
           </div>
         </div>
@@ -661,7 +856,11 @@ export default function RestaurantTemplate({
                 Add a category and start building your menu.
               </div>
               {editMode && (
-                <PillButton variant="primary" onClick={addCategory} className="mt-4">
+                <PillButton
+                  variant="primary"
+                  onClick={addCategory}
+                  className="mt-4"
+                >
                   + Add first category
                 </PillButton>
               )}
@@ -697,7 +896,10 @@ export default function RestaurantTemplate({
                       <PillButton variant="soft" onClick={() => addItem(cIdx)}>
                         + Add item
                       </PillButton>
-                      <PillButton variant="danger" onClick={() => removeCategory(cIdx)}>
+                      <PillButton
+                        variant="danger"
+                        onClick={() => removeCategory(cIdx)}
+                      >
                         Remove
                       </PillButton>
                     </div>
@@ -844,7 +1046,8 @@ export default function RestaurantTemplate({
                                   onChangeValue={(v: string) =>
                                     setContent((prev) => {
                                       const copy = structuredClone(prev);
-                                      copy.menu[cIdx].items[iIdx].description = v;
+                                      copy.menu[cIdx].items[iIdx].description =
+                                        v;
                                       return copy;
                                     })
                                   }
