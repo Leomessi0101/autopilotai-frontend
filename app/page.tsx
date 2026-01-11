@@ -1,41 +1,60 @@
 "use client";
-
 import MarketingNavbar from "@/components/MarketingNavbar";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 /* =========================
-   MOTION
+   MOTION VARIANTS
 ========================= */
-
 const fadeUp = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
 };
 
-/* =========================
-   SMALL UI
-========================= */
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.2,
+    },
+  },
+};
 
-function PrimaryCTA({
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.92 },
+  animate: { opacity: 1, scale: 1 },
+};
+
+/* =========================
+   REUSABLE COMPONENTS
+========================= */
+function PrimaryButton({
   href,
   children,
+  className = "",
 }: {
   href: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <a
+    <motion.a
       href={href}
-      className="inline-flex items-center gap-3 px-6 py-3 rounded-md bg-white text-black text-sm font-medium hover:bg-gray-100 transition"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      className={`inline-flex items-center justify-center gap-2.5 px-7 py-3.5 
+        rounded-xl bg-white text-black font-medium text-base shadow-lg shadow-black/30 
+        hover:bg-gray-100 transition-all duration-300 ${className}`}
     >
       {children}
       <ArrowRight className="w-4 h-4" />
-    </a>
+    </motion.a>
   );
 }
 
-function SecondaryCTA({
+function SecondaryButton({
   href,
   children,
 }: {
@@ -43,152 +62,181 @@ function SecondaryCTA({
   children: React.ReactNode;
 }) {
   return (
-    <a
+    <motion.a
       href={href}
-      className="inline-flex items-center gap-2 px-6 py-3 rounded-md border border-white/10 bg-white/5 text-white text-sm hover:bg-white/10 transition"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.12)" }}
+      className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl 
+        border border-white/15 bg-white/5 backdrop-blur-sm text-white 
+        font-medium text-base hover:border-white/30 transition-all duration-300"
     >
       {children}
-    </a>
+    </motion.a>
   );
 }
 
 /* =========================
-   PAGE
+   MAIN PAGE
 ========================= */
-
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#05070d] text-white">
-      {/* background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-[#05070d]" />
-        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_20%_20%,white,transparent_35%),radial-gradient(circle_at_80%_30%,white,transparent_30%)]" />
+    <div className="min-h-screen bg-[#03050b] text-white overflow-x-hidden">
+      {/* Background gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05070d] via-[#03050b] to-black" />
+        <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(ellipse_at_top_left,_#ffffff_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_right,_#6366f1_0%,_transparent_60%)]" />
       </div>
 
       <div className="relative z-10">
         <MarketingNavbar />
 
-        {/* HERO */}
-        <section className="pt-28 pb-20 px-6">
+        {/* HERO - Bigger & punchier */}
+        <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-5 sm:px-8">
           <motion.div
+            variants={staggerContainer}
             initial="initial"
             animate="animate"
-            variants={fadeUp}
-            transition={{ duration: 0.4 }}
-            className="max-w-6xl mx-auto"
+            className="max-w-5xl mx-auto text-center"
           >
-            <h1 className="text-4xl md:text-6xl font-medium tracking-tight">
-              Website builder
-              <br />
-              with built-in AI.
-            </h1>
+            <motion.div variants={fadeUp}>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs font-medium text-indigo-300 tracking-wide uppercase">
+                  AI-Powered Website Builder
+                </span>
+              </div>
+            </motion.div>
 
-            <p className="mt-5 text-gray-400 max-w-xl text-base">
-              Create a live website and manage content, email, and ads in one place.
+            <motion.h1
+              variants={fadeUp}
+              className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight leading-[1.05] bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-300"
+            >
+              Build beautiful websites
+              <br />
+              <span className="text-indigo-400">with AI superpowers</span>
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              className="mt-6 text-xl md:text-2xl text-gray-300/90 max-w-3xl mx-auto font-light"
+            >
+              Create, edit and grow your online presence — all with the help of AI.
+            </motion.p>
+
+            <motion.div
+              variants={fadeUp}
+              className="mt-10 flex flex-col sm:flex-row gap-5 justify-center items-center"
+            >
+              <PrimaryButton href="/register">Create your website →</PrimaryButton>
+              <SecondaryButton href="/features">Explore features</SecondaryButton>
+            </motion.div>
+          </motion.div>
+        </section>
+
+        {/* LIVE PREVIEW - Much bigger & more impressive */}
+        <section className="px-5 sm:px-8 pb-32 md:pb-40">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.9 }}
+              className="relative"
+            >
+              <div className="absolute -inset-8 md:-inset-12 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent rounded-3xl blur-3xl opacity-60" />
+
+              <div className="relative rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/60">
+                {/* Browser chrome */}
+                <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/10 bg-gradient-to-r from-black/80 to-black/60">
+                  <div className="flex gap-2">
+                    <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 shadow-sm" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-green-500/80 shadow-sm" />
+                  </div>
+                  <div className="flex-1 text-center">
+                    <span className="text-sm text-gray-400 font-medium">
+                      autopilotai.dev/r/testrestaurant
+                    </span>
+                  </div>
+                </div>
+
+                {/* Preview window */}
+                <div className="relative aspect-[4/3] md:aspect-[16/9] bg-black">
+                  <iframe
+                    src="/r/testrestaurant"
+                    className="absolute inset-0 w-full h-full scale-[0.92] md:scale-[0.96] origin-top rounded-b-2xl pointer-events-none"
+                    title="Live website preview"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="mt-6 text-center">
+              <SecondaryButton href="https://www.autopilotai.dev/r/testrestaurant">
+                Open live example <ExternalLink className="w-4 h-4 ml-1.5 opacity-70" />
+              </SecondaryButton>
+            </div>
+          </div>
+        </section>
+
+        {/* SIMPLE CAPABILITIES - Cleaner & more elegant */}
+        <section className="px-5 sm:px-8 pb-32">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              className="grid md:grid-cols-3 gap-8 md:gap-12 text-center"
+            >
+              {[
+                { title: "Instant live URL", value: "/r/your-name" },
+                { title: "True in-place editing", value: "No dashboard needed" },
+                { title: "Zero save button", value: "Everything auto-saves" },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  className="p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm"
+                >
+                  <div className="text-2xl md:text-3xl font-semibold text-white mb-3">
+                    {item.title}
+                  </div>
+                  <div className="text-indigo-300/90 font-medium">{item.value}</div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* FINAL CTA - More premium feeling */}
+        <section className="px-5 sm:px-8 pb-40">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl mx-auto rounded-3xl border border-white/10 bg-gradient-to-b from-white/8 to-white/3 backdrop-blur-xl p-10 md:p-16 text-center shadow-2xl shadow-black/40"
+          >
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">
+              Ready to launch your site?
+            </h2>
+            <p className="mt-5 text-xl text-gray-300 max-w-2xl mx-auto">
+              Create beautiful websites with built-in AI content, email & advertising tools.
             </p>
 
-            <div className="mt-8 flex gap-4">
-              <PrimaryCTA href="/register">Create website</PrimaryCTA>
-              <SecondaryCTA href="/features">View features</SecondaryCTA>
+            <div className="mt-10">
+              <PrimaryButton href="/register" className="text-lg px-10 py-5">
+                Start Building Now
+              </PrimaryButton>
             </div>
           </motion.div>
         </section>
 
-        {/* PRODUCT PREVIEW */}
-        <section className="px-6 pb-24">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-3 text-xs text-gray-400 uppercase tracking-wide">
-              Live example
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-black overflow-hidden">
-              {/* browser bar */}
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-black">
-                <span className="w-3 h-3 rounded-full bg-red-500/70" />
-                <span className="w-3 h-3 rounded-full bg-yellow-400/70" />
-                <span className="w-3 h-3 rounded-full bg-green-500/70" />
-                <span className="ml-4 text-xs text-gray-500">
-                  autopilotai.dev/r/testrestaurant
-                </span>
-              </div>
-
-              {/* iframe */}
-              <div className="relative h-[420px] md:h-[560px]">
-                <iframe
-                  src="/r/testrestaurant"
-                  className="absolute inset-0 w-full h-full scale-[0.88] origin-top-left pointer-events-none"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <SecondaryCTA href="https://www.autopilotai.dev/r/testrestaurant">
-                Open live site
-                <ExternalLink className="w-4 h-4 opacity-60" />
-              </SecondaryCTA>
-            </div>
-          </div>
-        </section>
-
-        {/* CAPABILITIES */}
-        <section className="px-6 pb-24">
-          <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-3 text-sm text-gray-400">
-            <div>
-              <div className="text-white mb-1">Live URL</div>
-              /r/your-name
-            </div>
-            <div>
-              <div className="text-white mb-1">Editing</div>
-              In-place
-            </div>
-            <div>
-              <div className="text-white mb-1">Saving</div>
-              Automatic
-            </div>
-          </div>
-        </section>
-
-        {/* AI TOOLS (QUIET) */}
-        <section className="px-6 pb-28">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-xs uppercase tracking-wide text-gray-400 mb-4">
-              AI tools
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3 text-sm text-gray-400">
-              <div className="rounded-md border border-white/10 bg-white/5 px-5 py-4">
-                Content
-              </div>
-              <div className="rounded-md border border-white/10 bg-white/5 px-5 py-4">
-                Email
-              </div>
-              <div className="rounded-md border border-white/10 bg-white/5 px-5 py-4">
-                Ads
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="px-6 pb-32">
-          <div className="max-w-6xl mx-auto rounded-lg border border-white/10 bg-white/5 p-10">
-            <h2 className="text-2xl md:text-4xl font-medium">
-              Create a website.
-            </h2>
-
-            <p className="mt-3 text-gray-400 text-sm">
-              Everything else is built in.
-            </p>
-
-            <div className="mt-6">
-              <PrimaryCTA href="/register">Get started</PrimaryCTA>
-            </div>
-          </div>
-        </section>
-
-        {/* FOOTER */}
-        <footer className="border-t border-white/10 py-10 text-center text-xs text-gray-500">
-          © 2025 AutopilotAI
+        {/* Minimal footer */}
+        <footer className="border-t border-white/10 py-12 text-center text-gray-500 text-sm">
+          © {new Date().getFullYear()} AutopilotAI • Made with AI + ❤️
         </footer>
       </div>
     </div>
