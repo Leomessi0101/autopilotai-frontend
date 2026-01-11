@@ -106,10 +106,6 @@ export default function RestaurantTemplate({
   );
 
   // If page.tsx re-fetches and passes new content (rare), keep in sync safely.
-  useEffect(() => {
-    setContent(normalizeContent(initialContent, username));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
 
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
