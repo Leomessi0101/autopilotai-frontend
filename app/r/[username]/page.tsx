@@ -58,13 +58,11 @@ export default function RestaurantPage() {
 
         setMenu(parsed.menu || []);
 
-        // 🔒 FINAL OWNER CHECK (JWT → user_id)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
 
           const tokenUserId = getUserIdFromToken(token);
-
           if (tokenUserId && tokenUserId === res.user_id) {
             setCanEdit(true);
           }
@@ -105,7 +103,6 @@ export default function RestaurantPage() {
           body: JSON.stringify({ menu }),
         }
       );
-
       alert("Menu saved");
     } catch {
       alert("Save failed");
@@ -116,7 +113,6 @@ export default function RestaurantPage() {
 
   async function uploadImage(file: File, cIdx: number, iIdx: number) {
     setUploading(true);
-
     try {
       const form = new FormData();
       form.append("file", file);
@@ -127,8 +123,7 @@ export default function RestaurantPage() {
       });
 
       const out = await res.json();
-
-      if (!out?.url) throw new Error("No URL returned");
+      if (!out?.url) throw new Error("No URL");
 
       const copy = structuredClone(menu);
       copy[cIdx].items[iIdx].image = out.url;
@@ -140,13 +135,18 @@ export default function RestaurantPage() {
     }
   }
 
-  // ✅ NEW: drag & drop helper (menu item images)
   function handleDroppedFile(file: File, cIdx: number, iIdx: number) {
     if (!file.type.startsWith("image/")) {
-      alert("Please drop an image file.");
+      alert("Please drop an image file");
       return;
     }
     uploadImage(file, cIdx, iIdx);
+  }
+
+  function removeImage(cIdx: number, iIdx: number) {
+    const copy = structuredClone(menu);
+    delete copy[cIdx].items[iIdx].image;
+    setMenu(copy);
   }
 
   if (!username || !content) {
@@ -174,7 +174,6 @@ export default function RestaurantPage() {
         </div>
       )}
 
-      {/* HERO */}
       <section className="flex min-h-[70vh] items-center justify-center px-6">
         <div className="text-center max-w-3xl">
           <h1 className="text-5xl font-bold">
@@ -186,7 +185,6 @@ export default function RestaurantPage() {
         </div>
       </section>
 
-      {/* MENU */}
       <section ref={menuRef} className="px-6 py-24 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16">Our Menu</h2>
@@ -215,61 +213,53 @@ export default function RestaurantPage() {
                     key={iIdx}
                     className="border border-white/10 rounded-xl p-5 bg-black/40"
                   >
-                    {/* ✅ NEW: Drag & Drop image zone */}
+                    {/* IMAGE */}
                     <div
-                      className={[
-                        "mb-3 rounded-lg overflow-hidden",
-                        editMode
-                          ? "border border-dashed border-white/20 bg-black/30"
-                          : "border border-white/10 bg-black/30",
-                        editMode ? "cursor-copy" : "",
-                      ].join(" ")}
-                      onDragOver={(e) => {
-                        if (!editMode) return;
-                        e.preventDefault();
-                      }}
+                      className="mb-3 rounded-lg overflow-hidden border border-dashed border-white/20 bg-black/30"
+                      onDragOver={(e) => editMode && e.preventDefault()}
                       onDrop={(e) => {
                         if (!editMode) return;
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
                         if (file) handleDroppedFile(file, cIdx, iIdx);
                       }}
-                      title={editMode ? "Drag & drop an image here" : undefined}
                     >
                       {item.image ? (
                         <img
                           src={item.image}
                           className="h-44 w-full object-cover"
-                          alt=""
                         />
                       ) : (
-                        <div className="h-44 flex flex-col items-center justify-center text-white/40">
-                          <div className="text-sm font-semibold">
-                            No image
-                          </div>
-                          {editMode && (
-                            <div className="text-xs mt-1 text-white/30">
-                              Drag & drop an image here
-                            </div>
-                          )}
+                        <div className="h-44 flex items-center justify-center text-white/40 text-sm">
+                          Drag & drop image
                         </div>
                       )}
                     </div>
 
-                    {/* Keep your existing file picker (still works) */}
                     {editMode && (
-                      <div className="mb-3 flex items-center gap-3">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          disabled={uploading}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            uploadImage(file, cIdx, iIdx);
-                          }}
-                          className="text-sm"
-                        />
+                      <div className="flex gap-3 mb-3">
+                        <label className="text-xs text-[#e4b363] cursor-pointer">
+                          Replace
+                          <input
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) uploadImage(f, cIdx, iIdx);
+                            }}
+                          />
+                        </label>
+
+                        {item.image && (
+                          <button
+                            onClick={() => removeImage(cIdx, iIdx)}
+                            className="text-xs text-red-400"
+                          >
+                            Remove
+                          </button>
+                        )}
+
                         {uploading && (
                           <span className="text-xs text-white/40">
                             Uploading…
@@ -289,7 +279,6 @@ export default function RestaurantPage() {
                           }}
                           className="font-semibold bg-transparent border-b border-white/20 w-full mb-2"
                         />
-
                         <input
                           value={item.price}
                           onChange={(e) => {
@@ -299,12 +288,12 @@ export default function RestaurantPage() {
                           }}
                           className="text-[#e4b363] bg-transparent border-b border-white/20 w-full mb-2"
                         />
-
                         <textarea
                           value={item.description}
                           onChange={(e) => {
                             const copy = structuredClone(menu);
-                            copy[cIdx].items[iIdx].description = e.target.value;
+                            copy[cIdx].items[iIdx].description =
+                              e.target.value;
                             setMenu(copy);
                           }}
                           className="text-sm bg-transparent border border-white/10 w-full p-2 rounded"
@@ -314,7 +303,9 @@ export default function RestaurantPage() {
                       <>
                         <div className="flex justify-between mb-2">
                           <h4 className="font-semibold">{item.name}</h4>
-                          <span className="text-[#e4b363]">{item.price}</span>
+                          <span className="text-[#e4b363]">
+                            {item.price}
+                          </span>
                         </div>
                         <p className="text-sm text-[#b5b5b5]">
                           {item.description}
