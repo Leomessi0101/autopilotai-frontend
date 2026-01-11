@@ -138,7 +138,7 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <Pill>
               <Globe className="w-4 h-4 text-[#6d8ce8]" />
-              Website builder included
+              Live website builder
             </Pill>
             <Pill>
               <Sparkles className="w-4 h-4 text-[#6d8ce8]" />
@@ -164,13 +164,13 @@ export default function HomePage() {
             AutopilotAI creates a live website at{" "}
             <span className="text-white font-semibold">/r/your-name</span>,
             then generates the content, emails, and ads that power it —
-            all in one system.
+            all in one focused system.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
             <PrimaryCTA href="/register">Create your website</PrimaryCTA>
             <SecondaryCTA href="/features">
-              Explore everything inside
+              See everything inside
               <ArrowRight className="w-5 h-5 opacity-70" />
             </SecondaryCTA>
           </div>
@@ -181,36 +181,46 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      <GlowDivider />
-
       {/* =========================================================
-          WEBSITE BUILDER HIGHLIGHT
+          LIVE WEBSITE BUILDER SHOWCASE
       ========================================================= */}
-      <section className="relative z-10 px-6 md:px-10 py-16">
-        <div className="max-w-7xl mx-auto grid gap-14 lg:grid-cols-2 items-center">
+      <section className="relative z-10 px-6 md:px-10 py-20">
+        <div className="max-w-7xl mx-auto grid gap-16 lg:grid-cols-[1fr,1.25fr] items-center">
+          {/* LEFT */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                <LayoutDashboard className="w-5 h-5 text-[#6d8ce8]" />
+              </div>
+              <p className="text-sm uppercase tracking-wide text-gray-300">
+                Live example
+              </p>
+            </div>
+
             <h2 className="text-4xl md:text-6xl font-black leading-[1.05]">
-              A real website.
+              This is a real website.
               <br />
-              <span className="text-[#d8e3ff]">Not a landing page.</span>
+              <span className="text-[#d8e3ff]">
+                Not a mockup.
+              </span>
             </h2>
 
-            <p className="mt-6 text-gray-300 text-lg max-w-xl leading-relaxed">
-              Your site is live instantly. Click text. Replace images.
-              Everything autosaves. No editors layered on top of editors.
+            <p className="mt-6 text-lg text-gray-300 max-w-xl leading-relaxed">
+              Below is an actual AutopilotAI website — live, hosted, and editable
+              in-place. This is exactly what your customers will see.
             </p>
 
-            <div className="mt-10 space-y-4">
+            <div className="mt-8 space-y-4">
               {[
                 "Live at /r/your-name",
-                "Edit directly on the page",
-                "Autosave — no publish button",
-                "Mobile + desktop handled automatically",
+                "Click text or images to edit",
+                "Autosave — changes go live instantly",
+                "Mobile & desktop handled automatically",
               ].map((t, i) => (
                 <div
                   key={i}
@@ -221,29 +231,45 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <PrimaryCTA href="/register">
+                Create your website
+              </PrimaryCTA>
+              <SecondaryCTA href="https://www.autopilotai.dev/r/testrestaurant">
+                Open live example
+                <ArrowRight className="w-5 h-5 opacity-70" />
+              </SecondaryCTA>
+            </div>
           </motion.div>
 
+          {/* RIGHT: IFRAME */}
           <motion.div
             initial={{ opacity: 0, y: 26 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.85, delay: 0.1 }}
-            className="rounded-3xl border border-white/10 bg-black/30 backdrop-blur-xl p-10 shadow-[0_50px_140px_rgba(0,0,0,.6)]"
+            className="relative rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_60px_160px_rgba(0,0,0,.65)] overflow-hidden"
           >
-            <p className="text-sm text-gray-400 mb-3">Example live URL</p>
-            <p className="font-semibold text-white mb-5">
-              autopilotai.dev/r/my-business
-            </p>
-
-            <div className="space-y-3">
-              <div className="h-3 rounded-full bg-white/10 w-full" />
-              <div className="h-3 rounded-full bg-white/10 w-5/6" />
-              <div className="h-3 rounded-full bg-white/10 w-4/6" />
+            {/* browser bar */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-black/60">
+              <div className="flex gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500/70" />
+                <span className="w-3 h-3 rounded-full bg-yellow-400/70" />
+                <span className="w-3 h-3 rounded-full bg-green-500/70" />
+              </div>
+              <div className="ml-4 text-xs text-gray-400 truncate">
+                autopilotai.dev/r/testrestaurant
+              </div>
             </div>
 
-            <p className="mt-5 text-sm text-gray-300">
-              Click. Edit. Done.
-            </p>
+            <div className="relative h-[420px] md:h-[560px] overflow-hidden">
+              <iframe
+                src="/r/testrestaurant"
+                className="absolute inset-0 w-full h-full scale-[0.85] origin-top-left pointer-events-none"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#05070d] via-transparent to-transparent" />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -251,15 +277,15 @@ export default function HomePage() {
       <GlowDivider />
 
       {/* =========================================================
-          AI MARKETING ENGINE (SUPPORTING PILLAR)
+          AI MARKETING ENGINE
       ========================================================= */}
-      <section className="relative z-10 px-6 md:px-10 py-16">
-        <div className="max-w-7xl mx-auto text-center mb-14">
+      <section className="relative z-10 px-6 md:px-10 py-20">
+        <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-black">
-            The engine behind the site.
+            The engine behind the website.
           </h2>
           <p className="mt-6 text-gray-400 text-xl max-w-3xl mx-auto">
-            Generate everything your website needs — without context switching.
+            Generate everything your site needs — without context switching.
           </p>
         </div>
 
@@ -309,19 +335,19 @@ export default function HomePage() {
           className="max-w-5xl mx-auto"
         >
           <h2 className="text-5xl md:text-7xl font-black leading-[1.02]">
-            Build once.
+            One system.
             <br />
-            Ship everywhere.
+            Real output.
           </h2>
 
           <p className="mt-8 text-xl text-gray-300 max-w-3xl mx-auto">
-            AutopilotAI replaces scattered tools with one focused system.
+            AutopilotAI replaces scattered tools with one focused platform.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-5">
             <PrimaryCTA href="/register">Get started</PrimaryCTA>
             <SecondaryCTA href="/features">
-              See full feature list
+              View full feature list
               <ArrowRight className="w-5 h-5 opacity-70" />
             </SecondaryCTA>
           </div>
