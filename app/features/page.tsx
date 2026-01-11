@@ -13,6 +13,10 @@ import {
   Target,
   Rocket,
   Users,
+  Globe,
+  Edit,
+  Eye,
+  Code,
 } from "lucide-react";
 
 /* -----------------------------
@@ -103,24 +107,23 @@ export default function FeaturesPage() {
         <motion.div {...fadeUp} transition={{ duration: 0.9 }} className="max-w-6xl mx-auto text-center">
 
           <div className="flex flex-wrap justify-center gap-3 mb-8">
+            <Pill><Globe className="w-4 h-4 text-[#6d8ce8]" /> Instant websites</Pill>
             <Pill><Sparkles className="w-4 h-4 text-[#6d8ce8]" /> All core tools included</Pill>
             <Pill><Zap className="w-4 h-4 text-[#6d8ce8]" /> Built for execution</Pill>
-            <Pill><Target className="w-4 h-4 text-[#6d8ce8]" /> Output-first workflow</Pill>
           </div>
 
           <h1 className="text-[2.7rem] leading-[1.05] md:text-7xl md:leading-[1.02] font-black tracking-tight">
             Everything you need
             <br />
-            <span className="text-[#d8e3ff]">to stay consistent.</span>
+            <span className="text-[#d8e3ff]">to build, grow & convert</span>
           </h1>
 
           <p className="mt-8 text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            AutopilotAI replaces scattered tools, indecision, and friction
-            with a single system designed for momentum.
+            One powerful platform: AI website builder + content + email + ads — all in sync.
           </p>
 
           <div className="mt-14 flex flex-col sm:flex-row justify-center gap-5">
-            <PrimaryCTA href="/register">Start Free</PrimaryCTA>
+            <PrimaryCTA href="/register">Build Your Site Free</PrimaryCTA>
             <SecondaryCTA href="/pricing">View Pricing</SecondaryCTA>
           </div>
         </motion.div>
@@ -128,56 +131,33 @@ export default function FeaturesPage() {
 
       <GlowDivider />
 
-      {/* PROBLEM → SOLUTION */}
-      <section className="relative z-10 px-6 md:px-10 py-16">
-        <motion.div {...fadeUp} transition={{ duration: 0.8 }} className="max-w-5xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-black">
-            The problem isn’t effort.
-            <br />
-            It’s fragmentation.
-          </h2>
-
-          <p className="mt-8 text-xl text-gray-400 max-w-3xl mx-auto">
-            Most people don’t fail because they lack ideas —
-            they fail because execution is split across tools, tabs, and decisions.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20">
-          {[
-            "Too many disconnected tools",
-            "No clear daily direction",
-            "Inconsistent execution",
-          ].map((t, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -4 }}
-              transition={springy}
-              {...fadeUp}
-              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_40px_100px_rgba(0,0,0,.55)]"
-            >
-              <h3 className="text-2xl font-bold">{t}</h3>
-              <p className="mt-4 text-gray-300">
-                AutopilotAI replaces chaos with one focused system for output.
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <GlowDivider />
-
-      {/* CORE FEATURES */}
+      {/* CORE FEATURES — Website Builder first & highlighted */}
       <section className="relative z-10 px-6 md:px-10 py-16">
         <div className="max-w-7xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-20">
             <h2 className="text-4xl md:text-6xl font-black">Core Capabilities</h2>
             <p className="mt-6 text-xl text-gray-400">
-              Built to replace workflows — not add another tool.
+              A complete system — starting with the fastest way to get online.
             </p>
           </motion.div>
 
           <div className="grid lg:grid-cols-2 gap-14">
+            {/* === WEBSITE BUILDER === (Placed first + slightly bigger) */}
+            <FeatureCard
+              icon={<Globe className="w-7 h-7 text-[#6d8ce8]" />}
+              title="AI-Powered Website Builder"
+              desc="Launch a beautiful, fully-functional website in minutes — with live editing and automatic updates."
+              isHighlighted={true}
+              bullets={[
+                "Instant live URL: /r/your-name",
+                "True in-place visual editing — no dashboard hell",
+                "AI-generated copy, layouts & sections",
+                "Automatic saves — never lose changes",
+                "Mobile-optimized from day one",
+                "Built-in analytics & growth tools",
+              ]}
+            />
+
             <FeatureCard
               icon={<Sparkles className="w-6 h-6 text-[#6d8ce8]" />}
               title="AI Content Engine"
@@ -217,16 +197,34 @@ export default function FeaturesPage() {
             <FeatureCard
               icon={<Layers className="w-6 h-6 text-[#6d8ce8]" />}
               title="One-Click Growth Pack"
-              desc="Generate posts, emails, and ads in one aligned pass."
+              desc="Generate posts, emails, ads + website updates in one aligned pass."
               bullets={[
-                "Unified messaging",
+                "Unified messaging across all channels",
                 "Single-prompt workflow",
                 "Optional AI visuals",
-                "One credit, full pack",
+                "One credit, full ecosystem update",
               ]}
             />
           </div>
         </div>
+      </section>
+
+      <GlowDivider />
+
+      {/* PROBLEM → SOLUTION */}
+      <section className="relative z-10 px-6 md:px-10 py-16">
+        <motion.div {...fadeUp} transition={{ duration: 0.8 }} className="max-w-5xl mx-auto text-center">
+          <h2 className="text-4xl md:text-6xl font-black">
+            Stop building in pieces.
+            <br />
+            Start shipping complete.
+          </h2>
+
+          <p className="mt-8 text-xl text-gray-400 max-w-3xl mx-auto">
+            Most tools force you to juggle website, content, email, and ads separately.  
+            AutopilotAI connects everything — so your site, messaging, and growth move together.
+          </p>
+        </motion.div>
       </section>
 
       <GlowDivider />
@@ -240,15 +238,15 @@ export default function FeaturesPage() {
 
           <div className="grid md:grid-cols-3 gap-10">
             <Persona icon={<Rocket className="w-6 h-6 text-[#6d8ce8]" />} title="Founders">
-              Replace overwhelm with clarity and execution.
+              From idea → live site + launch content in hours, not weeks.
             </Persona>
 
             <Persona icon={<Users className="w-6 h-6 text-[#6d8ce8]" />} title="Creators">
-              Stay consistent without burnout.
+              Beautiful portfolio + consistent content without burnout.
             </Persona>
 
             <Persona icon={<Zap className="w-6 h-6 text-[#6d8ce8]" />} title="Agencies">
-              Scale results without scaling workload.
+              Fast client sites + full marketing stack in one place.
             </Persona>
           </div>
         </motion.div>
@@ -260,19 +258,19 @@ export default function FeaturesPage() {
       <section className="relative z-10 py-32 text-center px-6 md:px-10">
         <motion.div {...fadeUp} className="max-w-5xl mx-auto">
           <h2 className="text-5xl md:text-7xl font-black leading-[1.02]">
-            Focus.
+            Your next site.
             <br />
-            Output.
+            Your next win.
             <br />
-            Momentum.
+            Starts here.
           </h2>
 
           <p className="mt-8 text-xl text-gray-300 max-w-3xl mx-auto">
-            AutopilotAI is built to help you move forward — consistently.
+            Build, launch and grow — with AI that actually works together.
           </p>
 
           <div className="mt-14 flex flex-col sm:flex-row justify-center gap-5">
-            <PrimaryCTA href="/register">Get Started Free</PrimaryCTA>
+            <PrimaryCTA href="/register">Build Your Website Now</PrimaryCTA>
             <SecondaryCTA href="/pricing">See pricing</SecondaryCTA>
           </div>
         </motion.div>
@@ -281,7 +279,7 @@ export default function FeaturesPage() {
       {/* FOOTER */}
       <footer className="border-t border-white/10 py-16 text-center relative z-10">
         <p className="text-gray-400 text-sm">
-          © 2025 AutopilotAI — Built for people who execute.
+          © 2026 AutopilotAI — Ship faster. Convert better.
         </p>
       </footer>
     </div>
@@ -296,32 +294,42 @@ function FeatureCard({
   title,
   desc,
   bullets,
+  isHighlighted = false,
 }: {
   icon: React.ReactNode;
   title: string;
   desc: string;
   bullets: string[];
+  isHighlighted?: boolean;
 }) {
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -6, scale: isHighlighted ? 1.02 : 1.01 }}
       transition={springy}
       {...fadeUp}
-      className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_40px_110px_rgba(0,0,0,.55)] relative overflow-hidden"
+      className={`rounded-3xl border ${
+        isHighlighted 
+          ? "border-[#6d8ce8]/40 bg-gradient-to-b from-white/10 to-white/5" 
+          : "border-white/10 bg-white/5"
+      } backdrop-blur-xl p-10 md:p-12 shadow-[0_40px_110px_rgba(0,0,0,.55)] relative overflow-hidden`}
     >
       <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#6d8ce8]/15 blur-3xl" />
       <div className="relative">
-        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-6">
+        <div className={`w-14 h-14 rounded-2xl ${
+          isHighlighted ? "bg-[#6d8ce8]/20 border-[#6d8ce8]/30" : "bg-white/10 border-white/10"
+        } flex items-center justify-center mb-6 border`}>
           {icon}
         </div>
 
-        <h3 className="text-2xl font-bold">{title}</h3>
-        <p className="mt-4 text-gray-300 text-lg">{desc}</p>
+        <h3 className={`text-3xl font-bold ${isHighlighted ? "text-[#d8e3ff]" : ""}`}>
+          {title}
+        </h3>
+        <p className="mt-4 text-gray-200 text-lg leading-relaxed">{desc}</p>
 
         <div className="mt-8 space-y-4">
           {bullets.map((b, i) => (
             <div key={i} className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[#6d8ce8] mt-1" />
+              <CheckCircle2 className={`w-5 h-5 ${isHighlighted ? "text-[#8da2ff]" : "text-[#6d8ce8]"} mt-1 flex-shrink-0`} />
               <span className="text-gray-200">{b}</span>
             </div>
           ))}
