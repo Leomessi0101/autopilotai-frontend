@@ -158,18 +158,18 @@ export default function PricingPage() {
 
         <GlowDivider />
 
-        {/* PRICING CARDS */}
+        {/* PRICING CARDS - All plans now include live website */}
         <section className="relative z-10 px-6 md:px-10 pb-20">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             <PriceCard
               plan="Basic"
               price="19"
-              desc="Good start for testing"
+              desc="Great for getting started"
               features={[
                 "30 AI generations per month",
+                "Live website included",
                 "Core content tools",
                 "Email templates",
-                "Basic guidance",
                 "Standard speed",
                 "Email support",
               ]}
