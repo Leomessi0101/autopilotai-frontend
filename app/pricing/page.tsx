@@ -101,7 +101,7 @@ export default function PricingPage() {
 
     if (token) {
       api
-        .get("/api/auth/me")
+        .get<User>("/api/auth/me")
         .then((res) => setUser(res.data))
         .catch(() => setUser(null));
     }
@@ -117,7 +117,7 @@ export default function PricingPage() {
     if (user?.subscription_plan === plan) return;
 
     try {
-      const res = await api.post(
+      const res = await api.post<{ checkout_url: string }>(
         `/api/stripe/create-checkout-session?plan=${plan}`
       );
       window.location.href = res.data.checkout_url;
