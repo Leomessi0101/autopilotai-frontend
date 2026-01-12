@@ -94,6 +94,7 @@ export default function UpgradePage() {
             month
             active={currentPlan === "Basic"}
             features={[
+              "Live website included",
               "Up to 30 generations per month",
               "Core content & ad tools",
               "Email support",
@@ -109,6 +110,7 @@ export default function UpgradePage() {
             recommended
             active={currentPlan === "Growth"}
             features={[
+              "Live website included",
               "Unlimited generations",
               "Priority processing",
               "Advanced features",
@@ -124,6 +126,7 @@ export default function UpgradePage() {
             month
             active={currentPlan === "Pro"}
             features={[
+              "Live website included",
               "Everything in Growth",
               "AI image generation",
               "Long-form content",
