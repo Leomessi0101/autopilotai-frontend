@@ -133,6 +133,15 @@ export default function DashboardPage() {
   >("restaurant");
 
   const [desiredUsername, setDesiredUsername] = useState<string>("");
+
+  // =========================
+  // AI WEBSITE QUESTIONS (NEW)
+  // =========================
+  const [aiBusinessName, setAiBusinessName] = useState<string>("");
+  const [aiShortDescription, setAiShortDescription] = useState<string>("");
+  const [aiPrimaryGoal, setAiPrimaryGoal] = useState<string>("");
+  const [aiCity, setAiCity] = useState<string>("");
+
   const [creatingWebsite, setCreatingWebsite] = useState(false);
 
   const [siteToast, setSiteToast] = useState<
@@ -274,6 +283,16 @@ export default function DashboardPage() {
       const res = await api.post("/api/dashboard/websites/create", {
         username: slug,
         template: selectedTemplate,
+
+        // =========================
+        // AI WEBSITE QUESTIONS (NEW)
+        // =========================
+        ai_input: {
+          business_name: aiBusinessName,
+          short_description: aiShortDescription,
+          primary_goal: aiPrimaryGoal,
+          city: aiCity,
+        },
       });
 
       const data = (res.data || {}) as CreateWebsiteResponse;
@@ -484,6 +503,60 @@ export default function DashboardPage() {
                     Answer a few questions and choose a website username. Your
                     website will live at{" "}
                     <span className="font-semibold text-white">/r/username</span>.
+                  </div>
+
+                  {/* =========================
+                      AI QUESTIONS (NEW)
+                  ========================= */}
+                  <div className="mt-5">
+                    <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                      Business name
+                    </div>
+                    <input
+                      value={aiBusinessName}
+                      onChange={(e) => setAiBusinessName(e.target.value)}
+                      placeholder="Example: Test Restaurant"
+                      className="w-full rounded-xl px-4 py-3 bg-black/25 border border-white/10 outline-none text-white placeholder:text-white/35 focus:border-white/20"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                      Short description
+                    </div>
+                    <textarea
+                      value={aiShortDescription}
+                      onChange={(e) => setAiShortDescription(e.target.value)}
+                      placeholder="Example: Modern Thai food with fast service and delivery."
+                      rows={3}
+                      className="w-full rounded-xl px-4 py-3 bg-black/25 border border-white/10 outline-none text-white placeholder:text-white/35 focus:border-white/20 resize-none"
+                    />
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                        Primary goal
+                      </div>
+                      <input
+                        value={aiPrimaryGoal}
+                        onChange={(e) => setAiPrimaryGoal(e.target.value)}
+                        placeholder="Bookings / calls / sales"
+                        className="w-full rounded-xl px-4 py-3 bg-black/25 border border-white/10 outline-none text-white placeholder:text-white/35 focus:border-white/20"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
+                        City
+                      </div>
+                      <input
+                        value={aiCity}
+                        onChange={(e) => setAiCity(e.target.value)}
+                        placeholder="Chiang Mai"
+                        className="w-full rounded-xl px-4 py-3 bg-black/25 border border-white/10 outline-none text-white placeholder:text-white/35 focus:border-white/20"
+                      />
+                    </div>
                   </div>
 
                   {/* Username */}
