@@ -282,7 +282,7 @@ export default function DashboardPage() {
         data.redirect ||
         (data.username ? `/r/${data.username}?edit=1` : `/r/${slug}?edit=1`);
 
-      setSiteToast({ type: "ok", msg: "Website created" });
+      setSiteToast({ type: "ok", msg: "Website generated" });
       setTimeout(() => setSiteToast(null), 1500);
 
       // refresh local state for card UI (optional but nice)
@@ -310,7 +310,7 @@ export default function DashboardPage() {
         return;
       }
 
-      setSiteToast({ type: "err", msg: "Failed to create website" });
+      setSiteToast({ type: "err", msg: "Failed to generate website" });
       setTimeout(() => setSiteToast(null), 2800);
     } finally {
       setCreatingWebsite(false);
@@ -376,22 +376,23 @@ export default function DashboardPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
             <div className="max-w-2xl">
               <p className="text-sm font-medium uppercase tracking-wide opacity-80">
-                Website Builder
+                AI Website Builder
               </p>
               <h2 className="text-3xl md:text-4xl font-semibold mt-3">
-                Build a premium website in minutes
+                Generate a premium website in minutes
               </h2>
               <p className="mt-4 text-gray-200/90 leading-relaxed">
-                Create a clean, high-converting website with built-in editing,
-                autosave, image uploads, and mobile-friendly layouts.
+                Answer a few questions and AutopilotAI generates a clean,
+                high-converting website — with built-in editing, autosave, image
+                uploads, and mobile-friendly layouts.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
-                <Badge>Templates</Badge>
+                <Badge>AI-generated website</Badge>
                 <Badge>In-place editing</Badge>
                 <Badge>Autosave</Badge>
                 <Badge>Mobile optimized</Badge>
-                <Badge>Instant publish</Badge>
+                <Badge>Always live</Badge>
               </div>
             </div>
 
@@ -421,8 +422,9 @@ export default function DashboardPage() {
                     Locked on Free plan
                   </div>
                   <div className="mt-2 text-sm text-white/65 leading-relaxed">
-                    Upgrade to Basic / Growth / Pro to create your first website.
-                    Paid plans include <span className="font-semibold">1 site</span>.
+                    Upgrade to Basic / Growth / Pro to generate your first
+                    website. Paid plans include{" "}
+                    <span className="font-semibold">1 site</span>.
                   </div>
 
                   <button
@@ -433,7 +435,7 @@ export default function DashboardPage() {
                   </button>
 
                   <div className="mt-3 text-xs text-white/45">
-                    You can still explore templates after upgrading.
+                    You can generate your site instantly after upgrading.
                   </div>
                 </div>
               ) : hasWebsite && existingUsername ? (
@@ -444,7 +446,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="mt-2 text-sm text-white/65">
-                    Template:{" "}
+                    Website type:{" "}
                     <span className="font-semibold text-white">
                       {String(existingTemplate || "unknown")}
                     </span>
@@ -476,14 +478,12 @@ export default function DashboardPage() {
               ) : (
                 <div>
                   <div className="text-sm text-white/80 font-semibold">
-                    Create your website
+                    Generate your website
                   </div>
                   <div className="mt-2 text-sm text-white/65 leading-relaxed">
-                    Choose a template and a username. Your website will live at{" "}
-                    <span className="font-semibold text-white">
-                      /r/username
-                    </span>
-                    .
+                    Answer a few questions and choose a website username. Your
+                    website will live at{" "}
+                    <span className="font-semibold text-white">/r/username</span>.
                   </div>
 
                   {/* Username */}
@@ -519,10 +519,10 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Template chooser */}
+                  {/* Website type chooser */}
                   <div className="mt-5">
                     <div className="text-[11px] uppercase tracking-wide text-white/55 mb-2">
-                      Template
+                      Website type
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -551,11 +551,12 @@ export default function DashboardPage() {
                         : "bg-white text-[#1b2f54] hover:bg-gray-100"
                     )}
                   >
-                    {creatingWebsite ? "Creating…" : "Create website"}
+                    {creatingWebsite ? "Generating…" : "Generate website"}
                   </button>
 
                   <div className="mt-3 text-xs text-white/45 leading-relaxed">
-                    You can edit instantly after creation. Changes autosave inside the editor.
+                    You can edit instantly after generation. Changes autosave
+                    inside the editor.
                   </div>
                 </div>
               )}
@@ -755,7 +756,12 @@ function TemplateOption({
           : "bg-white/5 border-white/10 hover:bg-white/10"
       )}
     >
-      <div className={cx("font-semibold", active ? "text-[#1b2f54]" : "text-white")}>
+      <div
+        className={cx(
+          "font-semibold",
+          active ? "text-[#1b2f54]" : "text-white"
+        )}
+      >
         {label}
       </div>
       <div
