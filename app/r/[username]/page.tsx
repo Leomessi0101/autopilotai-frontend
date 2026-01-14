@@ -4,7 +4,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
-import { generateAIStructure } from "@/components/ai/generateAIStructure";
+import RestaurantTemplate from "@/components/templates/RestaurantTemplate";
+import BusinessTemplate from "@/components/templates/BusinessTemplate";
 
 /* ======================================================
    TYPES
@@ -14,6 +15,7 @@ type WebsiteResponse = {
   username: string;
   content_json: string | Record<string, any>;
   ai_structure_json?: string | Record<string, any>;
+  template?: "restaurant" | "business";
   user_id?: number;
 };
 
@@ -64,7 +66,6 @@ export default function WebsitePage() {
 
         setData(res);
 
-        // Edit permission check
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
@@ -113,29 +114,59 @@ export default function WebsitePage() {
       : data.content_json;
 
   /* ======================================================
-     AI STRUCTURE (LEGO ENGINE)
+     PARSE AI STRUCTURE (ONLY IF EXISTS)
   ====================================================== */
 
-  const structure =
+  const aiStructure =
     data.ai_structure_json
       ? typeof data.ai_structure_json === "string"
         ? JSON.parse(data.ai_structure_json)
         : data.ai_structure_json
-      : generateAIStructure({
-          businessType: "local",
-          goal: "leads",
-        });
+      : null;
+
+  const editMode = editRequested && canEdit;
 
   /* ======================================================
-     RENDER (AI ONLY)
+     RENDER (AI → TEMPLATE FALLBACK)
   ====================================================== */
 
+  // ✅ AI-rendered website
+  if (aiStructure) {
+    return (
+      <AIWebsiteRenderer
+        username={username}
+        structure={aiStructure}
+        content={content}
+        editMode={editMode}
+      />
+    );
+  }
+
+  // ✅ Restaurant template
+  if (data.template === "restaurant") {
+    return (
+      <RestaurantTemplate
+        username={username}
+        content={content}
+      />
+    );
+  }
+
+  // ✅ Business template (REQUIRES username + editMode)
+  if (data.template === "business") {
+    return (
+      <BusinessTemplate
+        username={username}
+        content={content}
+        editMode={editMode}
+      />
+    );
+  }
+
+  // ❌ Safety net
   return (
-    <AIWebsiteRenderer
-      username={username}
-      structure={structure}
-      content={content}
-      editMode={editRequested && canEdit}
-    />
+    <main className="min-h-screen bg-black text-white flex items-center justify-center">
+      Website configuration error
+    </main>
   );
 }
