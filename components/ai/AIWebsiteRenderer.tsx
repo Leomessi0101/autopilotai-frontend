@@ -178,7 +178,10 @@ function useThemeTokens(structure: AIStructure) {
   const accent = structure.theme.accent || "indigo";
 
   // Keep it deterministic: map accent -> classes
-  const accentMap: Record<string, { glow: string; chip: string; btn: string; ring: string }> = {
+  const accentMap: Record<
+    string,
+    { glow: string; chip: string; btn: string; ring: string }
+  > = {
     indigo: {
       glow: "from-indigo-500/25 via-purple-500/15 to-transparent",
       chip: "bg-indigo-500/10 text-indigo-200 border-indigo-500/20",
@@ -191,11 +194,17 @@ function useThemeTokens(structure: AIStructure) {
       btn: "bg-emerald-500 text-black hover:bg-emerald-400",
       ring: "focus:ring-emerald-500/25",
     },
-    gold: {
-      glow: "from-amber-500/20 via-yellow-500/10 to-transparent",
-      chip: "bg-amber-500/10 text-amber-200 border-amber-500/20",
-      btn: "bg-amber-400 text-black hover:bg-amber-300",
-      ring: "focus:ring-amber-500/25",
+    orange: {
+      glow: "from-orange-500/20 via-amber-500/10 to-transparent",
+      chip: "bg-orange-500/10 text-orange-200 border-orange-500/20",
+      btn: "bg-orange-500 text-black hover:bg-orange-400",
+      ring: "focus:ring-orange-500/25",
+    },
+    neutral: {
+      glow: "from-slate-500/18 via-zinc-500/10 to-transparent",
+      chip: "bg-white/5 text-white/80 border-white/12",
+      btn: "bg-white text-black hover:bg-gray-100",
+      ring: "focus:ring-white/25",
     },
   };
 
@@ -209,7 +218,9 @@ function useThemeTokens(structure: AIStructure) {
     btn: a.btn,
     ring: a.ring,
     pageBg: isDark ? "bg-[#05070d] text-white" : "bg-[#f6f7fb] text-black",
-    panel: isDark ? "bg-white/5 border-white/10" : "bg-white border-black/10",
+    panel: isDark
+      ? "bg-white/5 border-white/10"
+      : "bg-white/70 border-black/10 backdrop-blur",
     softText: isDark ? "text-white/60" : "text-black/60",
     strongText: isDark ? "text-white" : "text-black",
     divider: isDark ? "bg-white/10" : "bg-black/10",
@@ -268,12 +279,22 @@ function Hero({
       return (
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
+            <div
+              className={cx(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
+                t.chip
+              )}
+            >
               <span className="opacity-90">AutopilotAI</span>
               <span className="opacity-60">•</span>
               <span className="opacity-90">Generated</span>
             </div>
-            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
+            <h1
+              className={cx(
+                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
+                t.strongText
+              )}
+            >
               {headline}
             </h1>
           </div>
@@ -283,7 +304,12 @@ function Hero({
     case "image_background":
       return (
         <section className="relative pt-24 pb-20 px-6 overflow-hidden">
-          <div className={cx("absolute -inset-12 blur-3xl opacity-70 bg-gradient-to-r", t.glow)} />
+          <div
+            className={cx(
+              "absolute -inset-12 blur-3xl opacity-70 bg-gradient-to-r",
+              t.glow
+            )}
+          />
           {c.hero.image && (
             <img
               src={c.hero.image}
@@ -291,15 +317,35 @@ function Hero({
               className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
           )}
-          <div className={cx("absolute inset-0", t.isDark ? "bg-black/55" : "bg-white/70")} />
+          <div
+            className={cx(
+              "absolute inset-0",
+              t.isDark ? "bg-black/55" : "bg-white/70"
+            )}
+          />
           <div className="relative max-w-6xl mx-auto text-center">
-            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
+            <div
+              className={cx(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
+                t.chip
+              )}
+            >
               AI layout • theme • copy
             </div>
-            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
+            <h1
+              className={cx(
+                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
+                t.strongText
+              )}
+            >
               {headline}
             </h1>
-            <p className={cx("mt-5 text-lg md:text-xl max-w-3xl mx-auto", t.softText)}>
+            <p
+              className={cx(
+                "mt-5 text-lg md:text-xl max-w-3xl mx-auto",
+                t.softText
+              )}
+            >
               {sub}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -314,13 +360,28 @@ function Hero({
       return (
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
+            <div
+              className={cx(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
+                t.chip
+              )}
+            >
               AI-generated website
             </div>
-            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
+            <h1
+              className={cx(
+                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
+                t.strongText
+              )}
+            >
               {headline}
             </h1>
-            <p className={cx("mt-5 text-lg md:text-xl max-w-3xl mx-auto", t.softText)}>
+            <p
+              className={cx(
+                "mt-5 text-lg md:text-xl max-w-3xl mx-auto",
+                t.softText
+              )}
+            >
               {sub}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -337,10 +398,20 @@ function Hero({
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
             <div>
-              <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
+              <div
+                className={cx(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
+                  t.chip
+                )}
+              >
                 AutopilotAI • Generated
               </div>
-              <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
+              <h1
+                className={cx(
+                  "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
+                  t.strongText
+                )}
+              >
                 {headline}
               </h1>
               <p className={cx("mt-5 text-lg md:text-xl", t.softText)}>{sub}</p>
@@ -351,7 +422,12 @@ function Hero({
             </div>
 
             <div className={cx("rounded-3xl border overflow-hidden", t.panel)}>
-              <div className={cx("relative aspect-[4/3] w-full", t.isDark ? "bg-black/40" : "bg-white")}>
+              <div
+                className={cx(
+                  "relative aspect-[4/3] w-full",
+                  t.isDark ? "bg-black/40" : "bg-white"
+                )}
+              >
                 {c.hero.image ? (
                   <img src={c.hero.image} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -362,7 +438,12 @@ function Hero({
                     </div>
                   </div>
                 )}
-                <div className={cx("absolute -inset-10 blur-3xl opacity-60 bg-gradient-to-r", t.glow)} />
+                <div
+                  className={cx(
+                    "absolute -inset-10 blur-3xl opacity-60 bg-gradient-to-r",
+                    t.glow
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -385,7 +466,12 @@ function SectionShell({
   subtle?: boolean;
 }) {
   return (
-    <section className={cx("px-6 py-16", subtle ? (t.isDark ? "bg-white/[0.03]" : "bg-black/[0.02]") : "")}>
+    <section
+      className={cx(
+        "px-6 py-16",
+        subtle ? (t.isDark ? "bg-white/[0.03]" : "bg-black/[0.02]") : ""
+      )}
+    >
       <div className="max-w-6xl mx-auto">{children}</div>
     </section>
   );
@@ -454,9 +540,7 @@ function Services({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnT
           <h2 className={cx("mt-2 text-3xl md:text-4xl font-semibold", t.strongText)}>
             {c.services.title}
           </h2>
-          {c.services.subtitle && (
-            <p className={cx("mt-3", t.softText)}>{c.services.subtitle}</p>
-          )}
+          {c.services.subtitle && <p className={cx("mt-3", t.softText)}>{c.services.subtitle}</p>}
         </div>
       </div>
 
@@ -464,7 +548,9 @@ function Services({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnT
         {c.services.items.map((s, i) => (
           <div key={i} className={cx("rounded-2xl border p-6", t.panel)}>
             <div className={cx("text-lg font-semibold", t.strongText)}>{s.title}</div>
-            {s.description && <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{s.description}</div>}
+            {s.description && (
+              <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{s.description}</div>
+            )}
           </div>
         ))}
       </div>
@@ -491,7 +577,9 @@ function Process({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnTy
               Step {i + 1}
             </div>
             <div className={cx("mt-4 text-lg font-semibold", t.strongText)}>{p.title}</div>
-            {p.description && <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{p.description}</div>}
+            {p.description && (
+              <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{p.description}</div>
+            )}
           </div>
         ))}
       </div>
@@ -520,6 +608,8 @@ function Testimonial({ c, t }: { c: ReturnType<typeof normalizeContent>; t: Retu
 }
 
 function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
+  const buttonLabel = str(c.cta.text) || str(c.hero.cta_text, "Get started");
+
   return (
     <SectionShell t={t} subtle>
       <div className={cx("rounded-3xl border p-10 md:p-12 text-center", t.panel)}>
@@ -537,7 +627,7 @@ function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<t
               t.ring
             )}
           >
-            {c.hero.cta_text || "Get started"} <span className="ml-2 opacity-80">→</span>
+            {buttonLabel} <span className="ml-2 opacity-80">→</span>
           </a>
         </div>
       </div>
@@ -551,11 +641,9 @@ function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<t
 
 function Footer({ username, t }: { username: string; t: ReturnType<typeof useThemeTokens> }) {
   return (
-    <footer className={cx("px-6 py-12", t.isDark ? "bg-black/20" : "bg-white")}>
+    <footer className={cx("px-6 py-12", t.isDark ? "bg-black/20" : "bg-white/70 backdrop-blur")}>
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className={cx("text-sm", t.softText)}>
-          © {new Date().getFullYear()} {username}
-        </div>
+        <div className={cx("text-sm", t.softText)}>© {new Date().getFullYear()} {username}</div>
         <div className={cx("text-xs", t.softText)}>Powered by AutopilotAI Website Builder</div>
       </div>
     </footer>
@@ -568,7 +656,6 @@ function Footer({ username, t }: { username: string; t: ReturnType<typeof useThe
 
 export default function AIWebsiteRenderer({ username, structure, content, editMode }: Props) {
   const t = useThemeTokens(structure);
-
   const c = useMemo(() => normalizeContent(content, username), [content, username]);
 
   return (
@@ -590,9 +677,7 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
           <div
             className={cx(
               "rounded-full px-4 py-2 text-xs font-semibold border backdrop-blur",
-              t.isDark
-                ? "bg-white/10 border-white/15 text-white"
-                : "bg-black/5 border-black/10 text-black"
+              t.isDark ? "bg-white/10 border-white/15 text-white" : "bg-black/5 border-black/10 text-black"
             )}
           >
             Edit mode

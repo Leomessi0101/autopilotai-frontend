@@ -282,6 +282,7 @@ export default function RestaurantTemplate({
 }: {
   username: string;
   content: any;
+  editMode?: boolean; // 👈 ADD THIS
 }) {
   const content = normalizeContent(raw, username);
 

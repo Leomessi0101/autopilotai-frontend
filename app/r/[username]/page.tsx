@@ -114,7 +114,7 @@ export default function WebsitePage() {
       : data.content_json;
 
   /* ======================================================
-     PARSE AI STRUCTURE (ONLY IF EXISTS)
+     PARSE AI STRUCTURE
   ====================================================== */
 
   const aiStructure =
@@ -130,7 +130,7 @@ export default function WebsitePage() {
      RENDER (AI → TEMPLATE FALLBACK)
   ====================================================== */
 
-  // ✅ AI-rendered website
+  // ✅ AI-rendered website (primary path)
   if (aiStructure) {
     return (
       <AIWebsiteRenderer
@@ -142,17 +142,18 @@ export default function WebsitePage() {
     );
   }
 
-  // ✅ Restaurant template
+  // ✅ Restaurant fallback (now compatible)
   if (data.template === "restaurant") {
     return (
       <RestaurantTemplate
         username={username}
         content={content}
+        editMode={editMode}
       />
     );
   }
 
-  // ✅ Business template (REQUIRES username + editMode)
+  // ✅ Business fallback
   if (data.template === "business") {
     return (
       <BusinessTemplate
