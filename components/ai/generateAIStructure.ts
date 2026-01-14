@@ -37,12 +37,10 @@ export function generateAIStructure(input: {
       ? {
           palette: "dark",
           accent: "indigo",
-          font: "inter",
         }
       : {
           palette: "light",
           accent: "emerald",
-          font: "inter",
         };
 
   return {
