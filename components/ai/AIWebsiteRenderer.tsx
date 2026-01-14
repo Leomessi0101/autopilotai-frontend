@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { AIStructure } from "./aiStructure";
 
 /* ======================================================
@@ -177,7 +177,6 @@ function useThemeTokens(structure: AIStructure) {
   const isDark = structure.theme.palette === "dark";
   const accent = structure.theme.accent || "indigo";
 
-  // Keep it deterministic: map accent -> classes
   const accentMap: Record<
     string,
     { glow: string; chip: string; btn: string; ring: string }
@@ -194,17 +193,11 @@ function useThemeTokens(structure: AIStructure) {
       btn: "bg-emerald-500 text-black hover:bg-emerald-400",
       ring: "focus:ring-emerald-500/25",
     },
-    orange: {
-      glow: "from-orange-500/20 via-amber-500/10 to-transparent",
-      chip: "bg-orange-500/10 text-orange-200 border-orange-500/20",
-      btn: "bg-orange-500 text-black hover:bg-orange-400",
-      ring: "focus:ring-orange-500/25",
-    },
-    neutral: {
-      glow: "from-slate-500/18 via-zinc-500/10 to-transparent",
-      chip: "bg-white/5 text-white/80 border-white/12",
-      btn: "bg-white text-black hover:bg-gray-100",
-      ring: "focus:ring-white/25",
+    gold: {
+      glow: "from-amber-500/20 via-yellow-500/10 to-transparent",
+      chip: "bg-amber-500/10 text-amber-200 border-amber-500/20",
+      btn: "bg-amber-400 text-black hover:bg-amber-300",
+      ring: "focus:ring-amber-500/25",
     },
   };
 
@@ -218,9 +211,7 @@ function useThemeTokens(structure: AIStructure) {
     btn: a.btn,
     ring: a.ring,
     pageBg: isDark ? "bg-[#05070d] text-white" : "bg-[#f6f7fb] text-black",
-    panel: isDark
-      ? "bg-white/5 border-white/10"
-      : "bg-white/70 border-black/10 backdrop-blur",
+    panel: isDark ? "bg-white/5 border-white/10" : "bg-white border-black/10",
     softText: isDark ? "text-white/60" : "text-black/60",
     strongText: isDark ? "text-white" : "text-black",
     divider: isDark ? "bg-white/10" : "bg-black/10",
@@ -228,7 +219,136 @@ function useThemeTokens(structure: AIStructure) {
 }
 
 /* ======================================================
-   HERO VARIANTS (NOW USES NORMALIZED CONTENT)
+   EDIT PANEL (ONLY WHEN editMode === true)
+====================================================== */
+
+function EditPanel({
+  t,
+  draft,
+  setDraft,
+  saveState,
+}: {
+  t: ReturnType<typeof useThemeTokens>;
+  draft: any;
+  setDraft: (next: any) => void;
+  saveState: "idle" | "saving" | "saved" | "error";
+}) {
+  return (
+    <div className="fixed left-4 bottom-4 z-[80] w-[360px] max-w-[90vw]">
+      <div className={cx("rounded-2xl border p-4 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,.55)]", t.panel)}>
+        <div className="flex items-center justify-between gap-3">
+          <div className={cx("text-sm font-semibold", t.strongText)}>Edit content</div>
+          <div className={cx("text-xs", t.softText)}>
+            {saveState === "saving"
+              ? "Saving…"
+              : saveState === "saved"
+              ? "Saved"
+              : saveState === "error"
+              ? "Save failed"
+              : "Autosave"}
+          </div>
+        </div>
+
+        <div className={cx("mt-3 h-px", t.divider)} />
+
+        <div className="mt-3 space-y-3">
+          <div>
+            <div className={cx("text-[11px] uppercase tracking-wide mb-1", t.softText)}>
+              Hero headline
+            </div>
+            <input
+              value={draft?.hero?.headline || ""}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  hero: { ...(draft.hero || {}), headline: e.target.value },
+                })
+              }
+              className={cx(
+                "w-full rounded-xl px-3 py-2 text-sm outline-none border",
+                t.isDark
+                  ? "bg-black/25 border-white/10 text-white placeholder:text-white/35"
+                  : "bg-white border-black/10 text-black"
+              )}
+              placeholder="Your business name"
+            />
+          </div>
+
+          <div>
+            <div className={cx("text-[11px] uppercase tracking-wide mb-1", t.softText)}>
+              Hero subheadline
+            </div>
+            <textarea
+              rows={2}
+              value={draft?.hero?.subheadline || ""}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  hero: { ...(draft.hero || {}), subheadline: e.target.value },
+                })
+              }
+              className={cx(
+                "w-full rounded-xl px-3 py-2 text-sm outline-none border resize-none",
+                t.isDark
+                  ? "bg-black/25 border-white/10 text-white placeholder:text-white/35"
+                  : "bg-white border-black/10 text-black"
+              )}
+              placeholder="What you do, in one sentence"
+            />
+          </div>
+
+          <div>
+            <div className={cx("text-[11px] uppercase tracking-wide mb-1", t.softText)}>
+              About text
+            </div>
+            <textarea
+              rows={3}
+              value={draft?.about?.text || ""}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  about: { ...(draft.about || {}), text: e.target.value },
+                })
+              }
+              className={cx(
+                "w-full rounded-xl px-3 py-2 text-sm outline-none border resize-none",
+                t.isDark
+                  ? "bg-black/25 border-white/10 text-white placeholder:text-white/35"
+                  : "bg-white border-black/10 text-black"
+              )}
+              placeholder="Tell visitors what makes you different."
+            />
+          </div>
+
+          <div>
+            <div className={cx("text-[11px] uppercase tracking-wide mb-1", t.softText)}>
+              CTA headline
+            </div>
+            <input
+              value={draft?.cta?.headline || ""}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  cta: { ...(draft.cta || {}), headline: e.target.value },
+                })
+              }
+              className={cx(
+                "w-full rounded-xl px-3 py-2 text-sm outline-none border",
+                t.isDark
+                  ? "bg-black/25 border-white/10 text-white placeholder:text-white/35"
+                  : "bg-white border-black/10 text-black"
+              )}
+              placeholder="Ready to book?"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================
+   HERO VARIANTS (USES NORMALIZED CONTENT)
 ====================================================== */
 
 function Hero({
@@ -279,22 +399,12 @@ function Hero({
       return (
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <div
-              className={cx(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                t.chip
-              )}
-            >
+            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
               <span className="opacity-90">AutopilotAI</span>
               <span className="opacity-60">•</span>
               <span className="opacity-90">Generated</span>
             </div>
-            <h1
-              className={cx(
-                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
-                t.strongText
-              )}
-            >
+            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
               {headline}
             </h1>
           </div>
@@ -304,12 +414,7 @@ function Hero({
     case "image_background":
       return (
         <section className="relative pt-24 pb-20 px-6 overflow-hidden">
-          <div
-            className={cx(
-              "absolute -inset-12 blur-3xl opacity-70 bg-gradient-to-r",
-              t.glow
-            )}
-          />
+          <div className={cx("absolute -inset-12 blur-3xl opacity-70 bg-gradient-to-r", t.glow)} />
           {c.hero.image && (
             <img
               src={c.hero.image}
@@ -317,35 +422,15 @@ function Hero({
               className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
           )}
-          <div
-            className={cx(
-              "absolute inset-0",
-              t.isDark ? "bg-black/55" : "bg-white/70"
-            )}
-          />
+          <div className={cx("absolute inset-0", t.isDark ? "bg-black/55" : "bg-white/70")} />
           <div className="relative max-w-6xl mx-auto text-center">
-            <div
-              className={cx(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                t.chip
-              )}
-            >
+            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
               AI layout • theme • copy
             </div>
-            <h1
-              className={cx(
-                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
-                t.strongText
-              )}
-            >
+            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
               {headline}
             </h1>
-            <p
-              className={cx(
-                "mt-5 text-lg md:text-xl max-w-3xl mx-auto",
-                t.softText
-              )}
-            >
+            <p className={cx("mt-5 text-lg md:text-xl max-w-3xl mx-auto", t.softText)}>
               {sub}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -360,28 +445,13 @@ function Hero({
       return (
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <div
-              className={cx(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                t.chip
-              )}
-            >
+            <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
               AI-generated website
             </div>
-            <h1
-              className={cx(
-                "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
-                t.strongText
-              )}
-            >
+            <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
               {headline}
             </h1>
-            <p
-              className={cx(
-                "mt-5 text-lg md:text-xl max-w-3xl mx-auto",
-                t.softText
-              )}
-            >
+            <p className={cx("mt-5 text-lg md:text-xl max-w-3xl mx-auto", t.softText)}>
               {sub}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -398,20 +468,10 @@ function Hero({
         <section className="pt-24 pb-16 px-6">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
             <div>
-              <div
-                className={cx(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                  t.chip
-                )}
-              >
+              <div className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs", t.chip)}>
                 AutopilotAI • Generated
               </div>
-              <h1
-                className={cx(
-                  "mt-6 text-4xl md:text-6xl font-semibold tracking-tight",
-                  t.strongText
-                )}
-              >
+              <h1 className={cx("mt-6 text-4xl md:text-6xl font-semibold tracking-tight", t.strongText)}>
                 {headline}
               </h1>
               <p className={cx("mt-5 text-lg md:text-xl", t.softText)}>{sub}</p>
@@ -422,12 +482,7 @@ function Hero({
             </div>
 
             <div className={cx("rounded-3xl border overflow-hidden", t.panel)}>
-              <div
-                className={cx(
-                  "relative aspect-[4/3] w-full",
-                  t.isDark ? "bg-black/40" : "bg-white"
-                )}
-              >
+              <div className={cx("relative aspect-[4/3] w-full", t.isDark ? "bg-black/40" : "bg-white")}>
                 {c.hero.image ? (
                   <img src={c.hero.image} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -438,12 +493,7 @@ function Hero({
                     </div>
                   </div>
                 )}
-                <div
-                  className={cx(
-                    "absolute -inset-10 blur-3xl opacity-60 bg-gradient-to-r",
-                    t.glow
-                  )}
-                />
+                <div className={cx("absolute -inset-10 blur-3xl opacity-60 bg-gradient-to-r", t.glow)} />
               </div>
             </div>
           </div>
@@ -453,7 +503,7 @@ function Hero({
 }
 
 /* ======================================================
-   SECTIONS (NOW USE NORMALIZED CONTENT)
+   SECTIONS
 ====================================================== */
 
 function SectionShell({
@@ -466,27 +516,34 @@ function SectionShell({
   subtle?: boolean;
 }) {
   return (
-    <section
-      className={cx(
-        "px-6 py-16",
-        subtle ? (t.isDark ? "bg-white/[0.03]" : "bg-black/[0.02]") : ""
-      )}
-    >
+    <section className={cx("px-6 py-16", subtle ? (t.isDark ? "bg-white/[0.03]" : "bg-black/[0.02]") : "")}>
       <div className="max-w-6xl mx-auto">{children}</div>
     </section>
   );
 }
 
-function Trust({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
-  if (!c.trust.items.length) return null;
+function Services({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
+  if (!c.services.items.length) return null;
 
   return (
     <SectionShell t={t}>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {c.trust.items.map((it, i) => (
-          <div key={i} className={cx("rounded-2xl border p-5", t.panel)}>
-            <div className={cx("text-2xl font-semibold", t.strongText)}>{it.value}</div>
-            <div className={cx("mt-1 text-sm", t.softText)}>{it.label}</div>
+      <div className="flex items-end justify-between gap-6 flex-wrap">
+        <div>
+          <div className={cx("text-xs uppercase tracking-wide", t.softText)}>Services</div>
+          <h2 className={cx("mt-2 text-3xl md:text-4xl font-semibold", t.strongText)}>
+            {c.services.title}
+          </h2>
+          {c.services.subtitle && (
+            <p className={cx("mt-3", t.softText)}>{c.services.subtitle}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {c.services.items.map((s, i) => (
+          <div key={i} className={cx("rounded-2xl border p-6", t.panel)}>
+            <div className={cx("text-lg font-semibold", t.strongText)}>{s.title}</div>
+            {s.description && <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{s.description}</div>}
           </div>
         ))}
       </div>
@@ -509,98 +566,8 @@ function About({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType
             {c.about.text}
           </p>
         </div>
-
         <div className={cx("rounded-3xl border overflow-hidden", t.panel)}>
-          <div className="aspect-[4/3] w-full">
-            {c.about.image ? (
-              <img src={c.about.image} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className={cx("text-center px-8", t.softText)}>
-                  <div className="font-semibold">About image</div>
-                  <div className="text-xs mt-2 opacity-80">No image set</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </SectionShell>
-  );
-}
-
-function Services({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
-  if (!c.services.items.length) return null;
-
-  return (
-    <SectionShell t={t}>
-      <div className="flex items-end justify-between gap-6 flex-wrap">
-        <div>
-          <div className={cx("text-xs uppercase tracking-wide", t.softText)}>Services</div>
-          <h2 className={cx("mt-2 text-3xl md:text-4xl font-semibold", t.strongText)}>
-            {c.services.title}
-          </h2>
-          {c.services.subtitle && <p className={cx("mt-3", t.softText)}>{c.services.subtitle}</p>}
-        </div>
-      </div>
-
-      <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {c.services.items.map((s, i) => (
-          <div key={i} className={cx("rounded-2xl border p-6", t.panel)}>
-            <div className={cx("text-lg font-semibold", t.strongText)}>{s.title}</div>
-            {s.description && (
-              <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{s.description}</div>
-            )}
-          </div>
-        ))}
-      </div>
-    </SectionShell>
-  );
-}
-
-function Process({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
-  if (!c.process.steps.length) return null;
-
-  return (
-    <SectionShell t={t} subtle>
-      <div>
-        <div className={cx("text-xs uppercase tracking-wide", t.softText)}>Process</div>
-        <h2 className={cx("mt-2 text-3xl md:text-4xl font-semibold", t.strongText)}>
-          {c.process.title}
-        </h2>
-      </div>
-
-      <div className="mt-10 grid md:grid-cols-3 gap-5">
-        {c.process.steps.map((p, i) => (
-          <div key={i} className={cx("rounded-2xl border p-6", t.panel)}>
-            <div className={cx("text-xs font-semibold inline-flex px-3 py-1 rounded-full border", t.chip)}>
-              Step {i + 1}
-            </div>
-            <div className={cx("mt-4 text-lg font-semibold", t.strongText)}>{p.title}</div>
-            {p.description && (
-              <div className={cx("mt-2 text-sm leading-relaxed", t.softText)}>{p.description}</div>
-            )}
-          </div>
-        ))}
-      </div>
-    </SectionShell>
-  );
-}
-
-function Testimonial({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
-  if (!c.testimonial.enabled) return null;
-  if (!str(c.testimonial.quote)) return null;
-
-  return (
-    <SectionShell t={t}>
-      <div className={cx("rounded-3xl border p-10", t.panel)}>
-        <div className={cx("text-xs uppercase tracking-wide", t.softText)}>Testimonial</div>
-        <div className={cx("mt-4 text-2xl md:text-3xl font-semibold leading-tight", t.strongText)}>
-          “{c.testimonial.quote}”
-        </div>
-        <div className={cx("mt-6 text-sm", t.softText)}>
-          — {c.testimonial.name}
-          {c.testimonial.role ? `, ${c.testimonial.role}` : ""}
+          <div className="aspect-[4/3] w-full" />
         </div>
       </div>
     </SectionShell>
@@ -608,8 +575,6 @@ function Testimonial({ c, t }: { c: ReturnType<typeof normalizeContent>; t: Retu
 }
 
 function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<typeof useThemeTokens> }) {
-  const buttonLabel = str(c.cta.text) || str(c.hero.cta_text, "Get started");
-
   return (
     <SectionShell t={t} subtle>
       <div className={cx("rounded-3xl border p-10 md:p-12 text-center", t.panel)}>
@@ -627,7 +592,7 @@ function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<t
               t.ring
             )}
           >
-            {buttonLabel} <span className="ml-2 opacity-80">→</span>
+            {c.hero.cta_text || "Get started"} <span className="ml-2 opacity-80">→</span>
           </a>
         </div>
       </div>
@@ -635,15 +600,13 @@ function CTA({ c, t }: { c: ReturnType<typeof normalizeContent>; t: ReturnType<t
   );
 }
 
-/* ======================================================
-   FOOTER
-====================================================== */
-
 function Footer({ username, t }: { username: string; t: ReturnType<typeof useThemeTokens> }) {
   return (
-    <footer className={cx("px-6 py-12", t.isDark ? "bg-black/20" : "bg-white/70 backdrop-blur")}>
+    <footer className={cx("px-6 py-12", t.isDark ? "bg-black/20" : "bg-white")}>
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className={cx("text-sm", t.softText)}>© {new Date().getFullYear()} {username}</div>
+        <div className={cx("text-sm", t.softText)}>
+          © {new Date().getFullYear()} {username}
+        </div>
         <div className={cx("text-xs", t.softText)}>Powered by AutopilotAI Website Builder</div>
       </div>
     </footer>
@@ -651,12 +614,60 @@ function Footer({ username, t }: { username: string; t: ReturnType<typeof useThe
 }
 
 /* ======================================================
-   MAIN RENDERER
+   MAIN
 ====================================================== */
+
+const API_BASE = "https://autopilotai-api.onrender.com";
 
 export default function AIWebsiteRenderer({ username, structure, content, editMode }: Props) {
   const t = useThemeTokens(structure);
-  const c = useMemo(() => normalizeContent(content, username), [content, username]);
+
+  // local draft for editing
+  const [draft, setDraft] = useState<any>(content || {});
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  // keep draft in sync if content changes (first load)
+  useEffect(() => {
+    setDraft(content || {});
+  }, [content]);
+
+  // autosave debounce
+  const saveTimer = useRef<any>(null);
+
+  useEffect(() => {
+    if (!editMode) return;
+
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+
+    setSaveState("saving");
+
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem("autopilot_token");
+        if (!token) throw new Error("Missing token");
+
+        await fetch(`${API_BASE}/api/restaurants/${username}/content`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(draft),
+        });
+
+        setSaveState("saved");
+        setTimeout(() => setSaveState("idle"), 900);
+      } catch {
+        setSaveState("error");
+      }
+    }, 800);
+
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [draft, editMode, username]);
+
+  const c = useMemo(() => normalizeContent(draft, username), [draft, username]);
 
   return (
     <main className={cx("min-h-screen", t.pageBg)}>
@@ -673,32 +684,32 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
       </div>
 
       {editMode && (
-        <div className="fixed top-4 right-4 z-50">
-          <div
-            className={cx(
-              "rounded-full px-4 py-2 text-xs font-semibold border backdrop-blur",
-              t.isDark ? "bg-white/10 border-white/15 text-white" : "bg-black/5 border-black/10 text-black"
-            )}
-          >
-            Edit mode
+        <>
+          <div className="fixed top-4 right-4 z-50">
+            <div
+              className={cx(
+                "rounded-full px-4 py-2 text-xs font-semibold border backdrop-blur",
+                t.isDark
+                  ? "bg-white/10 border-white/15 text-white"
+                  : "bg-black/5 border-black/10 text-black"
+              )}
+            >
+              Edit mode
+            </div>
           </div>
-        </div>
+
+          <EditPanel t={t} draft={draft} setDraft={setDraft} saveState={saveState} />
+        </>
       )}
 
       <Hero variant={structure.hero.variant} c={c} t={t} />
 
       {structure.sections.map((section, i) => {
         switch (section) {
-          case "trust":
-            return <Trust key={i} c={c} t={t} />;
           case "about":
             return <About key={i} c={c} t={t} />;
           case "services":
             return <Services key={i} c={c} t={t} />;
-          case "process":
-            return <Process key={i} c={c} t={t} />;
-          case "testimonial":
-            return <Testimonial key={i} c={c} t={t} />;
           case "cta":
             return <CTA key={i} c={c} t={t} />;
           default:
