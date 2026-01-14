@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import RestaurantTemplate from "@/components/templates/RestaurantTemplate";
 import BusinessTemplate from "@/components/templates/BusinessTemplate";
+import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
 
 /* ======================================================
    TYPES
@@ -14,6 +15,7 @@ type WebsiteResponse = {
   username: string;
   template: string;
   content_json: string | Record<string, any>;
+  ai_structure_json?: string | Record<string, any>;
   user_id?: number;
 };
 
@@ -32,8 +34,6 @@ function getUserIdFromToken(token: string): number | null {
 
 /* ======================================================
    TEMPLATE REGISTRY
-   - Single source of truth
-   - Easy to extend
 ====================================================== */
 
 const TEMPLATE_MAP: Record<
@@ -46,12 +46,10 @@ const TEMPLATE_MAP: Record<
 > = {
   restaurant: RestaurantTemplate,
   business: BusinessTemplate,
-  // gym: GymTemplate,
-  // barber: BarberTemplate,
 };
 
 /* ======================================================
-   PAGE (ROUTER / GATEKEEPER)
+   PAGE
 ====================================================== */
 
 export default function WebsitePage() {
@@ -67,8 +65,6 @@ export default function WebsitePage() {
 
   /* ======================================================
      FETCH WEBSITE
-     - Single fetch
-     - Template-agnostic
   ====================================================== */
 
   useEffect(() => {
@@ -86,7 +82,6 @@ export default function WebsitePage() {
 
         setData(res);
 
-        // Edit permission check (client-side UX only)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
@@ -126,7 +121,38 @@ export default function WebsitePage() {
   }
 
   /* ======================================================
-     TEMPLATE SELECTION
+     PARSE JSON
+  ====================================================== */
+
+  const content =
+    typeof data.content_json === "string"
+      ? JSON.parse(data.content_json)
+      : data.content_json;
+
+  const aiStructure =
+    data.ai_structure_json
+      ? typeof data.ai_structure_json === "string"
+        ? JSON.parse(data.ai_structure_json)
+        : data.ai_structure_json
+      : null;
+
+  /* ======================================================
+     AI RENDER PATH (NEW)
+  ====================================================== */
+
+  if (aiStructure) {
+    return (
+      <AIWebsiteRenderer
+        username={username}
+        structure={aiStructure}
+        content={content}
+        editMode={editRequested && canEdit}
+      />
+    );
+  }
+
+  /* ======================================================
+     TEMPLATE FALLBACK (EXISTING)
   ====================================================== */
 
   const Template = TEMPLATE_MAP[data.template];
@@ -138,17 +164,6 @@ export default function WebsitePage() {
       </main>
     );
   }
-
-  const content =
-    typeof data.content_json === "string"
-      ? JSON.parse(data.content_json)
-      : data.content_json;
-
-  /* ======================================================
-     RENDER TEMPLATE
-     - Gatekeeper passes data only
-     - No UI logic here
-  ====================================================== */
 
   return (
     <Template

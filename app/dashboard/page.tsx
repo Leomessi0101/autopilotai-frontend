@@ -260,81 +260,60 @@ export default function DashboardPage() {
   }
 
   async function createWebsite() {
-    if (!isPaid) {
-      router.push("/upgrade");
-      return;
-    }
-
-    const slug = normalizeSlug(desiredUsername);
-
-    if (!slugValid) {
-      setSiteToast({
-        type: "err",
-        msg: "Choose a username (3–30 chars, lowercase letters/numbers/hyphens)",
-      });
-      setTimeout(() => setSiteToast(null), 2600);
-      return;
-    }
-
-    setCreatingWebsite(true);
-    setSiteToast(null);
-
-    try {
-      const res = await api.post("/api/dashboard/websites/create", {
-        username: slug,
-        template: selectedTemplate,
-
-        // =========================
-        // AI WEBSITE QUESTIONS (NEW)
-        // =========================
-        ai_input: {
-          business_name: aiBusinessName,
-          short_description: aiShortDescription,
-          primary_goal: aiPrimaryGoal,
-          city: aiCity,
-        },
-      });
-
-      const data = (res.data || {}) as CreateWebsiteResponse;
-
-      const redirect =
-        data.redirect ||
-        (data.username ? `/r/${data.username}?edit=1` : `/r/${slug}?edit=1`);
-
-      setSiteToast({ type: "ok", msg: "Website generated" });
-      setTimeout(() => setSiteToast(null), 1500);
-
-      // refresh local state for card UI (optional but nice)
-      await refreshWebsiteMe();
-
-      // go edit
-      router.push(redirect);
-    } catch (err: any) {
-      const status = err?.response?.status;
-
-      if (status === 403) {
-        // free or already has site
-        const detail =
-          err?.response?.data?.detail ||
-          "Upgrade your plan to create a website";
-        setSiteToast({ type: "err", msg: String(detail) });
-        setTimeout(() => setSiteToast(null), 2800);
-        return;
-      }
-
-      if (status === 400) {
-        const detail = err?.response?.data?.detail || "Invalid request";
-        setSiteToast({ type: "err", msg: String(detail) });
-        setTimeout(() => setSiteToast(null), 2800);
-        return;
-      }
-
-      setSiteToast({ type: "err", msg: "Failed to generate website" });
-      setTimeout(() => setSiteToast(null), 2800);
-    } finally {
-      setCreatingWebsite(false);
-    }
+  if (!isPaid) {
+    router.push("/upgrade");
+    return;
   }
+
+  const slug = normalizeSlug(desiredUsername);
+
+  if (!slugValid) {
+    setSiteToast({
+      type: "err",
+      msg: "Choose a username (3–30 chars, lowercase letters/numbers/hyphens)",
+    });
+    setTimeout(() => setSiteToast(null), 2600);
+    return;
+  }
+
+  setCreatingWebsite(true);
+  setSiteToast(null);
+
+  try {
+    // 1️⃣ Create website (existing behavior)
+    const res = await api.post("/api/dashboard/websites/create", {
+      username: slug,
+      template: "ai-generated",
+    });
+
+    const username = res.data?.username || slug;
+
+    // 2️⃣ AI GENERATION (NEW)
+    await api.post(`/api/websites/${username}/ai-generate`, {
+      business_name: aiBusinessName,
+      description: aiShortDescription,
+      goal: aiPrimaryGoal,
+      location: aiCity,
+    });
+
+    setSiteToast({ type: "ok", msg: "Website generated" });
+    setTimeout(() => setSiteToast(null), 1500);
+
+    await refreshWebsiteMe();
+
+    // 3️⃣ Go to editor
+    router.push(`/r/${username}?edit=1`);
+  } catch (err: any) {
+    const detail =
+      err?.response?.data?.detail || "Failed to generate website";
+
+    setSiteToast({ type: "err", msg: String(detail) });
+    setTimeout(() => setSiteToast(null), 2800);
+  } finally {
+    setCreatingWebsite(false);
+  }
+}
+
 
   const hasWebsite = website && (website as any).exists === true;
   const existingUsername = hasWebsite ? (website as any).username : null;
