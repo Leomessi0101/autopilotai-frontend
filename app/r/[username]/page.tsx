@@ -3,9 +3,8 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import RestaurantTemplate from "@/components/templates/RestaurantTemplate";
-import BusinessTemplate from "@/components/templates/BusinessTemplate";
 import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
+import { generateAIStructure } from "@/components/ai/generateAIStructure";
 
 /* ======================================================
    TYPES
@@ -13,7 +12,6 @@ import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
 
 type WebsiteResponse = {
   username: string;
-  template: string;
   content_json: string | Record<string, any>;
   ai_structure_json?: string | Record<string, any>;
   user_id?: number;
@@ -31,22 +29,6 @@ function getUserIdFromToken(token: string): number | null {
     return null;
   }
 }
-
-/* ======================================================
-   TEMPLATE REGISTRY
-====================================================== */
-
-const TEMPLATE_MAP: Record<
-  string,
-  React.ComponentType<{
-    username: string;
-    content: any;
-    editMode: boolean;
-  }>
-> = {
-  restaurant: RestaurantTemplate,
-  business: BusinessTemplate,
-};
 
 /* ======================================================
    PAGE
@@ -77,11 +59,12 @@ export default function WebsitePage() {
         if (!res.ok) throw new Error("Website not found");
         return res.json();
       })
-      .then((res) => {
+      .then((res: WebsiteResponse) => {
         if (cancelled) return;
 
         setData(res);
 
+        // Edit permission check
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
@@ -121,7 +104,7 @@ export default function WebsitePage() {
   }
 
   /* ======================================================
-     PARSE JSON
+     PARSE CONTENT
   ====================================================== */
 
   const content =
@@ -129,45 +112,28 @@ export default function WebsitePage() {
       ? JSON.parse(data.content_json)
       : data.content_json;
 
-  const aiStructure =
+  /* ======================================================
+     AI STRUCTURE (LEGO ENGINE)
+  ====================================================== */
+
+  const structure =
     data.ai_structure_json
       ? typeof data.ai_structure_json === "string"
         ? JSON.parse(data.ai_structure_json)
         : data.ai_structure_json
-      : null;
+      : generateAIStructure({
+          businessType: "local",
+          goal: "leads",
+        });
 
   /* ======================================================
-     AI RENDER PATH (NEW)
+     RENDER (AI ONLY)
   ====================================================== */
-
-  if (aiStructure) {
-    return (
-      <AIWebsiteRenderer
-        username={username}
-        structure={aiStructure}
-        content={content}
-        editMode={editRequested && canEdit}
-      />
-    );
-  }
-
-  /* ======================================================
-     TEMPLATE FALLBACK (EXISTING)
-  ====================================================== */
-
-  const Template = TEMPLATE_MAP[data.template];
-
-  if (!Template) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Unknown template: {data.template}
-      </main>
-    );
-  }
 
   return (
-    <Template
+    <AIWebsiteRenderer
       username={username}
+      structure={structure}
       content={content}
       editMode={editRequested && canEdit}
     />

@@ -1,32 +1,11 @@
 "use client";
 
 import React from "react";
+import type { AIStructure } from "./aiStructure";
 
 /* ======================================================
-   TYPES
+   PROPS
 ====================================================== */
-
-type AISection =
-  | { type: "features"; variant: "grid_3" }
-  | { type: "about"; variant: "image_left" }
-  | { type: "testimonials"; variant: "cards" }
-  | { type: "cta"; variant: "centered" };
-
-type AIStructure = {
-  hero: {
-    variant: "split_image" | "centered_text" | "image_background";
-    cta_style: "primary" | "secondary";
-  };
-  sections: AISection[];
-  theme: {
-    palette: "light" | "dark";
-    accent: "indigo" | "orange" | "emerald";
-    font: "inter";
-  };
-  footer: {
-    variant: "minimal";
-  };
-};
 
 type Props = {
   username: string;
@@ -47,14 +26,20 @@ function cx(...classes: (string | false | undefined)[]) {
    HERO VARIANTS
 ====================================================== */
 
-function Hero({ structure, content }: { structure: AIStructure["hero"]; content: any }) {
-  switch (structure.variant) {
+function Hero({
+  variant,
+  content,
+}: {
+  variant: AIStructure["hero"]["variant"];
+  content: any;
+}) {
+  switch (variant) {
     case "centered_text":
       return (
         <section className="py-24 text-center">
           <h1 className="text-5xl font-bold mb-4">{content.hero_headline}</h1>
           <p className="text-lg opacity-80 mb-6">{content.hero_subheadline}</p>
-          <button className="px-6 py-3 bg-indigo-600 text-white rounded">
+          <button className="px-6 py-3 rounded bg-black text-white">
             {content.cta_text}
           </button>
         </section>
@@ -65,9 +50,16 @@ function Hero({ structure, content }: { structure: AIStructure["hero"]; content:
         <section className="py-24 text-center bg-gray-900 text-white">
           <h1 className="text-5xl font-bold mb-4">{content.hero_headline}</h1>
           <p className="text-lg opacity-80 mb-6">{content.hero_subheadline}</p>
-          <button className="px-6 py-3 bg-indigo-600 rounded">
+          <button className="px-6 py-3 rounded bg-white text-black">
             {content.cta_text}
           </button>
+        </section>
+      );
+
+    case "minimal":
+      return (
+        <section className="py-32 text-center">
+          <h1 className="text-4xl font-bold">{content.hero_headline}</h1>
         </section>
       );
 
@@ -76,9 +68,13 @@ function Hero({ structure, content }: { structure: AIStructure["hero"]; content:
       return (
         <section className="py-24 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div>
-            <h1 className="text-5xl font-bold mb-4">{content.hero_headline}</h1>
-            <p className="text-lg opacity-80 mb-6">{content.hero_subheadline}</p>
-            <button className="px-6 py-3 bg-indigo-600 text-white rounded">
+            <h1 className="text-5xl font-bold mb-4">
+              {content.hero_headline}
+            </h1>
+            <p className="text-lg opacity-80 mb-6">
+              {content.hero_subheadline}
+            </p>
+            <button className="px-6 py-3 rounded bg-black text-white">
               {content.cta_text}
             </button>
           </div>
@@ -92,13 +88,14 @@ function Hero({ structure, content }: { structure: AIStructure["hero"]; content:
    SECTIONS
 ====================================================== */
 
-function Features({ content }: { content: any }) {
+function Trust({ content }: { content: any }) {
   return (
-    <section className="py-20">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {(content.features || []).map((f: string, i: number) => (
-          <div key={i} className="p-6 border rounded">
-            {f}
+    <section className="py-16">
+      <div className="grid grid-cols-3 gap-6 text-center">
+        {(content.trust || []).map((t: any, i: number) => (
+          <div key={i}>
+            <div className="text-2xl font-bold">{t.value}</div>
+            <div className="opacity-60">{t.label}</div>
           </div>
         ))}
       </div>
@@ -106,29 +103,53 @@ function Features({ content }: { content: any }) {
   );
 }
 
-function About() {
+function About({ content }: { content: any }) {
   return (
-    <section className="py-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-      <div className="h-64 bg-gray-200 rounded" />
-      <div>
-        <h2 className="text-3xl font-bold mb-4">About Us</h2>
-        <p className="opacity-80">
-          We help businesses launch fast with modern, AI-generated websites.
-        </p>
+    <section className="py-20 max-w-3xl mx-auto text-center">
+      <h2 className="text-3xl font-bold mb-4">{content.about_title}</h2>
+      <p className="opacity-80">{content.about_text}</p>
+    </section>
+  );
+}
+
+function Services({ content }: { content: any }) {
+  return (
+    <section className="py-20">
+      <div className="grid md:grid-cols-3 gap-6">
+        {(content.services || []).map((s: any, i: number) => (
+          <div key={i} className="p-6 border rounded">
+            <div className="font-semibold mb-2">{s.title}</div>
+            <div className="opacity-70">{s.description}</div>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-function Testimonials() {
+function Process({ content }: { content: any }) {
   return (
     <section className="py-20">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
+      <div className="grid md:grid-cols-3 gap-6">
+        {(content.process || []).map((p: any, i: number) => (
           <div key={i} className="p-6 border rounded">
-            “Amazing experience.”
+            <div className="font-semibold">{p.title}</div>
+            <div className="opacity-70">{p.description}</div>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function Testimonial({ content }: { content: any }) {
+  return (
+    <section className="py-24 text-center bg-gray-100">
+      <blockquote className="text-2xl font-semibold">
+        “{content.testimonial_quote}”
+      </blockquote>
+      <div className="mt-4 opacity-60">
+        — {content.testimonial_name}
       </div>
     </section>
   );
@@ -136,11 +157,9 @@ function Testimonials() {
 
 function CTA({ content }: { content: any }) {
   return (
-    <section className="py-24 text-center bg-gray-100">
-      <h2 className="text-3xl font-bold mb-4">
-        Ready to get started?
-      </h2>
-      <button className="px-6 py-3 bg-indigo-600 text-white rounded">
+    <section className="py-24 text-center">
+      <h2 className="text-3xl font-bold mb-4">{content.cta_headline}</h2>
+      <button className="px-6 py-3 rounded bg-black text-white">
         {content.cta_text}
       </button>
     </section>
@@ -182,16 +201,20 @@ export default function AIWebsiteRenderer({
         </div>
       )}
 
-      <Hero structure={structure.hero} content={content} />
+      <Hero variant={structure.hero.variant} content={content} />
 
       {structure.sections.map((section, i) => {
-        switch (section.type) {
-          case "features":
-            return <Features key={i} content={content} />;
+        switch (section) {
+          case "trust":
+            return <Trust key={i} content={content} />;
           case "about":
-            return <About key={i} />;
-          case "testimonials":
-            return <Testimonials key={i} />;
+            return <About key={i} content={content} />;
+          case "services":
+            return <Services key={i} content={content} />;
+          case "process":
+            return <Process key={i} content={content} />;
+          case "testimonial":
+            return <Testimonial key={i} content={content} />;
           case "cta":
             return <CTA key={i} content={content} />;
           default:
