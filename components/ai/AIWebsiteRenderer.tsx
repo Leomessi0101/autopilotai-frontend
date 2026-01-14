@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import type { AIStructure } from "./aiStructure";
 
 /* ======================================================
@@ -22,112 +22,67 @@ function cx(...classes: (string | false | undefined | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-function str(v: any, fallback = ""): string {
-  if (v === null || v === undefined) return fallback;
-  const s = String(v);
-  return s.trim().length ? s : fallback;
-}
-
-function asArray<T = any>(v: any): T[] {
-  return Array.isArray(v) ? v : [];
-}
-
 /* ======================================================
-   CONTENT NORMALIZATION
+   AUTOSAVE
 ====================================================== */
 
-function normalizeContent(raw: any, username: string) {
-  const c = raw || {};
+function useAutosave(username: string, content: any, enabled: boolean) {
+  const latest = useRef(content);
 
-  return {
-    hero: {
-      headline:
-        str(c?.hero?.headline) ||
-        str(c?.hero_headline) ||
-        username,
-      subheadline:
-        str(c?.hero?.subheadline) ||
-        str(c?.hero_subheadline) ||
-        "Describe what you do in one clear sentence.",
-      cta_text:
-        str(c?.hero?.cta_text) ||
-        str(c?.cta_text) ||
-        "Get started",
-      cta_link:
-        str(c?.hero?.cta_link) ||
-        "#contact",
-    },
+  useEffect(() => {
+    latest.current = content;
+  }, [content]);
 
-    services: {
-      title:
-        str(c?.services?.title) ||
-        "Our services",
-      items:
-        asArray(c?.services?.items).length > 0
-          ? asArray(c?.services?.items)
-          : asArray(c?.services),
-    },
+  async function save(updated: any) {
+    if (!enabled) return;
 
-    cta: {
-      headline:
-        str(c?.cta?.headline) ||
-        "Ready to take the next step?",
-      text:
-        str(c?.cta?.text) ||
-        "",
-    },
-  };
+    try {
+      await fetch(
+        `https://autopilotai-api.onrender.com/api/restaurants/${username}/save`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("autopilot_token")}`,
+          },
+          body: JSON.stringify(updated),
+        }
+      );
+    } catch {
+      // silent fail (intentional)
+    }
+  }
+
+  return save;
 }
 
 /* ======================================================
-   EDITABLE TEXT — INTENTIONALLY LOOSE TYPING (STABLE)
+   EDITABLE TEXT
 ====================================================== */
 
 function EditableText({
   value,
   onSave,
+  className,
   editMode,
-  tag = "div",
-  className = "",
 }: {
   value: string;
   onSave: (v: string) => void;
-  editMode: boolean;
-  tag?: any; // ✅ intentional — avoids JSX/TS edge cases
   className?: string;
+  editMode: boolean;
 }) {
-  const [draft, setDraft] = useState(value);
-  const Tag = tag;
-
-  useEffect(() => {
-    setDraft(value);
-  }, [value]);
-
-  if (!editMode) {
-    return <Tag className={className}>{value}</Tag>;
-  }
-
   return (
-    <Tag
-      contentEditable
+    <div
+      contentEditable={editMode}
       suppressContentEditableWarning
+      onBlur={(e) => onSave(e.currentTarget.innerText)}
       className={cx(
-        className,
-        "outline-none cursor-text rounded px-1 -mx-1",
-        "focus:ring-2 focus:ring-indigo-500/40"
+        editMode && "outline outline-1 outline-dashed outline-indigo-400/40",
+        className
       )}
-      onInput={(e: any) =>
-        setDraft(e.currentTarget.innerText)
-      }
-      onBlur={() => {
-        const v = draft.trim();
-        if (v && v !== value) {
-          onSave(v);
-        }
-      }}
     >
-      {draft}
-    </Tag>
+      {value}
+    </div>
   );
 }
 
@@ -135,36 +90,46 @@ function EditableText({
    HERO
 ====================================================== */
 
-function Hero({ c, editMode }: { c: any; editMode: boolean }) {
+function Hero({
+  structure,
+  content,
+  onSave,
+  editMode,
+}: {
+  structure: AIStructure;
+  content: any;
+  onSave: (c: any) => void;
+  editMode: boolean;
+}) {
   return (
-    <section className="pt-28 pb-20 px-6 text-center">
-      <div className="max-w-5xl mx-auto">
-        <EditableText
-          tag="h1"
-          value={c.hero.headline}
-          editMode={editMode}
-          onSave={(v) => (c.hero.headline = v)}
-          className="text-4xl md:text-6xl font-semibold tracking-tight"
-        />
+    <section className="py-24 text-center">
+      <EditableText
+        value={content.hero?.headline || "Your Business Name"}
+        editMode={editMode}
+        className="text-5xl font-bold mb-4"
+        onSave={(v) =>
+          onSave({
+            ...content,
+            hero: { ...content.hero, headline: v },
+          })
+        }
+      />
 
-        <EditableText
-          tag="p"
-          value={c.hero.subheadline}
-          editMode={editMode}
-          onSave={(v) => (c.hero.subheadline = v)}
-          className="mt-5 text-lg md:text-xl text-white/70"
-        />
+      <EditableText
+        value={content.hero?.subheadline || "Short description of what you do"}
+        editMode={editMode}
+        className="text-lg opacity-80 mb-6"
+        onSave={(v) =>
+          onSave({
+            ...content,
+            hero: { ...content.hero, subheadline: v },
+          })
+        }
+      />
 
-        <div className="mt-8">
-          <a
-            href={c.hero.cta_link}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-7 py-3.5 font-semibold hover:bg-indigo-400 transition"
-          >
-            {c.hero.cta_text}
-            <span className="opacity-80">→</span>
-          </a>
-        </div>
-      </div>
+      <button className="px-6 py-3 rounded bg-black text-white">
+        Get started
+      </button>
     </section>
   );
 }
@@ -173,44 +138,50 @@ function Hero({ c, editMode }: { c: any; editMode: boolean }) {
    SERVICES
 ====================================================== */
 
-function Services({ c, editMode }: { c: any; editMode: boolean }) {
-  if (!c.services.items.length) return null;
+function Services({
+  content,
+  onSave,
+  editMode,
+}: {
+  content: any;
+  onSave: (c: any) => void;
+  editMode: boolean;
+}) {
+  const services = Array.isArray(content.services)
+    ? content.services
+    : [];
+
+  if (!services.length) return null;
 
   return (
-    <section className="px-6 py-20">
-      <div className="max-w-6xl mx-auto">
-        <EditableText
-          tag="h2"
-          value={c.services.title}
-          editMode={editMode}
-          onSave={(v) => (c.services.title = v)}
-          className="text-3xl md:text-4xl font-semibold"
-        />
+    <section className="py-20 max-w-5xl mx-auto">
+      <h2 className="text-3xl font-bold mb-10 text-center">Services</h2>
 
-        <div className="mt-10 grid md:grid-cols-3 gap-6">
-          {c.services.items.map((s: any, i: number) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6"
-            >
-              <EditableText
-                tag="div"
-                value={str(s.title, "Service")}
-                editMode={editMode}
-                onSave={(v) => (s.title = v)}
-                className="text-lg font-semibold"
-              />
-
-              <EditableText
-                tag="p"
-                value={str(s.description, "Describe your service here.")}
-                editMode={editMode}
-                onSave={(v) => (s.description = v)}
-                className="mt-2 text-sm text-white/65"
-              />
-            </div>
-          ))}
-        </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {services.map((s: any, i: number) => (
+          <div key={i} className="p-6 border rounded">
+            <EditableText
+              value={s.title || "Service"}
+              editMode={editMode}
+              className="font-semibold mb-2"
+              onSave={(v) => {
+                const next = [...services];
+                next[i] = { ...next[i], title: v };
+                onSave({ ...content, services: next });
+              }}
+            />
+            <EditableText
+              value={s.description || "Describe your service here."}
+              editMode={editMode}
+              className="opacity-70"
+              onSave={(v) => {
+                const next = [...services];
+                next[i] = { ...next[i], description: v };
+                onSave({ ...content, services: next });
+              }}
+            />
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -220,49 +191,33 @@ function Services({ c, editMode }: { c: any; editMode: boolean }) {
    CTA
 ====================================================== */
 
-function CTA({ c, editMode }: { c: any; editMode: boolean }) {
+function CTA({
+  content,
+  onSave,
+  editMode,
+}: {
+  content: any;
+  onSave: (c: any) => void;
+  editMode: boolean;
+}) {
   return (
-    <section className="px-6 py-24 text-center">
-      <div className="max-w-3xl mx-auto">
-        <EditableText
-          tag="h2"
-          value={c.cta.headline}
-          editMode={editMode}
-          onSave={(v) => (c.cta.headline = v)}
-          className="text-3xl md:text-4xl font-semibold"
-        />
+    <section className="py-24 text-center">
+      <EditableText
+        value={content.cta?.headline || "Ready to take the next step?"}
+        editMode={editMode}
+        className="text-3xl font-bold mb-4"
+        onSave={(v) =>
+          onSave({
+            ...content,
+            cta: { ...content.cta, headline: v },
+          })
+        }
+      />
 
-        <EditableText
-          tag="p"
-          value={c.cta.text}
-          editMode={editMode}
-          onSave={(v) => (c.cta.text = v)}
-          className="mt-4 text-lg text-white/70"
-        />
-
-        <div className="mt-8">
-          <a
-            href="#contact"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-7 py-3.5 font-semibold hover:bg-indigo-400 transition"
-          >
-            {c.hero.cta_text}
-            <span className="opacity-80">→</span>
-          </a>
-        </div>
-      </div>
+      <button className="px-6 py-3 rounded bg-black text-white">
+        Get started
+      </button>
     </section>
-  );
-}
-
-/* ======================================================
-   FOOTER
-====================================================== */
-
-function Footer({ username }: { username: string }) {
-  return (
-    <footer className="px-6 py-12 text-center text-white/50 border-t border-white/10">
-      © {new Date().getFullYear()} {username} • Powered by AutopilotAI
-    </footer>
   );
 }
 
@@ -276,30 +231,42 @@ export default function AIWebsiteRenderer({
   content,
   editMode,
 }: Props) {
-  const c = useMemo(
-    () => normalizeContent(content, username),
-    [content, username]
-  );
+  const save = useAutosave(username, content, editMode);
+
+  function update(next: any) {
+    save(next);
+  }
 
   return (
-    <main className="min-h-screen bg-[#05070d] text-white relative">
+    <main className="min-h-screen bg-white text-black">
       {editMode && (
-        <div className="fixed top-4 right-4 z-50 rounded-full bg-white/10 border border-white/15 px-4 py-2 text-xs font-semibold backdrop-blur">
-          Edit mode
+        <div className="fixed top-4 right-4 bg-indigo-500 text-white px-3 py-1 rounded text-xs z-50">
+          Edit mode (auto-save)
         </div>
       )}
 
-      <Hero c={c} editMode={editMode} />
+      <Hero
+        structure={structure}
+        content={content}
+        onSave={update}
+        editMode={editMode}
+      />
 
-      {structure.sections.includes("services") && (
-        <Services c={c} editMode={editMode} />
-      )}
+      <Services
+        content={content}
+        onSave={update}
+        editMode={editMode}
+      />
 
-      {structure.sections.includes("cta") && (
-        <CTA c={c} editMode={editMode} />
-      )}
+      <CTA
+        content={content}
+        onSave={update}
+        editMode={editMode}
+      />
 
-      <Footer username={username} />
+      <footer className="py-10 text-center opacity-60">
+        © {new Date().getFullYear()} {username}
+      </footer>
     </main>
   );
 }

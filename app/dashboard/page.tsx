@@ -10,10 +10,6 @@ import DashboardNavbar from "@/components/DashboardNavbar";
    TYPES
 ========================= */
 
-type WebsiteMeResponse =
-  | { exists: false }
-  | { exists: true; username: string; template: string };
-
 type CreateWebsiteResponse = {
   ok?: boolean;
   username?: string;
@@ -53,17 +49,13 @@ export default function DashboardPage() {
   ========================= */
 
   const [initial, setInitial] = useState("U");
-  const [fullName, setFullName] = useState<string | null>(null);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   /* =========================
-     WEBSITE STATE (FIXED)
+     WEBSITE STATE
   ========================= */
 
   const [slug, setSlug] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<
-    "restaurant" | "business"
-  >("business");
 
   const cleanedSlug = useMemo(() => normalizeSlug(slug), [slug]);
   const slugValid = useMemo(() => isValidSlug(cleanedSlug), [cleanedSlug]);
@@ -98,7 +90,6 @@ export default function DashboardPage() {
       .then((res) => {
         if (res.data?.name) {
           setInitial(res.data.name.charAt(0).toUpperCase());
-          setFullName(res.data.name.split(" ")[0]);
         }
         if (res.data?.subscription) {
           setSubscriptionPlan(res.data.subscription);
@@ -111,14 +102,14 @@ export default function DashboardPage() {
   }, [router]);
 
   /* =========================
-     CREATE WEBSITE (FINAL)
+     CREATE WEBSITE (AI-FIRST)
   ========================= */
 
   async function createWebsite() {
     if (!slugValid) {
       setSiteToast({
         type: "err",
-        msg: "Username must be 3–30 chars (a–z, 0–9, hyphen)",
+        msg: "Username must be 3–30 characters (a–z, 0–9, hyphen)",
       });
       setTimeout(() => setSiteToast(null), 2600);
       return;
@@ -132,7 +123,7 @@ export default function DashboardPage() {
         "/api/dashboard/websites/create",
         {
           username: cleanedSlug,
-          template: selectedTemplate,
+          template: "business", // 🔒 AI-first, no user choice
           ai_input: {
             business_name: aiBusinessName,
             short_description: aiShortDescription,
@@ -169,10 +160,10 @@ export default function DashboardPage() {
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
           <div
             className={cx(
-              "px-4 py-2 rounded-full text-sm font-semibold",
+              "px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur",
               siteToast.type === "ok"
-                ? "bg-white text-black"
-                : "bg-red-500/20 text-red-200 border border-red-500/30"
+                ? "bg-white text-black border-white/20"
+                : "bg-red-500/20 text-red-200 border-red-500/30"
             )}
           >
             {siteToast.msg}
@@ -205,11 +196,10 @@ export default function DashboardPage() {
             </h1>
 
             <p className="mt-5 text-lg text-gray-300">
-              No templates. No setup. Just type — your site is generated,
+              No templates. No setup. Just type — your website is generated,
               editable, and live instantly.
             </p>
 
-            {/* AI Inputs */}
             <div className="mt-10 grid gap-5">
               <input
                 value={aiBusinessName}
@@ -242,7 +232,6 @@ export default function DashboardPage() {
                 />
               </div>
 
-              {/* Username */}
               <div>
                 <input
                   value={slug}
@@ -263,24 +252,6 @@ export default function DashboardPage() {
                     /r/{cleanedSlug || "your-name"}
                   </span>
                 </div>
-              </div>
-
-              {/* Template */}
-              <div className="flex gap-3">
-                {(["business", "restaurant"] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedTemplate(t)}
-                    className={cx(
-                      "flex-1 py-3 rounded-xl border font-medium transition",
-                      selectedTemplate === t
-                        ? "bg-white text-black border-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
-                    )}
-                  >
-                    {t === "business" ? "Business" : "Restaurant"}
-                  </button>
-                ))}
               </div>
 
               <button
