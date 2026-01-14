@@ -169,6 +169,7 @@ export default function DashboardPage() {
         }
         if (res.data?.subscription) {
           setSubscriptionPlan(res.data.subscription);
+          localStorage.setItem("autopilot_user_email", res.data.email);
         }
       })
       .catch(() => {
