@@ -46,7 +46,6 @@ export function generateAIStructure(input: {
   return {
     hero: {
       variant: heroVariant,
-      cta_style: "primary",
     },
     sections,
     theme,
