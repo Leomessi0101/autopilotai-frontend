@@ -10,6 +10,10 @@ import DashboardNavbar from "@/components/DashboardNavbar";
    TYPES
 ========================= */
 
+type WebsiteMeResponse =
+  | { exists: false }
+  | { exists: true; username: string; template: string };
+
 type CreateWebsiteResponse = {
   ok?: boolean;
   username?: string;
@@ -56,21 +60,25 @@ export default function DashboardPage() {
   ========================= */
 
   const [slug, setSlug] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    "business" | "restaurant"
+  >("business");
 
   const cleanedSlug = useMemo(() => normalizeSlug(slug), [slug]);
   const slugValid = useMemo(() => isValidSlug(cleanedSlug), [cleanedSlug]);
 
   /* =========================
-     AI INPUTS
+     AI PROMPT (SINGLE INPUT)
   ========================= */
 
-  const [aiBusinessName, setAiBusinessName] = useState("");
-  const [aiShortDescription, setAiShortDescription] = useState("");
-  const [aiPrimaryGoal, setAiPrimaryGoal] = useState("");
-  const [aiCity, setAiCity] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+
+  /* =========================
+     UI STATE
+  ========================= */
 
   const [creatingWebsite, setCreatingWebsite] = useState(false);
-  const [siteToast, setSiteToast] = useState<
+  const [toast, setToast] = useState<
     null | { type: "ok" | "err"; msg: string }
   >(null);
 
@@ -91,8 +99,8 @@ export default function DashboardPage() {
         if (res.data?.name) {
           setInitial(res.data.name.charAt(0).toUpperCase());
         }
-        if (res.data?.subscription) {
-          setSubscriptionPlan(res.data.subscription);
+        if (res.data?.subscription_plan) {
+          setSubscriptionPlan(res.data.subscription_plan);
         }
       })
       .catch(() => {
@@ -102,47 +110,51 @@ export default function DashboardPage() {
   }, [router]);
 
   /* =========================
-     CREATE WEBSITE (AI-FIRST)
+     CREATE WEBSITE
   ========================= */
 
   async function createWebsite() {
     if (!slugValid) {
-      setSiteToast({
+      setToast({
         type: "err",
-        msg: "Username must be 3–30 characters (a–z, 0–9, hyphen)",
+        msg: "Username must be 3–30 chars (a–z, 0–9, hyphen)",
       });
-      setTimeout(() => setSiteToast(null), 2600);
+      setTimeout(() => setToast(null), 2600);
+      return;
+    }
+
+    if (!aiPrompt.trim()) {
+      setToast({
+        type: "err",
+        msg: "Describe your business so the AI knows what to build.",
+      });
+      setTimeout(() => setToast(null), 2600);
       return;
     }
 
     setCreatingWebsite(true);
-    setSiteToast(null);
+    setToast(null);
 
     try {
       const res = await api.post<CreateWebsiteResponse>(
         "/api/dashboard/websites/create",
         {
           username: cleanedSlug,
-          template: "business", // 🔒 AI-first, no user choice
-          ai_input: {
-            business_name: aiBusinessName,
-            short_description: aiShortDescription,
-            primary_goal: aiPrimaryGoal,
-            city: aiCity,
-          },
+          template: selectedTemplate, // optional but still supported
+          ai_prompt: aiPrompt,
         }
       );
 
       const username = res.data.username || cleanedSlug;
       router.push(`/r/${username}?edit=1`);
     } catch (err: any) {
-      setSiteToast({
+      setToast({
         type: "err",
         msg:
           err?.response?.data?.detail ||
           "Failed to generate website. Try again.",
       });
-      setTimeout(() => setSiteToast(null), 3000);
+      setTimeout(() => setToast(null), 3000);
     } finally {
       setCreatingWebsite(false);
     }
@@ -156,34 +168,34 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#05070d] text-white">
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
-      {siteToast && (
+      {toast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
           <div
             className={cx(
-              "px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur",
-              siteToast.type === "ok"
-                ? "bg-white text-black border-white/20"
-                : "bg-red-500/20 text-red-200 border-red-500/30"
+              "px-4 py-2 rounded-full text-sm font-semibold",
+              toast.type === "ok"
+                ? "bg-white text-black"
+                : "bg-red-500/20 text-red-200 border border-red-500/30"
             )}
           >
-            {siteToast.msg}
+            {toast.msg}
           </div>
         </div>
       )}
 
       <main className="max-w-6xl mx-auto px-6 py-20">
-        {/* =========================
-            AI BUILDER (LANDINGSITE STYLE)
-        ========================= */}
-
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10 shadow-[0_60px_160px_rgba(0,0,0,.7)]"
+          className="rounded-3xl border border-white/10
+                     bg-gradient-to-br from-[#0f172a] to-[#020617]
+                     p-10 shadow-[0_60px_160px_rgba(0,0,0,.7)]"
         >
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs uppercase tracking-wide text-indigo-300">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                            bg-white/5 border border-white/10
+                            text-xs uppercase tracking-wide text-indigo-300">
               AI Website Generator
             </div>
 
@@ -196,42 +208,22 @@ export default function DashboardPage() {
             </h1>
 
             <p className="mt-5 text-lg text-gray-300">
-              No templates. No setup. Just type — your website is generated,
-              editable, and live instantly.
+              Just explain what you do. The AI chooses layout, content, and structure.
             </p>
 
+            {/* AI PROMPT */}
             <div className="mt-10 grid gap-5">
-              <input
-                value={aiBusinessName}
-                onChange={(e) => setAiBusinessName(e.target.value)}
-                placeholder="Business name"
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10 text-white outline-none focus:border-indigo-400"
-              />
-
               <textarea
-                value={aiShortDescription}
-                onChange={(e) => setAiShortDescription(e.target.value)}
-                placeholder="What do you do? Who is it for?"
-                rows={3}
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10 text-white outline-none resize-none focus:border-indigo-400"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Example: I run a car dealership in Oslo and want more booking requests."
+                rows={4}
+                className="w-full rounded-2xl px-5 py-4 bg-black/40
+                           border border-white/10 text-white outline-none
+                           resize-none focus:border-indigo-400"
               />
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  value={aiPrimaryGoal}
-                  onChange={(e) => setAiPrimaryGoal(e.target.value)}
-                  placeholder="Primary goal (leads, bookings, sales)"
-                  className="rounded-xl px-5 py-4 bg-black/40 border border-white/10 text-white outline-none focus:border-indigo-400"
-                />
-
-                <input
-                  value={aiCity}
-                  onChange={(e) => setAiCity(e.target.value)}
-                  placeholder="City (optional)"
-                  className="rounded-xl px-5 py-4 bg-black/40 border border-white/10 text-white outline-none focus:border-indigo-400"
-                />
-              </div>
-
+              {/* USERNAME */}
               <div>
                 <input
                   value={slug}
@@ -246,12 +238,28 @@ export default function DashboardPage() {
                 />
                 <div className="mt-2 text-xs text-white/50">
                   Live URL:{" "}
-                  <span
-                    className={slugValid ? "text-white" : "text-red-300"}
-                  >
+                  <span className={slugValid ? "text-white" : "text-red-300"}>
                     /r/{cleanedSlug || "your-name"}
                   </span>
                 </div>
+              </div>
+
+              {/* TEMPLATE (OPTIONAL) */}
+              <div className="flex gap-3">
+                {(["business", "restaurant"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTemplate(t)}
+                    className={cx(
+                      "flex-1 py-3 rounded-xl border font-medium transition",
+                      selectedTemplate === t
+                        ? "bg-white text-black border-white"
+                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                    )}
+                  >
+                    {t === "business" ? "Business" : "Restaurant"}
+                  </button>
+                ))}
               </div>
 
               <button

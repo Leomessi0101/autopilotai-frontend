@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { AIStructure } from "./aiStructure";
 
 /* ======================================================
@@ -26,13 +26,7 @@ function cx(...classes: (string | false | undefined | null)[]) {
    AUTOSAVE
 ====================================================== */
 
-function useAutosave(username: string, content: any, enabled: boolean) {
-  const latest = useRef(content);
-
-  useEffect(() => {
-    latest.current = content;
-  }, [content]);
-
+function useAutosave(username: string, enabled: boolean) {
   async function save(updated: any) {
     if (!enabled) return;
 
@@ -91,14 +85,12 @@ function EditableText({
 ====================================================== */
 
 function Hero({
-  structure,
   content,
-  onSave,
+  onUpdate,
   editMode,
 }: {
-  structure: AIStructure;
   content: any;
-  onSave: (c: any) => void;
+  onUpdate: (c: any) => void;
   editMode: boolean;
 }) {
   return (
@@ -108,7 +100,7 @@ function Hero({
         editMode={editMode}
         className="text-5xl font-bold mb-4"
         onSave={(v) =>
-          onSave({
+          onUpdate({
             ...content,
             hero: { ...content.hero, headline: v },
           })
@@ -120,7 +112,7 @@ function Hero({
         editMode={editMode}
         className="text-lg opacity-80 mb-6"
         onSave={(v) =>
-          onSave({
+          onUpdate({
             ...content,
             hero: { ...content.hero, subheadline: v },
           })
@@ -140,16 +132,14 @@ function Hero({
 
 function Services({
   content,
-  onSave,
+  onUpdate,
   editMode,
 }: {
   content: any;
-  onSave: (c: any) => void;
+  onUpdate: (c: any) => void;
   editMode: boolean;
 }) {
-  const services = Array.isArray(content.services)
-    ? content.services
-    : [];
+  const services = Array.isArray(content.services) ? content.services : [];
 
   if (!services.length) return null;
 
@@ -167,7 +157,7 @@ function Services({
               onSave={(v) => {
                 const next = [...services];
                 next[i] = { ...next[i], title: v };
-                onSave({ ...content, services: next });
+                onUpdate({ ...content, services: next });
               }}
             />
             <EditableText
@@ -177,7 +167,7 @@ function Services({
               onSave={(v) => {
                 const next = [...services];
                 next[i] = { ...next[i], description: v };
-                onSave({ ...content, services: next });
+                onUpdate({ ...content, services: next });
               }}
             />
           </div>
@@ -193,11 +183,11 @@ function Services({
 
 function CTA({
   content,
-  onSave,
+  onUpdate,
   editMode,
 }: {
   content: any;
-  onSave: (c: any) => void;
+  onUpdate: (c: any) => void;
   editMode: boolean;
 }) {
   return (
@@ -207,7 +197,7 @@ function CTA({
         editMode={editMode}
         className="text-3xl font-bold mb-4"
         onSave={(v) =>
-          onSave({
+          onUpdate({
             ...content,
             cta: { ...content.cta, headline: v },
           })
@@ -231,9 +221,16 @@ export default function AIWebsiteRenderer({
   content,
   editMode,
 }: Props) {
-  const save = useAutosave(username, content, editMode);
+  const [localContent, setLocalContent] = useState<any>(content);
+  const save = useAutosave(username, editMode);
+
+  // keep in sync if backend content changes
+  useEffect(() => {
+    setLocalContent(content);
+  }, [content]);
 
   function update(next: any) {
+    setLocalContent(next); // 🔥 THIS WAS MISSING
     save(next);
   }
 
@@ -246,21 +243,20 @@ export default function AIWebsiteRenderer({
       )}
 
       <Hero
-        structure={structure}
-        content={content}
-        onSave={update}
+        content={localContent}
+        onUpdate={update}
         editMode={editMode}
       />
 
       <Services
-        content={content}
-        onSave={update}
+        content={localContent}
+        onUpdate={update}
         editMode={editMode}
       />
 
       <CTA
-        content={content}
-        onSave={update}
+        content={localContent}
+        onUpdate={update}
         editMode={editMode}
       />
 
