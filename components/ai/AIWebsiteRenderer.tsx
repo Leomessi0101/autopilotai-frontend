@@ -229,6 +229,81 @@ function CTA({
    MAIN
 ====================================================== */
 
+/* ======================================================
+   AI SUGGESTIONS PANEL
+====================================================== */
+
+function AISuggestions({
+  todos,
+}: {
+  todos: string[];
+}) {
+  if (!Array.isArray(todos) || todos.length === 0) return null;
+
+  return (
+    <div className="fixed bottom-6 right-6 w-[320px] rounded-2xl border border-black/10 bg-white shadow-xl p-4 z-50">
+      <div className="mb-3 text-sm font-semibold text-gray-900">
+        Suggestions
+      </div>
+
+      <ul className="space-y-2 text-sm text-gray-700">
+        {todos.map((t, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="mt-[2px] h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
+            <span>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ======================================================
+   AI TODO FILTERING (SMART)
+====================================================== */
+
+function filterTodos(todos: string[], content: any): string[] {
+  if (!Array.isArray(todos)) return [];
+
+  return todos.filter((t) => {
+    const text = t.toLowerCase();
+
+    // Contact info
+    if (text.includes("phone") || text.includes("email")) {
+      return !(
+        content?.contact?.phone ||
+        content?.contact?.email
+      );
+    }
+
+    // Address / city
+    if (text.includes("address") || text.includes("city")) {
+      return !(
+        content?.contact?.address ||
+        content?.location?.address ||
+        content?.location?.city
+      );
+    }
+
+    // Opening hours
+    if (text.includes("hours")) {
+      return !content?.hours;
+    }
+
+    // Menu items
+    if (text.includes("menu")) {
+      return !(
+        Array.isArray(content?.menu) &&
+        content.menu.length > 0
+      );
+    }
+
+    // Default: keep todo
+    return true;
+  });
+}
+
+
 export default function AIWebsiteRenderer({
   username,
   structure,
@@ -295,6 +370,12 @@ export default function AIWebsiteRenderer({
       <footer className="py-10 text-center opacity-60">
         © {new Date().getFullYear()} {username}
       </footer>
+    
+    {editMode && (
+  <AISuggestions
+   todos={filterTodos(localContent?.ai_todos || [], localContent)}
+  />
+)}
     </main>
   );
 }
