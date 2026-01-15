@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { AIStructure } from "./aiStructure";
 
 /* ======================================================
@@ -20,6 +20,17 @@ type Props = {
 
 function cx(...classes: (string | false | undefined | null)[]) {
   return classes.filter(Boolean).join(" ");
+}
+
+function getMissingFields(content: any) {
+  const missing: string[] = [];
+
+  if (!content?.contact?.phone) missing.push("phone number");
+  if (!content?.contact?.email) missing.push("email address");
+  if (!content?.location?.city && !content?.contact?.address)
+    missing.push("address or city");
+
+  return missing;
 }
 
 /* ======================================================
@@ -71,7 +82,8 @@ function EditableText({
       suppressContentEditableWarning
       onBlur={(e) => onSave(e.currentTarget.innerText)}
       className={cx(
-        editMode && "outline outline-1 outline-dashed outline-indigo-400/40",
+        editMode &&
+          "outline outline-1 outline-dashed outline-indigo-400/40",
         className
       )}
     >
@@ -120,7 +132,7 @@ function Hero({
       />
 
       <button className="px-6 py-3 rounded bg-black text-white">
-        Get started
+        {content.hero?.cta_text || "Get started"}
       </button>
     </section>
   );
@@ -139,7 +151,9 @@ function Services({
   onUpdate: (c: any) => void;
   editMode: boolean;
 }) {
-  const services = Array.isArray(content.services) ? content.services : [];
+  const services = Array.isArray(content.services)
+    ? content.services
+    : [];
 
   if (!services.length) return null;
 
@@ -230,15 +244,33 @@ export default function AIWebsiteRenderer({
   }, [content]);
 
   function update(next: any) {
-    setLocalContent(next); // 🔥 THIS WAS MISSING
+    setLocalContent(next);
     save(next);
   }
+
+  const missingFields = getMissingFields(localContent);
+  const showAIHint = editMode && missingFields.length > 0;
 
   return (
     <main className="min-h-screen bg-white text-black">
       {editMode && (
         <div className="fixed top-4 right-4 bg-indigo-500 text-white px-3 py-1 rounded text-xs z-50">
           Edit mode (auto-save)
+        </div>
+      )}
+
+      {showAIHint && (
+        <div className="max-w-3xl mx-auto mt-6 px-6">
+          <div className="rounded-xl border border-indigo-400/30 bg-indigo-50 text-indigo-900 px-5 py-4">
+            <div className="font-semibold mb-1">AI suggestion</div>
+            <div className="text-sm">
+              To improve conversions, add your{" "}
+              <span className="font-medium">
+                {missingFields.join(", ")}
+              </span>{" "}
+              below.
+            </div>
+          </div>
         </div>
       )}
 
