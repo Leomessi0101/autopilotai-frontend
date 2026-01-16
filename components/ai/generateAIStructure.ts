@@ -1,54 +1,20 @@
 import type { AIStructure } from "./aiStructure";
 
 /**
- * This is the deterministic "AI brain".
- * Later we can swap this with GPT.
+ * FALLBACK STRUCTURE ONLY.
+ * Backend AI is the source of truth.
+ * This is used only if structure is missing.
  */
-export function generateAIStructure(input: {
-  businessType: "local" | "online" | "personal";
-  goal: "leads" | "branding" | "sales";
-}): AIStructure {
-  // HERO SELECTION
-  const heroVariant: AIStructure["hero"]["variant"] =
-    input.goal === "branding"
-      ? "image_background"
-      : input.goal === "sales"
-      ? "split_image"
-      : "centered_text";
-
-  // SECTION ORDER
-  let sections: AIStructure["sections"] = [];
-
-  if (input.businessType === "local") {
-    sections = ["trust", "services", "process", "testimonial", "cta"];
-  }
-
-  if (input.businessType === "online") {
-    sections = ["about", "services", "cta"];
-  }
-
-  if (input.businessType === "personal") {
-    sections = ["about", "testimonial", "cta"];
-  }
-
-  // THEME
-  const theme: AIStructure["theme"] =
-    input.goal === "branding"
-      ? {
-          palette: "dark",
-          accent: "indigo",
-        }
-      : {
-          palette: "light",
-          accent: "emerald",
-        };
-
+export function generateAIStructureFallback(): AIStructure {
   return {
     hero: {
-      variant: heroVariant,
+      variant: "centered_text",
     },
-    sections,
-    theme,
+    sections: ["about", "services", "cta"],
+    theme: {
+      palette: "light",
+      accent: "indigo",
+    },
     footer: {
       variant: "minimal",
     },
