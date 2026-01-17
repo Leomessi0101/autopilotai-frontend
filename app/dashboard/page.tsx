@@ -54,7 +54,10 @@ export default function DashboardPage() {
   ========================= */
 
   const [username, setUsername] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [goal, setGoal] = useState("");
+  const [whatYouDo, setWhatYouDo] = useState("");
+  const [location, setLocation] = useState("");
   const [creating, setCreating] = useState(false);
 
   const cleanedUsername = useMemo(
@@ -120,10 +123,10 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!prompt.trim()) {
+    if (!businessType || !goal || !whatYouDo.trim()) {
       setToast({
         type: "err",
-        msg: "Describe your business in one sentence",
+        msg: "Please fill out business type, goal, and what you do",
       });
       setTimeout(() => setToast(null), 2500);
       return;
@@ -132,11 +135,18 @@ export default function DashboardPage() {
     setCreating(true);
     setToast(null);
 
+    const aiPrompt = `
+Business type: ${businessType}
+Primary goal: ${goal}
+What we do: ${whatYouDo}
+${location ? `Location: ${location}` : ""}
+    `.trim();
+
     try {
       const res = await api.post("/api/dashboard/websites/create", {
         username: cleanedUsername,
-        prompt: prompt.trim(),
-        ai_prompt: prompt.trim(),
+        prompt: aiPrompt,
+        ai_prompt: aiPrompt,
       });
 
       const u = res.data.username || cleanedUsername;
@@ -186,30 +196,19 @@ export default function DashboardPage() {
       )}
 
       <main className="max-w-3xl mx-auto px-6 py-24">
-        {/* =========================
-           EXISTING WEBSITE VIEW
-        ========================= */}
         {existingSite ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10 shadow-[0_60px_160px_rgba(0,0,0,.7)]">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10">
             <h1 className="text-4xl font-semibold">Your website</h1>
-
             <p className="mt-4 text-lg text-gray-300">
               Your site is live and ready to edit.
             </p>
 
-            <div className="mt-8 rounded-xl bg-black/40 border border-white/10 px-5 py-4">
-              <div className="text-sm text-white/60">Live URL</div>
-              <div className="mt-1 text-lg text-white">
-                autopilotai.dev/r/{existingSite.username}
-              </div>
-            </div>
-
-            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <div className="mt-8 flex gap-4">
               <button
                 onClick={() =>
                   router.push(`/r/${existingSite.username}?edit=1`)
                 }
-                className="flex-1 py-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 font-semibold transition"
+                className="flex-1 py-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 font-semibold"
               >
                 Edit website
               </button>
@@ -217,75 +216,80 @@ export default function DashboardPage() {
               <a
                 href={`/r/${existingSite.username}`}
                 target="_blank"
-                className="flex-1 py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 font-semibold text-center transition"
+                className="flex-1 py-4 rounded-xl border border-white/10 bg-white/5 text-center font-semibold"
               >
                 View live
               </a>
             </div>
           </div>
         ) : (
-          /* =========================
-             CREATE WEBSITE VIEW
-          ========================= */
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10 shadow-[0_60px_160px_rgba(0,0,0,.7)]">
-            <div className="mb-10">
-              <h1 className="text-4xl md:text-5xl font-semibold leading-tight">
-                Create your website with AI
-              </h1>
-              <p className="mt-4 text-lg text-gray-300">
-                Describe your business. We generate the website.
-              </p>
-            </div>
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10">
+            <h1 className="text-4xl font-semibold mb-6">
+              Create your website with AI
+            </h1>
 
-            <div className="mb-6">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Example: I run a car dealership in Oslo selling used cars and financing"
-                rows={4}
-                className="w-full rounded-2xl px-5 py-4 bg-black/40 border border-white/10 text-white outline-none resize-none focus:border-indigo-400"
+            {/* Guided inputs */}
+            <div className="grid gap-4 mb-6">
+              <select
+                value={businessType}
+                onChange={(e) => setBusinessType(e.target.value)}
+                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
+              >
+                <option value="">Business type</option>
+                <option>Local service</option>
+                <option>Restaurant</option>
+                <option>Agency</option>
+                <option>Consultant / Coach</option>
+                <option>Online business</option>
+              </select>
+
+              <select
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
+              >
+                <option value="">Primary goal</option>
+                <option>Get leads</option>
+                <option>Get bookings</option>
+                <option>Get quote requests</option>
+                <option>Drive visitors to location</option>
+              </select>
+
+              <input
+                value={whatYouDo}
+                onChange={(e) => setWhatYouDo(e.target.value)}
+                placeholder="What do you do? (one sentence)"
+                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
+              />
+
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Location (optional)"
+                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-8">
-              <div>
-                <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="website-name"
-                  className={cx(
-                    "w-full rounded-xl px-5 py-4 bg-black/40 border text-white outline-none",
-                    usernameValid
-                      ? "border-white/10 focus:border-indigo-400"
-                      : "border-red-500/40"
-                  )}
-                />
-                <div className="mt-2 text-xs text-white/50">
-                  URL:{" "}
-                  <span
-                    className={usernameValid ? "text-white" : "text-red-300"}
-                  >
-                    autopilotai.dev/r/{cleanedUsername || "your-name"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="rounded-xl px-5 py-4 bg-black/20 border border-white/10 text-white/50 flex items-center">
-                Connect your domain
-                <span className="ml-2 text-xs opacity-60">
-                  (coming soon)
-                </span>
-              </div>
-            </div>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="website-name"
+              className={cx(
+                "w-full rounded-xl px-5 py-4 bg-black/40 border mb-6",
+                usernameValid
+                  ? "border-white/10"
+                  : "border-red-500/40"
+              )}
+            />
 
             <button
               onClick={generateWebsite}
               disabled={creating}
               className={cx(
-                "w-full py-4 rounded-xl font-semibold transition",
+                "w-full py-4 rounded-xl font-semibold",
                 creating
-                  ? "bg-white/60 text-black cursor-not-allowed"
-                  : "bg-indigo-500 hover:bg-indigo-400 text-white"
+                  ? "bg-white/60 text-black"
+                  : "bg-indigo-500 hover:bg-indigo-400"
               )}
             >
               {creating ? "Generating website…" : "Generate website"}
