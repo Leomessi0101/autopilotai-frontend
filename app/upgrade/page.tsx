@@ -1,16 +1,30 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { ArrowRight, Check } from "lucide-react";
 
+/* =========================
+   TYPES
+========================= */
+type Plan = "free" | "starter" | "pro";
+
+interface User {
+  name: string;
+  subscription_plan: Plan;
+}
+
+/* =========================
+   PAGE
+========================= */
 export default function UpgradePage() {
   const router = useRouter();
 
-  const [name, setName] = useState("U");
-  const [currentPlan, setCurrentPlan] = useState<string>("Free");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -21,218 +35,195 @@ export default function UpgradePage() {
 
     api
       .get("/api/auth/me")
-      .then((res) => {
-        if (res.data?.name)
-          setName(res.data.name.charAt(0).toUpperCase());
-
-        if (res.data?.subscription) {
-          setCurrentPlan(
-            res.data.subscription.charAt(0).toUpperCase() +
-              res.data.subscription.slice(1)
-          );
-        }
-      })
+      .then((res) => setUser(res.data))
       .catch(() => {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
-      });
+      })
+      .finally(() => setLoading(false));
   }, [router]);
 
-  const handleSubscribe = async (plan: "basic" | "growth" | "pro") => {
-    if (currentPlan.toLowerCase() === plan) return;
-
+  const subscribe = async (plan: "starter" | "pro") => {
     try {
       const res = await api.post(
         `/api/stripe/create-checkout-session?plan=${plan}`
       );
       window.location.href = res.data.checkout_url;
     } catch {
-      alert("Something went wrong. Please try again.");
+      alert("Could not start checkout. Try again.");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
-
-      {/* Background Glow */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] 
-          bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] 
-          from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
-        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] 
-          bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] 
-          from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-[#05070d] text-white flex items-center justify-center">
+        Loading…
       </div>
+    );
+  }
 
-      <DashboardNavbar name={name} subscriptionPlan={currentPlan} />
+  const currentPlan = user.subscription_plan ?? "free";
+  const nameInitial = user.name?.charAt(0)?.toUpperCase() || "U";
 
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+  return (
+    <div className="min-h-screen bg-[#05070d] text-white">
+      <DashboardNavbar
+        name={nameInitial}
+        subscriptionPlan={currentPlan}
+      />
 
-        {/* Header */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
+      <main className="max-w-6xl mx-auto px-6 py-16">
+        {/* HEADER */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <h1 className="text-5xl md:text-6xl font-light">
-            Upgrade Your Plan
+          <h1 className="text-5xl font-black tracking-tight">
+            Publish your website
           </h1>
-
-          <p className="mt-6 text-xl text-gray-300 max-w-3xl mx-auto">
-            Unlock unlimited generations, priority processing, and advanced features.
+          <p className="mt-6 text-xl text-gray-300">
+            Upgrade to make your site live. Cancel anytime.
           </p>
-        </motion.section>
+        </motion.div>
 
-        {/* Pricing Cards */}
-        <section className="grid gap-10 md:grid-cols-3 mb-20">
-
-          {/* BASIC */}
+        {/* PLANS */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {/* FREE */}
           <PlanCard
-            title="Basic"
-            price="$19"
-            month
-            active={currentPlan === "Basic"}
+            title="Free"
+            price="$0"
+            subtitle="Draft mode"
+            active={currentPlan === "free"}
             features={[
-              "Live website included",
-              "Up to 30 generations per month",
-              "Core content & ad tools",
-              "Email support",
+              "Generate a full website",
+              "Edit content and layout",
+              "Preview in draft mode",
+              "Publishing disabled",
             ]}
-            onClick={() => handleSubscribe("basic")}
+            disabled
+            cta="Current plan"
           />
 
-          {/* GROWTH */}
+          {/* STARTER */}
           <PlanCard
-            title="Growth"
-            price="$49"
-            month
-            recommended
-            active={currentPlan === "Growth"}
+            title="Starter"
+            price="$10"
+            subtitle="Make your site live"
+            active={currentPlan === "starter"}
             features={[
-              "Live website included",
-              "Unlimited generations",
-              "Priority processing",
-              "Advanced features",
-              "Priority support",
+              "Publish 1 website",
+              "1 page",
+              "Custom domain support",
+              "Cancel anytime",
             ]}
-            onClick={() => handleSubscribe("growth")}
+            cta={
+              currentPlan === "starter"
+                ? "Current plan"
+                : "Publish website"
+            }
+            onClick={() => subscribe("starter")}
           />
 
           {/* PRO */}
           <PlanCard
             title="Pro"
-            price="$99"
-            month
-            active={currentPlan === "Pro"}
+            price="$20"
+            subtitle="More pages"
+            active={currentPlan === "pro"}
             features={[
-              "Live website included",
-              "Everything in Growth",
-              "AI image generation",
-              "Long-form content",
-              "Advanced automation",
+              "Publish 1 website",
+              "Up to 3 pages",
+              "Custom domain support",
+              "Priority updates",
             ]}
-            onClick={() => handleSubscribe("pro")}
+            cta={
+              currentPlan === "pro"
+                ? "Current plan"
+                : "Upgrade to Pro"
+            }
+            onClick={() => subscribe("pro")}
           />
         </section>
 
-        {/* Trust */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-center mb-20"
-        >
-          <p className="text-lg text-gray-400">
-            Cancel or change plans anytime from Billing. No contracts.
-          </p>
-        </motion.section>
-
-        {/* Footer */}
-        <footer className="text-center py-12 border-t border-white/10 text-gray-400">
-          Questions? Email{" "}
-          <a
-            href="mailto:contact@autopilotai.dev"
-            className="text-[#6d8ce8] hover:underline"
-          >
-            contact@autopilotai.dev
-          </a>
-        </footer>
+        {/* FOOTER NOTE */}
+        <div className="mt-20 text-center text-gray-400">
+          You can manage or cancel your subscription anytime from Billing.
+        </div>
       </main>
     </div>
   );
 }
 
-/* ============ PLAN CARD COMPONENT ============ */
+/* =========================
+   COMPONENTS
+========================= */
 function PlanCard({
   title,
   price,
-  month,
+  subtitle,
   features,
-  recommended,
+  cta,
   active,
+  disabled,
   onClick,
 }: {
   title: string;
   price: string;
-  month?: boolean;
+  subtitle: string;
   features: string[];
-  recommended?: boolean;
+  cta: string;
   active?: boolean;
-  onClick: () => void;
+  disabled?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      className={`rounded-2xl border 
-        ${active ? "border-[#6d8ce8]" : "border-white/10"} 
-        bg-white/5 backdrop-blur-xl 
-        p-10 shadow-[0_40px_120px_rgba(0,0,0,.55)] relative`}
+      transition={{ duration: 0.6 }}
+      className={`rounded-3xl border p-10 bg-white/5 backdrop-blur-xl
+        ${
+          active
+            ? "border-[#6d8ce8]"
+            : "border-white/10"
+        }`}
     >
-      {active && (
-        <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 
-          bg-[#6d8ce8] text-white text-sm font-medium rounded-full">
-          Current Plan
-        </span>
-      )}
+      <h3 className="text-2xl font-bold">{title}</h3>
+      <p className="mt-1 text-gray-400">{subtitle}</p>
 
-      {recommended && (
-        <span className="absolute -top-10 right-4 px-4 py-1 
-          bg-teal-600 text-white text-sm font-medium rounded-full">
-          Recommended
-        </span>
-      )}
+      <div className="mt-6 flex items-end gap-2">
+        <span className="text-5xl font-black">{price}</span>
+        <span className="text-gray-400">/month</span>
+      </div>
 
-      <h3 className="text-2xl font-semibold mb-4">{title}</h3>
-
-      <p className="text-4xl font-light mb-2">
-        {price}
-        {month && <span className="text-lg text-gray-400">/month</span>}
-      </p>
-
-      <ul className="space-y-4 text-gray-300 mb-10">
-        {features.map((f, i) => (
-          <li key={i} className="flex items-start gap-4">
-            <div className="w-2 h-2 rounded-full bg-[#6d8ce8] mt-2" />
-            <span>{f}</span>
+      <ul className="mt-8 space-y-4">
+        {features.map((f) => (
+          <li key={f} className="flex gap-3 text-gray-200">
+            <Check className="w-5 h-5 text-[#6d8ce8] mt-0.5" />
+            {f}
           </li>
         ))}
       </ul>
 
-      <button
-        onClick={onClick}
-        disabled={active}
-        className={`w-full py-4 rounded-xl font-medium transition 
-          ${
-            active
-              ? "bg-white/10 text-gray-400 cursor-not-allowed"
-              : "bg-white text-[#1b2f54] hover:bg-gray-200"
-          }`}
-      >
-        {active ? "Current Plan" : `Choose ${title}`}
-      </button>
+      <div className="mt-10">
+        <button
+          onClick={onClick}
+          disabled={disabled || active}
+          className={`w-full py-4 rounded-xl text-lg font-medium flex items-center justify-center gap-2
+            ${
+              disabled || active
+                ? "bg-white/10 text-gray-400 cursor-not-allowed"
+                : "bg-[#345899] hover:bg-[#3f6bc5]"
+            }`}
+        >
+          {cta}
+          {!disabled && !active && (
+            <ArrowRight className="w-5 h-5" />
+          )}
+        </button>
+      </div>
     </motion.div>
   );
 }
