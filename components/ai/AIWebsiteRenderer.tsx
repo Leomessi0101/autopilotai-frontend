@@ -22,6 +22,10 @@ function cx(...classes: (string | false | undefined | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+function hasValue(v: any) {
+  return typeof v === "string" ? v.trim().length > 0 : v !== null && v !== undefined;
+}
+
 function safeStr(v: any, fallback: string) {
   const s = typeof v === "string" ? v : "";
   return s.trim() ? s : fallback;
@@ -524,69 +528,105 @@ function defaultSectionsFromStructure(structure: any): SectionKey[] {
   return mapped;
 }
 
+
 function buildDefaultContentIfMissing(content: any, username: string) {
   const next = ensureBuilderMeta({ ...(content || {}) });
 
-  const businessName = safeStr(next?.business_name, "") || username.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+  // ---- BUSINESS NAME ----
+  const businessName =
+    safeStr(next.business_name, "") ||
+    username
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+
   next.business_name = businessName;
 
+  // ---- HERO ----
   if (!next.hero || typeof next.hero !== "object") next.hero = {};
   next.hero.headline = safeStr(next.hero.headline, businessName);
-  next.hero.subheadline = safeStr(next.hero.subheadline, "A modern website that turns visitors into customers.");
+  next.hero.subheadline = safeStr(
+    next.hero.subheadline,
+    "A modern website that turns visitors into customers."
+  );
   next.hero.cta_text = safeStr(next.hero.cta_text, "Get started");
   if (!("image" in next.hero)) next.hero.image = null;
 
+  // ---- HIGHLIGHT ----
   if (!next.highlight || typeof next.highlight !== "object") next.highlight = {};
-  next.highlight.headline = safeStr(next.highlight.headline, "Make a strong first impression.");
-  next.highlight.subheadline = safeStr(next.highlight.subheadline, "Warm, trustworthy design — plus real copy your customers understand.");
+  next.highlight.headline = safeStr(
+    next.highlight.headline,
+    "Make a strong first impression."
+  );
+  next.highlight.subheadline = safeStr(
+    next.highlight.subheadline,
+    "Warm, trustworthy design — plus real copy your customers understand."
+  );
 
+  // ---- ABOUT ----
   if (!next.about || typeof next.about !== "object") next.about = {};
-  if (!Array.isArray(next.about.paragraphs)) next.about.paragraphs = [
-    "We focus on clarity, quality, and a great customer experience.",
-    "If you want a simple website that looks premium and drives action, you’re in the right place.",
-  ];
+  if (!Array.isArray(next.about.paragraphs)) {
+    next.about.paragraphs = [
+      `At ${businessName}, we focus on clarity, quality, and a great customer experience.`,
+      "If you want a simple website that looks premium and drives action, you’re in the right place.",
+    ];
+  }
   if (!("image" in next.about)) next.about.image = null;
 
-  // services default
+  // ---- SERVICES ----
   const sv = normalizeServices(next);
   if (!sv.length) {
-    const seeded = [
-      { title: "Quality service", description: "Reliable work with attention to detail.", image: null },
-      { title: "Fast response", description: "Quick turnaround and clear communication.", image: null },
-      { title: "Great experience", description: "Smooth process from start to finish.", image: null },
-    ];
-    Object.assign(next, writeServicesBack(next, seeded));
+    Object.assign(
+      next,
+      writeServicesBack(next, [
+        { title: "Quality service", description: "Reliable work with attention to detail.", image: null },
+        { title: "Fast response", description: "Quick turnaround and clear communication.", image: null },
+        { title: "Great experience", description: "Smooth process from start to finish.", image: null },
+      ])
+    );
   }
 
+  // ---- TRUST ----
   if (!next.trust || typeof next.trust !== "object") next.trust = {};
-  if (!Array.isArray(next.trust.items)) next.trust.items = ["Clear pricing", "Fast response", "Trusted quality"];
+  if (!Array.isArray(next.trust.items)) {
+    next.trust.items = ["Clear pricing", "Fast response", "Trusted quality"];
+  }
 
+  // ---- PROCESS ----
   if (!next.process || typeof next.process !== "object") next.process = {};
-  if (!Array.isArray(next.process.steps)) next.process.steps = [
-    { title: "Reach out", description: "Send a message with what you need." },
-    { title: "Get a plan", description: "We reply with a simple next step." },
-    { title: "Get results", description: "We deliver quickly — and you can edit anytime." },
-  ];
+  if (!Array.isArray(next.process.steps)) {
+    next.process.steps = [
+      { title: "Reach out", description: "Send a message with what you need." },
+      { title: "Get a plan", description: "We reply with a simple next step." },
+      { title: "Get results", description: "We deliver quickly — and you can edit anytime." },
+    ];
+  }
 
+  // ---- TESTIMONIAL ----
   if (!next.testimonial || typeof next.testimonial !== "object") next.testimonial = {};
   next.testimonial.quote = safeStr(next.testimonial.quote, "“Professional, fast, and easy to work with.”");
   next.testimonial.author = safeStr(next.testimonial.author, "Happy customer");
 
+  // ---- FAQ ----
   if (!next.faq || typeof next.faq !== "object") next.faq = {};
-  if (!Array.isArray(next.faq.items)) next.faq.items = [
-    { q: "How fast can I get started?", a: "Usually the same day. Send a message and we’ll take it from there." },
-    { q: "Can I change anything later?", a: "Yes — you can edit everything and it autosaves." },
-    { q: "Do I need images?", a: "No. But adding real photos increases trust and conversions." },
-  ];
+  if (!Array.isArray(next.faq.items)) {
+    next.faq.items = [
+      { q: "How fast can I get started?", a: "Usually the same day. Send a message and we’ll take it from there." },
+      { q: "Can I change anything later?", a: "Yes — you can edit everything and it autosaves." },
+      { q: "Do I need images?", a: "No. But adding real photos increases trust and conversions." },
+    ];
+  }
 
+  // ---- GALLERY ----
   if (!next.gallery || typeof next.gallery !== "object") next.gallery = {};
   if (!Array.isArray(next.gallery.images)) next.gallery.images = [];
 
+  // ---- CTA ----
   if (!next.cta || typeof next.cta !== "object") next.cta = {};
   next.cta.headline = safeStr(next.cta.headline, "Ready to take the next step?");
   next.cta.subheadline = safeStr(next.cta.subheadline, "Send a message — we respond quickly.");
-  next.cta.button = safeStr(next.cta.button, safeStr(next.hero.cta_text, "Get started"));
+  next.cta.button = safeStr(next.cta.button, next.hero.cta_text);
 
+  // ---- CONTACT ----
   if (!next.contact || typeof next.contact !== "object") next.contact = {};
   next.contact.phone = safeStr(next.contact.phone, "");
   next.contact.email = safeStr(next.contact.email, "");
@@ -595,6 +635,7 @@ function buildDefaultContentIfMissing(content: any, username: string) {
   if (!next.location || typeof next.location !== "object") next.location = {};
   next.location.city = safeStr(next.location.city, "");
 
+  // ---- AI TODOS ----
   if (!Array.isArray(next.ai_todos)) {
     next.ai_todos = [
       "Add your phone number and email in Contact.",
@@ -626,9 +667,13 @@ function SectionShell({
       <div className="max-w-6xl mx-auto px-6">
         {title ? (
           <div className="text-center">
-            <h2 className={cx("text-3xl md:text-4xl font-semibold", theme.heading)}>{title}</h2>
+            <h2 className={cx("text-3xl md:text-4xl font-semibold", theme.heading)}>
+              {title}
+            </h2>
             {subtitle ? (
-              <p className={cx("mt-3 text-base md:text-lg", theme.subtle)}>{subtitle}</p>
+              <p className={cx("mt-3 text-base md:text-lg", theme.subtle)}>
+                {subtitle}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -637,6 +682,9 @@ function SectionShell({
     </section>
   );
 }
+
+
+
 
 /* ======================================================
    HERO
