@@ -13,10 +13,11 @@ import BusinessTemplate from "@/components/templates/BusinessTemplate";
 
 type WebsiteResponse = {
   username: string;
-  content_json: string | Record<string, any>;
+  content_json?: string | Record<string, any>;
   ai_structure_json?: string | Record<string, any>;
   template?: "restaurant" | "business";
   user_id?: number;
+  suspended?: boolean;
 };
 
 /* ======================================================
@@ -66,6 +67,7 @@ export default function WebsitePage() {
 
         setData(res);
 
+        // Owner edit access (even if suspended)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
@@ -105,13 +107,47 @@ export default function WebsitePage() {
   }
 
   /* ======================================================
+     SUSPENDED (PUBLIC PAYWALL)
+  ====================================================== */
+
+  if (data.suspended && !canEdit) {
+    return (
+      <main className="min-h-screen bg-white text-black flex items-center justify-center">
+        <div className="max-w-md w-full px-6">
+          <div className="rounded-3xl border border-black/10 p-8 text-center shadow-sm">
+            <h1 className="text-2xl font-semibold">
+              This website is temporarily unavailable
+            </h1>
+            <p className="mt-3 text-sm text-black/70">
+              The owner’s subscription is inactive.
+            </p>
+
+            <div className="mt-6">
+              <a
+                href="/pricing"
+                className="inline-block px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold"
+              >
+                Reactivate subscription
+              </a>
+            </div>
+
+            <div className="mt-4 text-xs text-black/50">
+              Powered by AutopilotAI
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  /* ======================================================
      PARSE CONTENT
   ====================================================== */
 
   const content =
     typeof data.content_json === "string"
       ? JSON.parse(data.content_json)
-      : data.content_json;
+      : data.content_json || {};
 
   /* ======================================================
      PARSE AI STRUCTURE
@@ -142,7 +178,7 @@ export default function WebsitePage() {
     );
   }
 
-  // ✅ Restaurant fallback (now compatible)
+  // ✅ Restaurant fallback
   if (data.template === "restaurant") {
     return (
       <RestaurantTemplate

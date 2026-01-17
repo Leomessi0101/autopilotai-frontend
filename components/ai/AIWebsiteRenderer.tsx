@@ -1460,6 +1460,8 @@ function BuilderPanel({
 
   const present = new Set(sections.map((s) => s.key));
   const addable = allAddable.filter((k) => !present.has(k));
+  const isPro = true; // pages come later; this is a UI hook only
+
 
   return (
     <div className="fixed top-4 left-4 z-50 w-[340px] max-w-[92vw]">
@@ -1581,8 +1583,11 @@ function BuilderPanel({
                 </div>
               ) : null}
 
-              <div className="mt-4 text-[11px] text-black/50">
-                ✨ = regenerate section. You can edit anything after.
+              <div className="mt-4 space-y-1 text-[11px] text-black/50">
+                <div>✨ = regenerate section. You can edit anything after.</div>
+                <div>
+                  Multiple pages are available on the <span className="font-semibold">Pro</span> plan.
+                </div>
               </div>
             </div>
           </div>
@@ -1610,7 +1615,15 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
 
   const save = useAutosave(username, editMode);
 
+    const plan =
+    (structure as any)?.plan || {
+      name: "free",
+      max_pages: 1,
+      can_publish: false,
+    };
+
   const tone: Tone = (localContent?._builder?.tone as Tone) || "warm";
+
   const theme = useTheme(structure, tone);
 
   const defaultSectionOrder = useMemo(() => defaultSectionsFromStructure(structure), [structure]);
@@ -1773,6 +1786,38 @@ const setSections = useCallback(
           </div>
         </div>
       )}
+
+            {/* Free plan notice */}
+      {editMode && !plan.can_publish && (
+        <div className="max-w-6xl mx-auto mt-6 px-6">
+          <div
+            className={cx(
+              "rounded-3xl border px-6 py-5 flex items-center justify-between gap-4",
+              theme.outline,
+              theme.surface2
+            )}
+          >
+            <div>
+              <div className={cx("font-semibold", theme.heading)}>
+                Free plan — preview only
+              </div>
+              <div className={cx("text-sm mt-1", theme.subtle)}>
+                Upgrade to publish your site and connect a custom domain.
+              </div>
+            </div>
+            <a
+              href="/pricing"
+              className={cx(
+                "px-4 py-2 rounded-xl text-sm font-semibold text-white",
+                theme.accentSolid
+              )}
+            >
+              Upgrade
+            </a>
+          </div>
+        </div>
+      )}
+
 
       {/* Builder panel */}
       <BuilderPanel
