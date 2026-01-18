@@ -4,8 +4,6 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
-import RestaurantTemplate from "@/components/templates/RestaurantTemplate";
-import BusinessTemplate from "@/components/templates/BusinessTemplate";
 
 /* ======================================================
    TYPES
@@ -21,7 +19,7 @@ type WebsiteResponse = {
 };
 
 /* ======================================================
-   AUTH HELPERS (CLIENT-SIDE ONLY)
+   AUTH HELPERS
 ====================================================== */
 
 function getUserIdFromToken(token: string): number | null {
@@ -65,9 +63,10 @@ export default function WebsitePage() {
       .then((res: WebsiteResponse) => {
         if (cancelled) return;
 
+        console.log("🔍 RAW API RESPONSE:", res);
+
         setData(res);
 
-        // Owner edit access (even if suspended)
         if (editRequested && res.user_id) {
           const token = localStorage.getItem("autopilot_token");
           if (!token) return;
@@ -107,40 +106,6 @@ export default function WebsitePage() {
   }
 
   /* ======================================================
-     SUSPENDED (PUBLIC PAYWALL)
-  ====================================================== */
-
-  if (data.suspended && !canEdit) {
-    return (
-      <main className="min-h-screen bg-white text-black flex items-center justify-center">
-        <div className="max-w-md w-full px-6">
-          <div className="rounded-3xl border border-black/10 p-8 text-center shadow-sm">
-            <h1 className="text-2xl font-semibold">
-              This website is temporarily unavailable
-            </h1>
-            <p className="mt-3 text-sm text-black/70">
-              The owner’s subscription is inactive.
-            </p>
-
-            <div className="mt-6">
-              <a
-                href="/pricing"
-                className="inline-block px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold"
-              >
-                Reactivate subscription
-              </a>
-            </div>
-
-            <div className="mt-4 text-xs text-black/50">
-              Powered by AutopilotAI
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  /* ======================================================
      PARSE CONTENT
   ====================================================== */
 
@@ -148,6 +113,8 @@ export default function WebsitePage() {
     typeof data.content_json === "string"
       ? JSON.parse(data.content_json)
       : data.content_json || {};
+
+  console.log("🧠 CONTENT_JSON USED:", content);
 
   /* ======================================================
      PARSE AI STRUCTURE
@@ -160,50 +127,32 @@ export default function WebsitePage() {
         : data.ai_structure_json
       : null;
 
+  console.log("🧱 AI STRUCTURE USED:", aiStructure);
+
   const editMode = editRequested && canEdit;
 
   /* ======================================================
-     RENDER (AI → TEMPLATE FALLBACK)
+     HARD REQUIRE AI STRUCTURE
   ====================================================== */
 
-  // ✅ AI-rendered website (primary path)
-  if (aiStructure) {
+  if (!aiStructure) {
     return (
-      <AIWebsiteRenderer
-        username={username}
-        structure={aiStructure}
-        content={content}
-        editMode={editMode}
-      />
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        AI structure missing — generation failed
+      </main>
     );
   }
 
-  // ✅ Restaurant fallback
-  if (data.template === "restaurant") {
-    return (
-      <RestaurantTemplate
-        username={username}
-        content={content}
-        editMode={editMode}
-      />
-    );
-  }
+  /* ======================================================
+     AI RENDER (ONLY PATH)
+  ====================================================== */
 
-  // ✅ Business fallback
-  if (data.template === "business") {
-    return (
-      <BusinessTemplate
-        username={username}
-        content={content}
-        editMode={editMode}
-      />
-    );
-  }
-
-  // ❌ Safety net
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center">
-      Website configuration error
-    </main>
+    <AIWebsiteRenderer
+      username={username}
+      structure={aiStructure}
+      content={content}
+      editMode={editMode}
+    />
   );
 }
