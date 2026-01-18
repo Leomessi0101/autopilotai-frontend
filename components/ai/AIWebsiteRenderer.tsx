@@ -530,7 +530,7 @@ function defaultSectionsFromStructure(structure: any): SectionKey[] {
 
 
 function buildDefaultContentIfMissing(content: any, username: string) {
-  const next = ensureBuilderMeta({ ...(content || {}) });
+  const next = ensureBuilderMeta(content && Object.keys(content).length ? content : {});
 
   // ---- BUSINESS NAME ----
   const businessName =
@@ -1653,13 +1653,17 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
   const { toast, t } = useToast();
 
   const [localContent, setLocalContent] = useState<any>(() =>
-    buildDefaultContentIfMissing(content || {}, username)
+  content || {}
   );
+
 
   // Keep in sync if backend content changes
   useEffect(() => {
-    setLocalContent(buildDefaultContentIfMissing(content || {}, username));
-  }, [content, username]);
+  if (content) {
+    setLocalContent(content);
+  }
+}, [content]);
+
 
   const save = useAutosave(username, editMode);
 
