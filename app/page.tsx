@@ -44,8 +44,8 @@ const softSpring = { type: "spring", stiffness: 260, damping: 26 } as const;
 ========================= */
 const FAQS = [
   {
-    q: "Do I need to pick a template?",
-    a: "No. You describe your business — AutopilotAI infers the type and builds the layout for you.",
+    q: "Can i test it for free?",
+    a: "Yes. Free users can test but cannot publish, publishing is only for paid users.",
   },
   {
     q: "How fast is it?",
@@ -56,8 +56,8 @@ const FAQS = [
     a: "Yes. You can edit text inline and changes autosave. No complicated editors.",
   },
   {
-    q: "Is it only for restaurants?",
-    a: "No. AutopilotAI works for local businesses, creators, and more — it infers your business type from your description.",
+    q: "Do i need to have any skills?",
+    a: "No. AutopilotAI is made so anyone can make a website, simply describe your business and get a page.",
   },
   {
     q: "Can I connect my own domain?",
