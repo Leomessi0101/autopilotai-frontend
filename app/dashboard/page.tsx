@@ -54,16 +54,14 @@ export default function DashboardPage() {
   ========================= */
 
   const [username, setUsername] = useState("");
-  const [businessType, setBusinessType] = useState("");
-  const [goal, setGoal] = useState("");
-  const [whatYouDo, setWhatYouDo] = useState("");
-  const [location, setLocation] = useState("");
+  const [businessDescription, setBusinessDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   const cleanedUsername = useMemo(
     () => normalizeSlug(username),
     [username]
   );
+
   const usernameValid = useMemo(
     () => isValidSlug(cleanedUsername),
     [cleanedUsername]
@@ -110,7 +108,7 @@ export default function DashboardPage() {
   }, [router]);
 
   /* =========================
-     CREATE WEBSITE
+     CREATE WEBSITE (AI)
   ========================= */
 
   async function generateWebsite() {
@@ -123,10 +121,10 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!businessType || !goal || !whatYouDo.trim()) {
+    if (!businessDescription.trim()) {
       setToast({
         type: "err",
-        msg: "Please fill out business type, goal, and what you do",
+        msg: "Describe your business so the AI knows what to build",
       });
       setTimeout(() => setToast(null), 2500);
       return;
@@ -135,18 +133,10 @@ export default function DashboardPage() {
     setCreating(true);
     setToast(null);
 
-    const aiPrompt = `
-Business type: ${businessType}
-Primary goal: ${goal}
-What we do: ${whatYouDo}
-${location ? `Location: ${location}` : ""}
-    `.trim();
-
     try {
       const res = await api.post("/api/dashboard/websites/create", {
         username: cleanedUsername,
-        prompt: aiPrompt,
-        ai_prompt: aiPrompt,
+        prompt: businessDescription.trim(),
       });
 
       const u = res.data.username || cleanedUsername;
@@ -170,21 +160,21 @@ ${location ? `Location: ${location}` : ""}
 
   if (loadingSite) {
     return (
-      <div className="min-h-screen bg-[#05070d] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading dashboard…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#05070d] text-white">
+    <div className="min-h-screen bg-black text-white">
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
       {toast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
           <div
             className={cx(
-              "px-4 py-2 rounded-full text-sm font-semibold",
+              "px-4 py-2 rounded-full text-sm font-semibold backdrop-blur",
               toast.type === "ok"
                 ? "bg-white text-black"
                 : "bg-red-500/20 text-red-200 border border-red-500/30"
@@ -197,10 +187,10 @@ ${location ? `Location: ${location}` : ""}
 
       <main className="max-w-3xl mx-auto px-6 py-24">
         {existingSite ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10">
-            <h1 className="text-4xl font-semibold">Your website</h1>
-            <p className="mt-4 text-lg text-gray-300">
-              Your site is live and ready to edit.
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-neutral-900 to-black p-10">
+            <h1 className="text-4xl font-semibold">Your AI website</h1>
+            <p className="mt-4 text-lg text-gray-400">
+              Your website is live. You can edit everything — content, layout, tone.
             </p>
 
             <div className="mt-8 flex gap-4">
@@ -223,76 +213,48 @@ ${location ? `Location: ${location}` : ""}
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#020617] p-10">
-            <h1 className="text-4xl font-semibold mb-6">
-              Create your website with AI
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-neutral-900 to-black p-10">
+            <h1 className="text-4xl font-semibold mb-3">
+              Build a website with AI
             </h1>
+            <p className="text-gray-400 mb-8">
+              Describe your business in plain language. AutopilotAI writes the
+              content, designs the layout, and builds a real website you can edit.
+            </p>
 
-            {/* Guided inputs */}
-            <div className="grid gap-4 mb-6">
-              <select
-                value={businessType}
-                onChange={(e) => setBusinessType(e.target.value)}
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
-              >
-                <option value="">Business type</option>
-                <option>Local service</option>
-                <option>Restaurant</option>
-                <option>Agency</option>
-                <option>Consultant / Coach</option>
-                <option>Online business</option>
-              </select>
-
-              <select
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
-              >
-                <option value="">Primary goal</option>
-                <option>Get leads</option>
-                <option>Get bookings</option>
-                <option>Get quote requests</option>
-                <option>Drive visitors to location</option>
-              </select>
-
-              <input
-                value={whatYouDo}
-                onChange={(e) => setWhatYouDo(e.target.value)}
-                placeholder="What do you do? (one sentence)"
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
+            <div className="grid gap-4 mb-8">
+              <textarea
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value)}
+                rows={5}
+                placeholder="Example: I run a local basketball program for homeless youth in Oslo. We organize weekly training sessions, accept donations, and want people to volunteer or support us."
+                className="w-full rounded-2xl px-5 py-4 bg-black/60 border border-white/10 resize-none focus:outline-none focus:border-indigo-500"
               />
 
               <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Location (optional)"
-                className="w-full rounded-xl px-5 py-4 bg-black/40 border border-white/10"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="website-name"
+                className={cx(
+                  "w-full rounded-xl px-5 py-4 bg-black/60 border",
+                  usernameValid
+                    ? "border-white/10"
+                    : "border-red-500/40"
+                )}
               />
             </div>
-
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="website-name"
-              className={cx(
-                "w-full rounded-xl px-5 py-4 bg-black/40 border mb-6",
-                usernameValid
-                  ? "border-white/10"
-                  : "border-red-500/40"
-              )}
-            />
 
             <button
               onClick={generateWebsite}
               disabled={creating}
               className={cx(
-                "w-full py-4 rounded-xl font-semibold",
+                "w-full py-4 rounded-xl font-semibold transition",
                 creating
-                  ? "bg-white/60 text-black"
+                  ? "bg-white/70 text-black"
                   : "bg-indigo-500 hover:bg-indigo-400"
               )}
             >
-              {creating ? "Generating website…" : "Generate website"}
+              {creating ? "Generating website with AI…" : "Generate website"}
             </button>
           </div>
         )}
