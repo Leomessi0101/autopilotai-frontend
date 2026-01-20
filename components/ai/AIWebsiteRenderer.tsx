@@ -409,14 +409,27 @@ function ImageSlot({
    THEME (Palette + Accent + Tone)
 ====================================================== */
 
-function useTheme(structure: AIStructure, tone: Tone) {
-  const palette = structure?.theme?.palette || "light";
-  const accent = structure?.theme?.accent || "indigo";
+function useTheme(
+  structure: AIStructure,
+  tone: Tone,
+  editorView: "auto" | "light" | "dark"
+) {
+const paletteFromStructure =
+  structure?.theme?.palette === "dark" ? "dark" : "light";
+
+const palette =
+  editorView === "dark"
+    ? "dark"
+    : editorView === "light"
+    ? "light"
+    : paletteFromStructure;
+
+const accent = structure?.theme?.accent || "indigo";
 
   const accentMap: Record<string, { solid: string; soft: string; ring: string }> = {
     indigo: { solid: "bg-indigo-600 hover:bg-indigo-500", soft: "bg-indigo-500/10", ring: "ring-indigo-500/20" },
     emerald: { solid: "bg-emerald-600 hover:bg-emerald-500", soft: "bg-emerald-500/10", ring: "ring-emerald-500/20" },
-    orange: { solid: "bg-orange-500 hover:bg-orange-400", soft: "bg-orange-500/10", ring: "ring-orange-500/20" },
+    orange: { solid: "bg-orange-orange-500 hover:bg-orange-400", soft: "bg-orange-500/10", ring: "ring-orange-500/20" },
     neutral: { solid: "bg-black hover:bg-black/90", soft: "bg-black/5", ring: "ring-black/10" },
   };
   const a = accentMap[accent] || accentMap.indigo;
@@ -442,7 +455,7 @@ function useTheme(structure: AIStructure, tone: Tone) {
           chip: "bg-white text-black border-black/10",
         };
 
-  // Tone overlays (make it feel alive)
+  // Tone overlays (page-only background glow)
   const toneBg =
     tone === "warm"
       ? palette === "dark"
@@ -458,14 +471,47 @@ function useTheme(structure: AIStructure, tone: Tone) {
         : "bg-[radial-gradient(circle_at_25%_0%,rgba(16,185,129,.12),transparent_45%),radial-gradient(circle_at_75%_10%,rgba(249,115,22,.10),transparent_40%)]"
       : ""; // minimal
 
+  /**
+   * Editor UI Fix
+   * Many controls still use hardcoded Tailwind like bg-white / border-black/10.
+   * This wrapper class makes those controls look correct in dark mode WITHOUT rewriting 1966 lines.
+   */
+  const editorUiFix =
+    palette === "dark"
+      ? [
+          // Buttons / chips / small panels
+          "[&_button]:text-white",
+          "[&_button]:border-white/10",
+          "[&_button]:bg-white/5",
+          "[&_button:hover]:bg-white/10",
+          // Inputs
+          "[&_input]:bg-white/5",
+          "[&_input]:text-white",
+          "[&_input]:border-white/10",
+          // Links
+          "[&_a]:text-white",
+          // Common text utility classes you used
+          "[&_.text-black\\/50]:text-white/60",
+          "[&_.text-black\\/60]:text-white/70",
+          "[&_.text-black\\/80]:text-white/80",
+        ].join(" ")
+      : [
+          // In light mode, ensure things stay clean & consistent
+          "[&_button]:border-black/10",
+          "[&_button:hover]:bg-black/5",
+        ].join(" ");
+
   return {
     ...base,
     accentSolid: a.solid,
     accentSoft: a.soft,
     accentRing: a.ring,
     toneBg,
+    editorUiFix,
+    palette, // expose for UI if needed
   };
 }
+
 
 /* ======================================================
    SECTION REGISTRY
@@ -1489,6 +1535,8 @@ function BuilderPanel({
   setSections,
   tone,
   setTone,
+  editorView,
+  setEditorView,
   onRegenerate,
   theme,
 }: {
@@ -1497,9 +1545,12 @@ function BuilderPanel({
   setSections: (next: Array<{ key: SectionKey; enabled: boolean }>) => void;
   tone: Tone;
   setTone: (t: Tone) => void;
+  editorView: "auto" | "dark" | "light";
+  setEditorView: (v: "auto" | "dark" | "light") => void;
   onRegenerate: (key: SectionKey) => void;
   theme: any;
 }) {
+
   const [open, setOpen] = useState(true);
 
   if (!editMode) return null;
@@ -1529,6 +1580,29 @@ function BuilderPanel({
 
         {open && (
           <div className="px-4 pb-4">
+            {/* Editor appearance */}
+<div className="mt-2">
+  <div className={cx("text-xs font-semibold", theme.subtle)}>
+    Editor appearance
+  </div>
+
+  <div className="mt-2 grid grid-cols-3 gap-2">
+    {(["auto", "light", "dark"] as const).map((v) => (
+      <button
+        key={v}
+        className={cx(
+          "px-2 py-2 rounded-xl text-xs font-semibold border transition",
+          editorView === v
+            ? cx("text-white", theme.accentSolid, "border-transparent")
+            : "bg-white border-black/10 hover:bg-black/5"
+        )}
+        onClick={() => setEditorView(v)}
+      >
+        {v}
+      </button>
+    ))}
+  </div>
+</div>
             {/* Tone */}
             <div className="mt-2">
               <div className={cx("text-xs font-semibold", theme.subtle)}>Tone</div>
@@ -1676,7 +1750,11 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
 
   const tone: Tone = (localContent?._builder?.tone as Tone) || "warm";
 
-  const theme = useTheme(structure, tone);
+    // Editor-only view mode (does NOT affect the published site)
+  const editorView =
+  (localContent?._builder?.editorView as "auto" | "light" | "dark") || "auto";
+
+      const theme = useTheme(structure, tone, editorView);
 
   const defaultSectionOrder = useMemo(() => defaultSectionsFromStructure(structure), [structure]);
 
@@ -1750,6 +1828,16 @@ const setSections = useCallback(
     [localContent, save]
   );
 
+  const setEditorView = useCallback(
+  (next: "auto" | "light" | "dark") => {
+    const updated = ensureBuilderMeta(localContent);
+    updated._builder.editorView = next;
+    setLocalContent(updated);
+    save(updated);
+  },
+  [localContent, save]
+);
+
   const update = useCallback(
     (next: any) => {
       const fixed = buildDefaultContentIfMissing(next, username);
@@ -1811,7 +1899,7 @@ const setSections = useCallback(
   const enabledSectionKeys = useMemo(() => sections.filter((s) => s.enabled).map((s) => s.key), [sections]);
 
   return (
-    <main className={cx("min-h-screen", theme.page)}>
+    <main className={cx("min-h-screen", theme.page, theme.editorUiFix)}>
       {/* Toast */}
       {toast ? (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60]">
@@ -1878,6 +1966,8 @@ const setSections = useCallback(
         setSections={setSections}
         tone={tone}
         setTone={setTone}
+        editorView={editorView}
+        setEditorView={setEditorView}
         onRegenerate={(k) => regenerateSection(k)}
         theme={theme}
       />
