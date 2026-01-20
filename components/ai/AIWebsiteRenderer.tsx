@@ -709,7 +709,7 @@ function SectionShell({
   theme: any;
 }) {
   return (
-    <section className="py-16 md:py-20">
+    <section className={cx("py-16 md:py-20", theme.page)}>
       <div className="max-w-6xl mx-auto px-6">
         {title ? (
           <div className="text-center">
