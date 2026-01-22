@@ -1764,7 +1764,7 @@ useEffect(() => {
   const meta = localContent?._builder;
   const stored = meta?.sections;
 
-  if (Array.isArray(stored) && stored.length) {
+if (editMode && Array.isArray(stored) && stored.length) {
     const next: Array<{ key: SectionKey; enabled: boolean }> = stored
       .map((x: any) => ({
         key: String(x?.key || "").toLowerCase() as SectionKey,
