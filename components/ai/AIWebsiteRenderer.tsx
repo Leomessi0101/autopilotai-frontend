@@ -1754,10 +1754,28 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
 
   const defaultSectionOrder = useMemo(() => defaultSectionsFromStructure(structure), [structure]);
 
-  const [sections, setSectionsState] = useState<Array<{ key: SectionKey; enabled: boolean }>>(() => {
-    const initial = defaultSectionOrder.map((k) => ({ key: k, enabled: true }));
-    return initial;
-  });
+  const [sections, setSectionsState] = useState<
+  Array<{ key: SectionKey; enabled: boolean }>
+>([]);
+
+// initialize sections ONCE from AI structure
+useEffect(() => {
+  const aiSections = defaultSectionsFromStructure(structure);
+
+  const initial = aiSections.map((k) => ({
+    key: k,
+    enabled: true,
+  }));
+
+  // ensure contact always exists
+  if (!initial.some((s) => s.key === "contact")) {
+    initial.push({ key: "contact", enabled: true });
+  }
+
+  setSectionsState(initial);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [structure]);
+
 
 // initialize from content._builder.sections if present
 useEffect(() => {
