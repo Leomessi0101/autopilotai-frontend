@@ -1765,6 +1765,13 @@ useEffect(() => {
   const stored = meta?.sections;
 
 if (editMode && Array.isArray(stored) && stored.length) {
+  // Fallback: enable all AI sections by default
+const fallback = defaultSectionOrder.map((key) => ({
+  key,
+  enabled: true,
+}));
+
+setSectionsState(fallback);
     const next: Array<{ key: SectionKey; enabled: boolean }> = stored
       .map((x: any) => ({
         key: String(x?.key || "").toLowerCase() as SectionKey,
