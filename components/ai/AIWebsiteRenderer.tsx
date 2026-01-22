@@ -543,36 +543,32 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 };
 
 function defaultSectionsFromStructure(structure: any): SectionKey[] {
-  const base = safeArr<string>(structure?.sections).map((s) => String(s).toLowerCase());
-  const mapped: SectionKey[] = [];
-  for (const s of base) {
-    if (s === "about") mapped.push("about");
-    else if (s === "services") mapped.push("services");
-    else if (s === "trust") mapped.push("trust");
-    else if (s === "process") mapped.push("process");
-    else if (s === "testimonial") mapped.push("testimonial");
-    else if (s === "faq") mapped.push("faq");
-    else if (s === "cta") mapped.push("cta");
+  const base = safeArr<string>(structure?.sections)
+    .map((s) => String(s).toLowerCase())
+    .filter((s) =>
+      [
+        "highlight",
+        "about",
+        "services",
+        "trust",
+        "process",
+        "testimonial",
+        "faq",
+        "gallery",
+        "cta",
+        "contact",
+      ].includes(s)
+    ) as SectionKey[];
+
+  // 🔒 Safety: hero is always rendered separately
+  // 🔒 Safety: contact must exist (business requirement)
+  if (!base.includes("contact")) {
+    base.push("contact");
   }
 
-  // Always include warmth + proof + FAQ (so it feels like a real page)
-  const ensure = (k: SectionKey) => {
-    if (!mapped.includes(k)) mapped.push(k);
-  };
-
-  ensure("highlight");
-  ensure("trust");
-  ensure("process");
-  ensure("testimonial");
-  ensure("faq");
-  ensure("cta");
-  ensure("gallery");
-
-  // Always last
-  ensure("contact");
-
-  return mapped;
+  return base;
 }
+
 
 
 function buildDefaultContentIfMissing(content: any, username: string) {
