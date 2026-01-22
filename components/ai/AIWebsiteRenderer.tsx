@@ -1781,8 +1781,13 @@ useEffect(() => {
 useEffect(() => {
   const meta = localContent?._builder;
   const stored = meta?.sections;
+const normalizedStored =
+  Array.isArray(stored) && typeof stored[0] === "string"
+    ? stored.map((k: string) => ({ key: k, enabled: true }))
+    : stored;
 
-if (editMode && Array.isArray(stored) && stored.length) {
+
+if (Array.isArray(normalizedStored) && normalizedStored.length) {
   // Fallback: enable all AI sections by default
 const fallback = defaultSectionOrder.map((key) => ({
   key,
@@ -1790,7 +1795,7 @@ const fallback = defaultSectionOrder.map((key) => ({
 }));
 
 setSectionsState(fallback);
-    const next: Array<{ key: SectionKey; enabled: boolean }> = stored
+    const next: Array<{ key: SectionKey; enabled: boolean }> = normalizedStored
       .map((x: any) => ({
         key: String(x?.key || "").toLowerCase() as SectionKey,
         enabled: x?.enabled !== false,
