@@ -2,7 +2,7 @@ import React from "react";
 
 async function getRestaurant() {
   const res = await fetch(
-    "https://autopilotai-api.onrender.com/api/websites/restaurant/testrestaurant",
+    "https://autopilotai-api.onrender.com/api/restaurants/testrestaurant",
     { cache: "no-store" }
   );
 
