@@ -161,7 +161,7 @@ function useAutosave(username: string, enabled: boolean) {
     async (updated: any) => {
       if (!enabled) return;
       try {
-        await fetch(`${getApiBase()}/api/restaurants/${username}/save`, {
+        await fetch(`${getApiBase()}/api/websites/${username}/content`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
