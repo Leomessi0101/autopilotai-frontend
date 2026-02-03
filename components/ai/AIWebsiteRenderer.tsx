@@ -1757,6 +1757,8 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
     if (content) setLocalContent(content);
   }, [content]);
 
+  console.log("AUTOSAVE username =", username);
+
   const save = useAutosave(username, editMode);
 
   const plan =
