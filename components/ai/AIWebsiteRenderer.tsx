@@ -22,10 +22,6 @@ function cx(...classes: (string | false | undefined | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-function hasValue(v: any) {
-  return typeof v === "string" ? v.trim().length > 0 : v !== null && v !== undefined;
-}
-
 function safeStr(v: any, fallback: string) {
   const s = typeof v === "string" ? v : "";
   return s.trim() ? s : fallback;
@@ -101,7 +97,10 @@ function normalizeServices(content: any): Array<{ title: string; description: st
   return [];
 }
 
-function writeServicesBack(originalContent: any, normalized: Array<{ title: string; description: string; image?: string | null }>) {
+function writeServicesBack(
+  originalContent: any,
+  normalized: Array<{ title: string; description: string; image?: string | null }>
+) {
   // Prefer keeping whichever schema already exists.
   const hasArray = Array.isArray(originalContent?.services);
   const hasObjItems = Array.isArray(originalContent?.services?.items);
@@ -265,7 +264,6 @@ function ImageSlot({
   className?: string;
   heightClass?: string;
 }) {
-  const { t } = useToast(); // local instance is fine; slot used inside page too
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -414,22 +412,23 @@ function useTheme(
   tone: Tone,
   editorView: "auto" | "light" | "dark"
 ) {
-const paletteFromStructure =
-  structure?.theme?.palette === "dark" ? "dark" : "light";
+  const paletteFromStructure =
+    structure?.theme?.palette === "dark" ? "dark" : "light";
 
-const palette =
-  editorView === "dark"
-    ? "dark"
-    : editorView === "light"
-    ? "light"
-    : paletteFromStructure;
+  const palette =
+    editorView === "dark"
+      ? "dark"
+      : editorView === "light"
+      ? "light"
+      : paletteFromStructure;
 
-const accent = structure?.theme?.accent || "indigo";
+  const accent = structure?.theme?.accent || "indigo";
 
   const accentMap: Record<string, { solid: string; soft: string; ring: string }> = {
     indigo: { solid: "bg-indigo-600 hover:bg-indigo-500", soft: "bg-indigo-500/10", ring: "ring-indigo-500/20" },
     emerald: { solid: "bg-emerald-600 hover:bg-emerald-500", soft: "bg-emerald-500/10", ring: "ring-emerald-500/20" },
-    orange: { solid: "bg-orange-orange-500 hover:bg-orange-400", soft: "bg-orange-500/10", ring: "ring-orange-500/20" },
+    // ✅ FIXED (was "bg-orange-orange-500")
+    orange: { solid: "bg-orange-500 hover:bg-orange-400", soft: "bg-orange-500/10", ring: "ring-orange-500/20" },
     neutral: { solid: "bg-black hover:bg-black/90", soft: "bg-black/5", ring: "ring-black/10" },
   };
   const a = accentMap[accent] || accentMap.indigo;
@@ -455,7 +454,6 @@ const accent = structure?.theme?.accent || "indigo";
           chip: "bg-white text-black border-black/10",
         };
 
-  // Tone overlays (page-only background glow)
   const toneBg =
     tone === "warm"
       ? palette === "dark"
@@ -469,34 +467,24 @@ const accent = structure?.theme?.accent || "indigo";
       ? palette === "dark"
         ? "bg-[radial-gradient(circle_at_25%_0%,rgba(16,185,129,.18),transparent_45%),radial-gradient(circle_at_75%_10%,rgba(249,115,22,.16),transparent_40%)]"
         : "bg-[radial-gradient(circle_at_25%_0%,rgba(16,185,129,.12),transparent_45%),radial-gradient(circle_at_75%_10%,rgba(249,115,22,.10),transparent_40%)]"
-      : ""; // minimal
+      : "";
 
-  /**
-   * Editor UI Fix
-   * Many controls still use hardcoded Tailwind like bg-white / border-black/10.
-   * This wrapper class makes those controls look correct in dark mode WITHOUT rewriting 1966 lines.
-   */
   const editorUiFix =
     palette === "dark"
       ? [
-          // Buttons / chips / small panels
           "[&_button]:text-white",
           "[&_button]:border-white/10",
           "[&_button]:bg-white/5",
           "[&_button:hover]:bg-white/10",
-          // Inputs
           "[&_input]:bg-white/5",
           "[&_input]:text-white",
           "[&_input]:border-white/10",
-          // Links
           "[&_a]:text-white",
-          // Common text utility classes you used
           "[&_.text-black\\/50]:text-white/60",
           "[&_.text-black\\/60]:text-white/70",
           "[&_.text-black\\/80]:text-white/80",
         ].join(" ")
       : [
-          // In light mode, ensure things stay clean & consistent
           "[&_button]:border-black/10",
           "[&_button:hover]:bg-black/5",
         ].join(" ");
@@ -508,13 +496,12 @@ const accent = structure?.theme?.accent || "indigo";
     accentRing: a.ring,
     toneBg,
     editorUiFix,
-    palette, // expose for UI if needed
+    palette,
   };
 }
 
-
 /* ======================================================
-   SECTION REGISTRY
+   SECTION REGISTRY (NOW ACTUALLY INCLUDES "location")
 ====================================================== */
 
 type SectionKey =
@@ -527,7 +514,17 @@ type SectionKey =
   | "faq"
   | "gallery"
   | "cta"
-  | "contact";
+  | "contact"
+  | "location"
+  // Future-proof “universal world” keys (renderer will try generic rendering when content exists)
+  | "features"
+  | "pricing"
+  | "team"
+  | "portfolio"
+  | "events"
+  | "products"
+  | "menu"
+  | "hours";
 
 const SECTION_LABELS: Record<SectionKey, string> = {
   highlight: "Highlight",
@@ -540,41 +537,38 @@ const SECTION_LABELS: Record<SectionKey, string> = {
   gallery: "Gallery",
   cta: "Call to action",
   contact: "Contact",
+  location: "Location",
+  features: "Features",
+  pricing: "Pricing",
+  team: "Team",
+  portfolio: "Portfolio",
+  events: "Events",
+  products: "Products",
+  menu: "Menu",
+  hours: "Hours",
 };
 
 function defaultSectionsFromStructure(structure: any): SectionKey[] {
   const base = safeArr<string>(structure?.sections)
     .map((s) => String(s).toLowerCase())
     .filter((s) =>
-      [
-        "highlight",
-        "about",
-        "services",
-        "trust",
-        "process",
-        "testimonial",
-        "faq",
-        "gallery",
-        "cta",
-        "contact",
-      ].includes(s)
+      Object.keys(SECTION_LABELS).includes(s)
     ) as SectionKey[];
 
-  // 🔒 Safety: hero is always rendered separately
-  // 🔒 Safety: contact must exist (business requirement)
-  if (!base.includes("contact")) {
-    base.push("contact");
-  }
+  // hero is separate
+  // keep contact enforced because you said publishing requires it
+  if (!base.includes("contact")) base.push("contact");
 
   return base;
 }
 
-
+/* ======================================================
+   DEFAULT CONTENT BACKFILL (kept, but slightly safer)
+====================================================== */
 
 function buildDefaultContentIfMissing(content: any, username: string) {
   const next = ensureBuilderMeta(content && Object.keys(content).length ? content : {});
 
-  // ---- BUSINESS NAME ----
   const businessName =
     safeStr(next.business_name, "") ||
     username
@@ -583,7 +577,6 @@ function buildDefaultContentIfMissing(content: any, username: string) {
 
   next.business_name = businessName;
 
-  // ---- HERO ----
   if (!next.hero || typeof next.hero !== "object") next.hero = {};
   next.hero.headline = safeStr(next.hero.headline, businessName);
   next.hero.subheadline = safeStr(
@@ -593,18 +586,13 @@ function buildDefaultContentIfMissing(content: any, username: string) {
   next.hero.cta_text = safeStr(next.hero.cta_text, "Get started");
   if (!("image" in next.hero)) next.hero.image = null;
 
-  // ---- HIGHLIGHT ----
   if (!next.highlight || typeof next.highlight !== "object") next.highlight = {};
-  next.highlight.headline = safeStr(
-    next.highlight.headline,
-    "Make a strong first impression."
-  );
+  next.highlight.headline = safeStr(next.highlight.headline, "Make a strong first impression.");
   next.highlight.subheadline = safeStr(
     next.highlight.subheadline,
     "Warm, trustworthy design — plus real copy your customers understand."
   );
 
-  // ---- ABOUT ----
   if (!next.about || typeof next.about !== "object") next.about = {};
   if (!Array.isArray(next.about.paragraphs)) {
     next.about.paragraphs = [
@@ -614,7 +602,6 @@ function buildDefaultContentIfMissing(content: any, username: string) {
   }
   if (!("image" in next.about)) next.about.image = null;
 
-  // ---- SERVICES ----
   const sv = normalizeServices(next);
   if (!sv.length) {
     Object.assign(
@@ -627,13 +614,9 @@ function buildDefaultContentIfMissing(content: any, username: string) {
     );
   }
 
-  // ---- TRUST ----
   if (!next.trust || typeof next.trust !== "object") next.trust = {};
-  if (!Array.isArray(next.trust.items)) {
-    next.trust.items = ["Clear pricing", "Fast response", "Trusted quality"];
-  }
+  if (!Array.isArray(next.trust.items)) next.trust.items = ["Clear pricing", "Fast response", "Trusted quality"];
 
-  // ---- PROCESS ----
   if (!next.process || typeof next.process !== "object") next.process = {};
   if (!Array.isArray(next.process.steps)) {
     next.process.steps = [
@@ -643,12 +626,10 @@ function buildDefaultContentIfMissing(content: any, username: string) {
     ];
   }
 
-  // ---- TESTIMONIAL ----
   if (!next.testimonial || typeof next.testimonial !== "object") next.testimonial = {};
   next.testimonial.quote = safeStr(next.testimonial.quote, "“Professional, fast, and easy to work with.”");
   next.testimonial.author = safeStr(next.testimonial.author, "Happy customer");
 
-  // ---- FAQ ----
   if (!next.faq || typeof next.faq !== "object") next.faq = {};
   if (!Array.isArray(next.faq.items)) {
     next.faq.items = [
@@ -658,17 +639,14 @@ function buildDefaultContentIfMissing(content: any, username: string) {
     ];
   }
 
-  // ---- GALLERY ----
   if (!next.gallery || typeof next.gallery !== "object") next.gallery = {};
   if (!Array.isArray(next.gallery.images)) next.gallery.images = [];
 
-  // ---- CTA ----
   if (!next.cta || typeof next.cta !== "object") next.cta = {};
   next.cta.headline = safeStr(next.cta.headline, "Ready to take the next step?");
   next.cta.subheadline = safeStr(next.cta.subheadline, "Send a message — we respond quickly.");
   next.cta.button = safeStr(next.cta.button, next.hero.cta_text);
 
-  // ---- CONTACT ----
   if (!next.contact || typeof next.contact !== "object") next.contact = {};
   next.contact.phone = safeStr(next.contact.phone, "");
   next.contact.email = safeStr(next.contact.email, "");
@@ -677,7 +655,6 @@ function buildDefaultContentIfMissing(content: any, username: string) {
   if (!next.location || typeof next.location !== "object") next.location = {};
   next.location.city = safeStr(next.location.city, "");
 
-  // ---- AI TODOS ----
   if (!Array.isArray(next.ai_todos)) {
     next.ai_todos = [
       "Add your phone number and email in Contact.",
@@ -690,22 +667,60 @@ function buildDefaultContentIfMissing(content: any, username: string) {
 }
 
 /* ======================================================
-   LAYOUT SHELL
+   SCROLL HELPERS (CTA now does something)
+====================================================== */
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    return true;
+  }
+  return false;
+}
+
+function pickBestCtaTarget(enabled: SectionKey[], content: any, ctaText: string) {
+  const text = (ctaText || "").toLowerCase();
+
+  // If text hints something, prefer that
+  if (text.includes("menu") && enabled.includes("menu")) return "section-menu";
+  if ((text.includes("book") || text.includes("reserve") || text.includes("appointment")) && enabled.includes("contact")) return "section-contact";
+  if ((text.includes("quote") || text.includes("pricing") || text.includes("price")) && enabled.includes("pricing")) return "section-pricing";
+  if ((text.includes("event") || text.includes("schedule")) && enabled.includes("events")) return "section-events";
+
+  // Prefer actual existing structured info
+  if (enabled.includes("menu") && content?.menu) return "section-menu";
+  if (enabled.includes("pricing") && content?.pricing) return "section-pricing";
+  if (enabled.includes("products") && content?.products) return "section-products";
+  if (enabled.includes("portfolio") && content?.portfolio) return "section-portfolio";
+  if (enabled.includes("location")) return "section-location";
+
+  // Always fall back to contact (your business requirement)
+  if (enabled.includes("contact")) return "section-contact";
+
+  // fallback: first enabled section
+  return enabled.length ? `section-${enabled[0]}` : "section-contact";
+}
+
+/* ======================================================
+   LAYOUT SHELL (now supports ID anchors)
 ====================================================== */
 
 function SectionShell({
+  id,
   title,
   subtitle,
   children,
   theme,
 }: {
+  id?: string;
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
   theme: any;
 }) {
   return (
-    <section className={cx("py-16 md:py-20", theme.page)}>
+    <section id={id} className={cx("py-16 md:py-20", theme.page)}>
       <div className="max-w-6xl mx-auto px-6">
         {title ? (
           <div className="text-center">
@@ -725,9 +740,6 @@ function SectionShell({
   );
 }
 
-
-
-
 /* ======================================================
    HERO
 ====================================================== */
@@ -739,6 +751,7 @@ function Hero({
   onUpdate,
   editMode,
   theme,
+  enabledSections,
 }: {
   username: string;
   structure: AIStructure;
@@ -746,12 +759,18 @@ function Hero({
   onUpdate: (c: any) => void;
   editMode: boolean;
   theme: any;
+  enabledSections: SectionKey[];
 }) {
   const variant = structure?.hero?.variant || "centered_text";
   const headline = safeStr(content?.hero?.headline, content?.business_name || "Your Business");
   const subheadline = safeStr(content?.hero?.subheadline, "Short description of what you do.");
   const ctaText = safeStr(content?.hero?.cta_text, safeStr(content?.cta?.button, "Get started"));
   const heroImage = typeof content?.hero?.image === "string" ? content.hero.image : null;
+
+  const onCta = () => {
+    const target = pickBestCtaTarget(enabledSections, content, ctaText);
+    scrollToId(target);
+  };
 
   const sharedInner = (
     <div className="relative z-10 max-w-6xl mx-auto px-6">
@@ -768,7 +787,13 @@ function Hero({
           placeholder="Business name"
           editMode={editMode}
           className="text-5xl md:text-6xl font-semibold tracking-tight leading-[1.05]"
-          onSave={(v) => onUpdate({ ...content, hero: { ...(content.hero || {}), headline: v }, business_name: safeStr(content?.business_name, "") || v })}
+          onSave={(v) =>
+            onUpdate({
+              ...content,
+              hero: { ...(content.hero || {}), headline: v },
+              business_name: safeStr(content?.business_name, "") || v,
+            })
+          }
         />
         <EditablePara
           value={subheadline}
@@ -780,7 +805,10 @@ function Hero({
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <button className={cx("px-7 py-3 rounded-xl font-semibold transition shadow-sm", theme.accentSolid, "text-white")}>
+        <button
+          onClick={onCta}
+          className={cx("px-7 py-3 rounded-xl font-semibold transition shadow-sm", theme.accentSolid, "text-white")}
+        >
           {ctaText}
         </button>
 
@@ -840,7 +868,6 @@ function Hero({
     );
   }
 
-  // minimal + centered_text
   return (
     <section className={cx("relative py-16 md:py-20 text-center overflow-hidden", theme.toneBg)}>
       <div className="absolute inset-0 pointer-events-none">
@@ -866,23 +893,143 @@ function Hero({
 }
 
 /* ======================================================
-   SECTIONS
+   UNIVERSAL “LIST / GRID” SECTION (future-proof for EVERYTHING)
+   If content[key] looks like { title, items:[...] } it renders automatically.
 ====================================================== */
 
-function HighlightSection({
+function GenericListSection({
+  username,
+  sectionKey,
   content,
   onUpdate,
   editMode,
   theme,
 }: {
+  username: string;
+  sectionKey: SectionKey;
   content: any;
   onUpdate: (c: any) => void;
   editMode: boolean;
   theme: any;
 }) {
+  const block = content?.[sectionKey];
+
+  // supports shapes:
+  // { title?: string, items?: Array<{title?, description?, image?, price?, link?}> }
+  const title = safeStr(block?.title, SECTION_LABELS[sectionKey] || "Section");
+  const items = safeArr<any>(block?.items);
+
+  if (!block || !items.length) return null;
+
+  return (
+    <SectionShell
+      id={`section-${sectionKey}`}
+      title={SECTION_LABELS[sectionKey]}
+      subtitle="This section adapts to whatever your business needs."
+      theme={theme}
+    >
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <EditableText
+          value={title}
+          editMode={editMode}
+          className={cx("text-xl md:text-2xl font-semibold", theme.heading)}
+          onSave={(v) => onUpdate({ ...content, [sectionKey]: { ...(block || {}), title: v } })}
+        />
+
+        {editMode ? (
+          <div className="flex gap-2">
+            <button
+              className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
+              onClick={() => {
+                const nextItems = [...items, { title: "New item", description: "Describe this.", image: null }];
+                onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: nextItems } });
+              }}
+            >
+              + Add
+            </button>
+            <button
+              className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
+              onClick={() => {
+                const nextItems = items.slice(0, -1);
+                onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: nextItems } });
+              }}
+              disabled={!items.length}
+            >
+              − Remove last
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        {items.slice(0, 12).map((it, i) => (
+          <div key={i} className={cx("rounded-3xl border p-6 shadow-sm", theme.outline, theme.surface2)}>
+            {"image" in (it || {}) ? (
+              <ImageSlot
+                username={username}
+                value={typeof it?.image === "string" ? it.image : null}
+                onChange={(url) => {
+                  const next = items.slice();
+                  next[i] = { ...(next[i] || {}), image: url };
+                  onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: next } });
+                }}
+                editMode={editMode}
+                label="Image (optional)"
+                heightClass="h-40"
+              />
+            ) : null}
+
+            <div className="mt-4">
+              <EditableText
+                value={safeStr(it?.title, "Item")}
+                editMode={editMode}
+                className={cx("text-lg font-semibold", theme.heading)}
+                onSave={(v) => {
+                  const next = items.slice();
+                  next[i] = { ...(next[i] || {}), title: v };
+                  onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: next } });
+                }}
+              />
+              <EditablePara
+                value={safeStr(it?.description, "")}
+                editMode={editMode}
+                className={cx("mt-2 text-sm leading-relaxed", theme.subtle)}
+                onSave={(v) => {
+                  const next = items.slice();
+                  next[i] = { ...(next[i] || {}), description: v };
+                  onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: next } });
+                }}
+              />
+              {"price" in (it || {}) ? (
+                <div className={cx("mt-3 text-sm font-semibold", theme.heading)}>
+                  <EditableText
+                    value={safeStr(it?.price, "")}
+                    editMode={editMode}
+                    className="inline"
+                    onSave={(v) => {
+                      const next = items.slice();
+                      next[i] = { ...(next[i] || {}), price: v };
+                      onUpdate({ ...content, [sectionKey]: { ...(block || {}), title, items: next } });
+                    }}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionShell>
+  );
+}
+
+/* ======================================================
+   SECTIONS (existing ones kept)
+====================================================== */
+
+function HighlightSection({ content, onUpdate, editMode, theme }: any) {
   const h = content?.highlight || {};
   return (
-    <SectionShell title={SECTION_LABELS.highlight} subtitle="A warm line that explains your value fast." theme={theme}>
+    <SectionShell id="section-highlight" title={SECTION_LABELS.highlight} subtitle="A warm line that explains your value fast." theme={theme}>
       <div className={cx("max-w-4xl mx-auto rounded-3xl border p-10 md:p-12", theme.outline, theme.surface2)}>
         <EditableText
           value={safeStr(h?.headline, "Make a strong first impression.")}
@@ -901,24 +1048,12 @@ function HighlightSection({
   );
 }
 
-function AboutSection({
-  username,
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  username: string;
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function AboutSection({ username, content, onUpdate, editMode, theme }: any) {
   const about = content?.about || {};
   const paragraphs = safeArr<string>(about?.paragraphs);
 
   return (
-    <SectionShell title={SECTION_LABELS.about} subtitle="Tell a simple story customers trust." theme={theme}>
+    <SectionShell id="section-about" title={SECTION_LABELS.about} subtitle="Tell a simple story customers trust." theme={theme}>
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <div className={cx("rounded-3xl border p-8", theme.outline, theme.surface2)}>
           <div className="space-y-5">
@@ -989,35 +1124,21 @@ function AboutSection({
   );
 }
 
-function ServicesSection({
-  username,
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  username: string;
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function ServicesSection({ username, content, onUpdate, editMode, theme }: any) {
   const services = normalizeServices(content);
   const title = safeStr(content?.services?.title, "Services");
 
   return (
-    <SectionShell title={SECTION_LABELS.services} subtitle="What you offer — clear, specific, and easy to understand." theme={theme}>
+    <SectionShell id="section-services" title={SECTION_LABELS.services} subtitle="What you offer — clear, specific, and easy to understand." theme={theme}>
       <div className="flex items-center justify-between gap-4 mb-6">
         <EditableText
           value={title}
           editMode={editMode}
           className={cx("text-xl md:text-2xl font-semibold", theme.heading)}
           onSave={(v) => {
-            // write title back to object schema if present, else keep as is
             if (content?.services && typeof content.services === "object" && !Array.isArray(content.services)) {
               onUpdate({ ...content, services: { ...(content.services || {}), title: v } });
             } else {
-              // if array schema, keep title elsewhere
               onUpdate({ ...content, services_title: v });
             }
           }}
@@ -1028,11 +1149,11 @@ function ServicesSection({
             <button
               className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
               onClick={() => {
-                const next = [...services, { title: "New service", description: "Describe the service.", image: null }];
+                const next = [...services, { title: "New item", description: "Describe it.", image: null }];
                 onUpdate(writeServicesBack(content, next));
               }}
             >
-              + Add service
+              + Add
             </button>
             {services.length ? (
               <button
@@ -1062,7 +1183,7 @@ function ServicesSection({
                 onUpdate(writeServicesBack(content, next));
               }}
               editMode={editMode}
-              label="Service image (optional)"
+              label="Image (optional)"
               heightClass="h-40"
             />
 
@@ -1078,7 +1199,7 @@ function ServicesSection({
                 }}
               />
               <EditablePara
-                value={safeStr(s?.description, "Describe your service here.")}
+                value={safeStr(s?.description, "Describe it here.")}
                 editMode={editMode}
                 className={cx("mt-2 text-sm leading-relaxed", theme.subtle)}
                 onSave={(v) => {
@@ -1095,22 +1216,12 @@ function ServicesSection({
   );
 }
 
-function TrustSection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function TrustSection({ content, onUpdate, editMode, theme }: any) {
   const items = safeArr<string>(content?.trust?.items);
   const list = items.length ? items : ["Clear pricing", "Fast response", "Trusted quality"];
 
   return (
-    <SectionShell title={SECTION_LABELS.trust} subtitle="Quick reasons people should choose you." theme={theme}>
+    <SectionShell id="section-trust" title={SECTION_LABELS.trust} subtitle="Quick reasons people should choose you." theme={theme}>
       <div className="grid md:grid-cols-3 gap-6">
         {list.slice(0, 6).map((t, i) => (
           <div key={i} className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
@@ -1157,26 +1268,18 @@ function TrustSection({
   );
 }
 
-function ProcessSection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function ProcessSection({ content, onUpdate, editMode, theme }: any) {
   const steps = safeArr<any>(content?.process?.steps);
-  const list = steps.length ? steps : [
-    { title: "Reach out", description: "Send a message with what you need." },
-    { title: "Get a plan", description: "We reply with a simple next step." },
-    { title: "Get results", description: "We deliver quickly — and you can edit anytime." },
-  ];
+  const list = steps.length
+    ? steps
+    : [
+        { title: "Reach out", description: "Send a message with what you need." },
+        { title: "Get a plan", description: "We reply with a simple next step." },
+        { title: "Get results", description: "We deliver quickly — and you can edit anytime." },
+      ];
 
   return (
-    <SectionShell title={SECTION_LABELS.process} subtitle="A simple process customers trust." theme={theme}>
+    <SectionShell id="section-process" title={SECTION_LABELS.process} subtitle="A simple process customers trust." theme={theme}>
       <div className="grid md:grid-cols-3 gap-6">
         {list.slice(0, 6).map((s, i) => (
           <div key={i} className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
@@ -1203,52 +1306,16 @@ function ProcessSection({
           </div>
         ))}
       </div>
-
-      {editMode ? (
-        <div className="mt-6 flex gap-2 justify-center">
-          <button
-            className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
-            onClick={() => {
-              const next = list.slice();
-              next.push({ title: "New step", description: "Describe the step." });
-              onUpdate({ ...content, process: { ...(content.process || {}), steps: next } });
-            }}
-          >
-            + Add step
-          </button>
-          {list.length > 3 ? (
-            <button
-              className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
-              onClick={() => {
-                const next = list.slice(0, -1);
-                onUpdate({ ...content, process: { ...(content.process || {}), steps: next } });
-              }}
-            >
-              − Remove last
-            </button>
-          ) : null}
-        </div>
-      ) : null}
     </SectionShell>
   );
 }
 
-function TestimonialSection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function TestimonialSection({ content, onUpdate, editMode, theme }: any) {
   const quote = safeStr(content?.testimonial?.quote, "“Professional, fast, and easy to work with.”");
   const author = safeStr(content?.testimonial?.author, "Happy customer");
 
   return (
-    <SectionShell title={SECTION_LABELS.testimonial} subtitle="One strong quote adds instant trust." theme={theme}>
+    <SectionShell id="section-testimonial" title={SECTION_LABELS.testimonial} subtitle="One strong quote adds instant trust." theme={theme}>
       <div className={cx("max-w-4xl mx-auto rounded-3xl border p-10 md:p-12", theme.outline, theme.surface2)}>
         <EditablePara
           value={quote}
@@ -1270,26 +1337,18 @@ function TestimonialSection({
   );
 }
 
-function FAQSection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function FAQSection({ content, onUpdate, editMode, theme }: any) {
   const faqs = safeArr<any>(content?.faq?.items);
-  const list = faqs.length ? faqs : [
-    { q: "How fast can I get started?", a: "Usually the same day. Send a message and we’ll take it from there." },
-    { q: "Can I change anything later?", a: "Yes — you can edit everything and it autosaves." },
-    { q: "Do I need images?", a: "No. But adding real photos increases trust and conversions." },
-  ];
+  const list = faqs.length
+    ? faqs
+    : [
+        { q: "How fast can I get started?", a: "Usually the same day. Send a message and we’ll take it from there." },
+        { q: "Can I change anything later?", a: "Yes — you can edit everything and it autosaves." },
+        { q: "Do I need images?", a: "No. But adding real photos increases trust and conversions." },
+      ];
 
   return (
-    <SectionShell title={SECTION_LABELS.faq} subtitle="Answer the questions customers actually ask." theme={theme}>
+    <SectionShell id="section-faq" title={SECTION_LABELS.faq} subtitle="Answer the questions customers actually ask." theme={theme}>
       <div className="max-w-4xl mx-auto space-y-4">
         {list.slice(0, 10).map((f, i) => (
           <div key={i} className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
@@ -1316,54 +1375,16 @@ function FAQSection({
           </div>
         ))}
       </div>
-
-      {editMode ? (
-        <div className="mt-6 flex gap-2 justify-center">
-          <button
-            className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
-            onClick={() => {
-              const next = list.slice();
-              next.push({ q: "New question", a: "New answer" });
-              onUpdate({ ...content, faq: { ...(content.faq || {}), items: next } });
-            }}
-          >
-            + Add FAQ
-          </button>
-          {list.length > 3 ? (
-            <button
-              className="px-3 py-2 text-xs rounded-lg border bg-white hover:bg-black/5"
-              onClick={() => {
-                const next = list.slice(0, -1);
-                onUpdate({ ...content, faq: { ...(content.faq || {}), items: next } });
-              }}
-            >
-              − Remove last
-            </button>
-          ) : null}
-        </div>
-      ) : null}
     </SectionShell>
   );
 }
 
-function GallerySection({
-  username,
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  username: string;
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function GallerySection({ username, content, onUpdate, editMode, theme }: any) {
   const imgs = safeArr<string>(content?.gallery?.images);
   const list = imgs.filter((x) => typeof x === "string" && x.trim());
 
   return (
-    <SectionShell title={SECTION_LABELS.gallery} subtitle="Optional — real photos make the page feel alive." theme={theme}>
+    <SectionShell id="section-gallery" title={SECTION_LABELS.gallery} subtitle="Optional — real photos make the page feel alive." theme={theme}>
       <div className={cx("rounded-3xl border p-8", theme.outline, theme.surface2)}>
         {list.length ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1421,62 +1442,51 @@ function GallerySection({
   );
 }
 
-function CTASection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
+function CTASection({ content, editMode, theme, enabledSections }: any) {
   const cta = content?.cta || {};
+  const text = safeStr(cta?.button, safeStr(content?.hero?.cta_text, "Get started"));
+
+  const onCta = () => {
+    const target = pickBestCtaTarget(enabledSections, content, text);
+    scrollToId(target);
+  };
+
   return (
-    <SectionShell title={SECTION_LABELS.cta} subtitle="A clear final action. Simple wins." theme={theme}>
+    <SectionShell id="section-cta" title={SECTION_LABELS.cta} subtitle="A clear final action. Simple wins." theme={theme}>
       <div className={cx("rounded-3xl border p-10 md:p-12 text-center", theme.outline, theme.surface2)}>
-        <EditableText
-          value={safeStr(cta?.headline, "Ready to take the next step?")}
-          editMode={editMode}
-          className={cx("text-3xl md:text-4xl font-semibold", theme.heading)}
-          onSave={(v) => onUpdate({ ...content, cta: { ...(content.cta || {}), headline: v } })}
-        />
-        <EditablePara
-          value={safeStr(cta?.subheadline, "Send a message — we respond quickly.")}
-          editMode={editMode}
-          className={cx("mt-4 text-lg leading-relaxed", theme.subtle)}
-          onSave={(v) => onUpdate({ ...content, cta: { ...(content.cta || {}), subheadline: v } })}
-        />
+        <div className={cx("text-3xl md:text-4xl font-semibold", theme.heading)}>
+          {safeStr(cta?.headline, "Ready to take the next step?")}
+        </div>
+        <div className={cx("mt-4 text-lg leading-relaxed", theme.subtle)}>
+          {safeStr(cta?.subheadline, "Send a message — we respond quickly.")}
+        </div>
 
         <div className="mt-8 flex justify-center">
-          <button className={cx("px-7 py-3 rounded-xl font-semibold transition shadow-sm text-white", theme.accentSolid)}>
-            {safeStr(cta?.button, safeStr(content?.hero?.cta_text, "Get started"))}
+          <button
+            onClick={onCta}
+            className={cx("px-7 py-3 rounded-xl font-semibold transition shadow-sm text-white", theme.accentSolid)}
+          >
+            {text}
           </button>
         </div>
+
+        {editMode ? (
+          <div className={cx("mt-4 text-xs", theme.subtle)}>
+            (CTA button scrolls to the most relevant section.)
+          </div>
+        ) : null}
       </div>
     </SectionShell>
   );
 }
 
-function ContactSection({
-  content,
-  onUpdate,
-  editMode,
-  theme,
-}: {
-  content: any;
-  onUpdate: (c: any) => void;
-  editMode: boolean;
-  theme: any;
-}) {
-  // You wanted this as the only "must fill"
+function ContactSection({ content, onUpdate, editMode, theme }: any) {
   const phone = safeStr(content?.contact?.phone, "");
   const email = safeStr(content?.contact?.email, "");
   const address = safeStr(content?.contact?.address, safeStr(content?.location?.city, ""));
 
   return (
-    <SectionShell title={SECTION_LABELS.contact} subtitle="This is the only part you must fill for a real business." theme={theme}>
+    <SectionShell id="section-contact" title={SECTION_LABELS.contact} subtitle="This is the only part you must fill for a real business." theme={theme}>
       <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
         <div className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
           <div className={cx("text-sm font-semibold", theme.heading)}>Phone</div>
@@ -1521,8 +1531,44 @@ function ContactSection({
   );
 }
 
+function LocationSection({ content, onUpdate, editMode, theme }: any) {
+  const city = safeStr(content?.location?.city, "");
+  const addr = safeStr(content?.contact?.address, "");
+
+  return (
+    <SectionShell id="section-location" title={SECTION_LABELS.location} subtitle="Help people find you." theme={theme}>
+      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+        <div className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
+          <div className={cx("text-sm font-semibold", theme.heading)}>City</div>
+          <EditableText
+            value={city}
+            placeholder={editMode ? "Add city" : ""}
+            editMode={editMode}
+            className={cx("mt-2", theme.subtle)}
+            onSave={(v) => onUpdate({ ...content, location: { ...(content.location || {}), city: v } })}
+          />
+          <div className={cx("mt-4 text-xs", theme.subtle)}>
+            (You can also put the full address in Contact.)
+          </div>
+        </div>
+
+        <div className={cx("rounded-3xl border p-6", theme.outline, theme.surface2)}>
+          <div className={cx("text-sm font-semibold", theme.heading)}>Address</div>
+          <EditableText
+            value={addr}
+            placeholder={editMode ? "Add address" : ""}
+            editMode={editMode}
+            className={cx("mt-2", theme.subtle)}
+            onSave={(v) => onUpdate({ ...content, contact: { ...(content.contact || {}), address: v } })}
+          />
+        </div>
+      </div>
+    </SectionShell>
+  );
+}
+
 /* ======================================================
-   BUILDER PANEL (reorder/hide/add + tone + regenerate)
+   BUILDER PANEL (NOW SIDEBAR, NOT OVERLAY)
 ====================================================== */
 
 function BuilderPanel({
@@ -1546,171 +1592,154 @@ function BuilderPanel({
   onRegenerate: (key: SectionKey) => void;
   theme: any;
 }) {
-
   const [open, setOpen] = useState(true);
 
   if (!editMode) return null;
 
-  const allAddable: SectionKey[] = ["highlight", "about", "services", "trust", "process", "testimonial", "faq", "gallery", "cta", "contact"];
-
+  const allAddable: SectionKey[] = Object.keys(SECTION_LABELS) as SectionKey[];
   const present = new Set(sections.map((s) => s.key));
   const addable = allAddable.filter((k) => !present.has(k));
-  const isPro = true; // pages come later; this is a UI hook only
-
 
   return (
-    <div className="fixed top-4 left-4 z-50 w-[340px] max-w-[92vw]">
-      <div className={cx("rounded-3xl border shadow-xl overflow-hidden", theme.outline, theme.surface2)}>
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div>
-            <div className={cx("text-sm font-semibold", theme.heading)}>Builder</div>
-            <div className={cx("text-xs mt-0.5", theme.subtle)}>Reorder • Toggle • Tone • Regenerate</div>
-          </div>
-          <button
-            className="px-3 py-1.5 text-xs rounded-lg border bg-white hover:bg-black/5"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? "Hide" : "Show"}
-          </button>
+    <div className={cx(
+      "h-full",
+      "rounded-3xl border shadow-xl overflow-hidden",
+      theme.outline,
+      theme.surface2
+    )}>
+      <div className="px-4 py-3 flex items-center justify-between">
+        <div>
+          <div className={cx("text-sm font-semibold", theme.heading)}>Builder</div>
+          <div className={cx("text-xs mt-0.5", theme.subtle)}>Reorder • Toggle • Tone • Regenerate</div>
         </div>
+        <button
+          className="px-3 py-1.5 text-xs rounded-lg border bg-white hover:bg-black/5"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? "Hide" : "Show"}
+        </button>
+      </div>
 
-        {open && (
-          <div className="px-4 pb-4">
-            {/* Editor appearance */}
-<div className="mt-2">
-  <div className={cx("text-xs font-semibold", theme.subtle)}>
-    Editor appearance
-  </div>
-
-  <div className="mt-2 grid grid-cols-3 gap-2">
-    {(["auto", "light", "dark"] as const).map((v) => (
-      <button
-        key={v}
-        className={cx(
-          "px-2 py-2 rounded-xl text-xs font-semibold border transition",
-          editorView === v
-            ? cx("text-white", theme.accentSolid, "border-transparent")
-            : "bg-white border-black/10 hover:bg-black/5"
-        )}
-        onClick={() => setEditorView(v)}
-      >
-        {v}
-      </button>
-    ))}
-  </div>
-</div>
-            {/* Tone */}
-            <div className="mt-2">
-              <div className={cx("text-xs font-semibold", theme.subtle)}>Tone</div>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {(["warm", "premium", "bold", "minimal"] as Tone[]).map((t) => (
-                  <button
-                    key={t}
-                    className={cx(
-                      "px-2 py-2 rounded-xl text-xs font-semibold border transition",
-                      tone === t ? cx("text-white", theme.accentSolid, "border-transparent") : "bg-white border-black/10 hover:bg-black/5"
-                    )}
-                    onClick={() => setTone(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+      {open && (
+        <div className="px-4 pb-4">
+          <div className="mt-2">
+            <div className={cx("text-xs font-semibold", theme.subtle)}>Editor appearance</div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(["auto", "light", "dark"] as const).map((v) => (
+                <button
+                  key={v}
+                  className={cx(
+                    "px-2 py-2 rounded-xl text-xs font-semibold border transition",
+                    editorView === v
+                      ? cx("text-white", theme.accentSolid, "border-transparent")
+                      : "bg-white border-black/10 hover:bg-black/5"
+                  )}
+                  onClick={() => setEditorView(v)}
+                >
+                  {v}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Sections */}
-            <div className="mt-4">
-              <div className={cx("text-xs font-semibold", theme.subtle)}>Sections</div>
-              <div className="mt-2 space-y-2">
-                {sections.map((s, idx) => (
-                  <div key={`${s.key}-${idx}`} className="flex items-center gap-2">
+          <div className="mt-3">
+            <div className={cx("text-xs font-semibold", theme.subtle)}>Tone</div>
+            <div className="mt-2 grid grid-cols-4 gap-2">
+              {(["warm", "premium", "bold", "minimal"] as Tone[]).map((t) => (
+                <button
+                  key={t}
+                  className={cx(
+                    "px-2 py-2 rounded-xl text-xs font-semibold border transition",
+                    tone === t ? cx("text-white", theme.accentSolid, "border-transparent") : "bg-white border-black/10 hover:bg-black/5"
+                  )}
+                  onClick={() => setTone(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className={cx("text-xs font-semibold", theme.subtle)}>Sections</div>
+            <div className="mt-2 space-y-2">
+              {sections.map((s, idx) => (
+                <div key={`${s.key}-${idx}`} className="flex items-center gap-2">
+                  <button
+                    className={cx("px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5", !s.enabled && "opacity-60")}
+                    title="Toggle section"
+                    onClick={() => {
+                      const next = sections.slice();
+                      next[idx] = { ...next[idx], enabled: !next[idx].enabled };
+                      setSections(next);
+                    }}
+                  >
+                    {s.enabled ? "On" : "Off"}
+                  </button>
+
+                  <div className={cx("flex-1 px-3 py-2 rounded-xl border text-xs", theme.outline, theme.surface)}>
+                    <div className={cx("font-semibold", theme.heading)}>{SECTION_LABELS[s.key]}</div>
+                  </div>
+
+                  <div className="flex gap-1">
                     <button
-                      className={cx(
-                        "px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5",
-                        !s.enabled && "opacity-60"
-                      )}
-                      title="Toggle section"
+                      className="px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
+                      title="Move up"
+                      disabled={idx === 0}
                       onClick={() => {
+                        if (idx === 0) return;
                         const next = sections.slice();
-                        next[idx] = { ...next[idx], enabled: !next[idx].enabled };
+                        const tmp = next[idx - 1];
+                        next[idx - 1] = next[idx];
+                        next[idx] = tmp;
                         setSections(next);
                       }}
                     >
-                      {s.enabled ? "On" : "Off"}
+                      ↑
                     </button>
-
-                    <div className={cx("flex-1 px-3 py-2 rounded-xl border text-xs", theme.outline, theme.surface)}>
-                      <div className={cx("font-semibold", theme.heading)}>{SECTION_LABELS[s.key]}</div>
-                    </div>
-
-                    <div className="flex gap-1">
-                      <button
-                        className="px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
-                        title="Move up"
-                        disabled={idx === 0}
-                        onClick={() => {
-                          if (idx === 0) return;
-                          const next = sections.slice();
-                          const tmp = next[idx - 1];
-                          next[idx - 1] = next[idx];
-                          next[idx] = tmp;
-                          setSections(next);
-                        }}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        className="px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
-                        title="Move down"
-                        disabled={idx === sections.length - 1}
-                        onClick={() => {
-                          if (idx === sections.length - 1) return;
-                          const next = sections.slice();
-                          const tmp = next[idx + 1];
-                          next[idx + 1] = next[idx];
-                          next[idx] = tmp;
-                          setSections(next);
-                        }}
-                      >
-                        ↓
-                      </button>
-                      <button
-                        className={cx("px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5")}
-                        title="Regenerate this section with AI"
-                        onClick={() => onRegenerate(s.key)}
-                      >
-                        ✨
-                      </button>
-                    </div>
+                    <button
+                      className="px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
+                      title="Move down"
+                      disabled={idx === sections.length - 1}
+                      onClick={() => {
+                        if (idx === sections.length - 1) return;
+                        const next = sections.slice();
+                        const tmp = next[idx + 1];
+                        next[idx + 1] = next[idx];
+                        next[idx] = tmp;
+                        setSections(next);
+                      }}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      className="px-2 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
+                      title="Regenerate this section with AI"
+                      onClick={() => onRegenerate(s.key)}
+                    >
+                      ✨
+                    </button>
                   </div>
+                </div>
+              ))}
+            </div>
+
+            {addable.length ? (
+              <div className="mt-3 flex gap-2 flex-wrap">
+                {addable.map((k) => (
+                  <button
+                    key={k}
+                    className="px-3 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
+                    onClick={() => setSections([...sections, { key: k, enabled: true }])}
+                  >
+                    + {SECTION_LABELS[k]}
+                  </button>
                 ))}
               </div>
-
-              {/* Add section */}
-              {addable.length ? (
-                <div className="mt-3 flex gap-2 flex-wrap">
-                  {addable.map((k) => (
-                    <button
-                      key={k}
-                      className="px-3 py-2 rounded-xl text-xs border bg-white hover:bg-black/5"
-                      onClick={() => setSections([...sections, { key: k, enabled: true }])}
-                    >
-                      + {SECTION_LABELS[k]}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="mt-4 space-y-1 text-[11px] text-black/50">
-                <div>✨ = regenerate section. You can edit anything after.</div>
-                <div>
-                  Multiple pages are available on the <span className="font-semibold">Pro</span> plan.
-                </div>
-              </div>
-            </div>
+            ) : null}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1722,22 +1751,15 @@ function BuilderPanel({
 export default function AIWebsiteRenderer({ username, structure, content, editMode }: Props) {
   const { toast, t } = useToast();
 
-  const [localContent, setLocalContent] = useState<any>(() =>
-  content || {}
-  );
+  const [localContent, setLocalContent] = useState<any>(() => content || {});
 
-
-  // Keep in sync if backend content changes
   useEffect(() => {
-  if (content) {
-    setLocalContent(content);
-  }
-}, [content]);
-
+    if (content) setLocalContent(content);
+  }, [content]);
 
   const save = useAutosave(username, editMode);
 
-    const plan =
+  const plan =
     (structure as any)?.plan || {
       name: "free",
       max_pages: 1,
@@ -1745,104 +1767,72 @@ export default function AIWebsiteRenderer({ username, structure, content, editMo
     };
 
   const tone: Tone = (localContent?._builder?.tone as Tone) || "warm";
-
-    // Editor-only view mode (does NOT affect the published site)
   const editorView =
-  (localContent?._builder?.editorView as "auto" | "light" | "dark") || "auto";
+    (localContent?._builder?.editorView as "auto" | "light" | "dark") || "auto";
 
-      const theme = useTheme(structure, tone, editorView);
+  const theme = useTheme(structure, tone, editorView);
 
   const defaultSectionOrder = useMemo(() => defaultSectionsFromStructure(structure), [structure]);
 
-  const [sections, setSectionsState] = useState<
-  Array<{ key: SectionKey; enabled: boolean }>
->([]);
+  const [sections, setSectionsState] = useState<Array<{ key: SectionKey; enabled: boolean }>>([]);
 
-// initialize sections ONCE from AI structure
-useEffect(() => {
-  const aiSections = defaultSectionsFromStructure(structure);
+  useEffect(() => {
+    const aiSections = defaultSectionsFromStructure(structure);
+    const initial = aiSections.map((k) => ({ key: k, enabled: true }));
+    if (!initial.some((s) => s.key === "contact")) initial.push({ key: "contact", enabled: true });
+    setSectionsState(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [structure]);
 
-  const initial = aiSections.map((k) => ({
-    key: k,
-    enabled: true,
-  }));
+  useEffect(() => {
+    const meta = localContent?._builder;
+    const stored = meta?.sections;
 
-  // ensure contact always exists
-  if (!initial.some((s) => s.key === "contact")) {
-    initial.push({ key: "contact", enabled: true });
-  }
+    const normalizedStored =
+      Array.isArray(stored) && typeof stored[0] === "string"
+        ? stored.map((k: string) => ({ key: k, enabled: true }))
+        : stored;
 
-  setSectionsState(initial);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [structure]);
+    if (Array.isArray(normalizedStored) && normalizedStored.length) {
+      const next: Array<{ key: SectionKey; enabled: boolean }> = normalizedStored
+        .map((x: any) => ({
+          key: String(x?.key || "").toLowerCase() as SectionKey,
+          enabled: x?.enabled !== false,
+        }))
+        .filter((x) => Object.keys(SECTION_LABELS).includes(x.key));
 
+      const hasContact = next.some((s) => s.key === "contact");
+      const final: Array<{ key: SectionKey; enabled: boolean }> = hasContact
+        ? next
+        : [...next, { key: "contact", enabled: true }];
 
-// initialize from content._builder.sections if present
-useEffect(() => {
-  const meta = localContent?._builder;
-  const stored = meta?.sections;
-const normalizedStored =
-  Array.isArray(stored) && typeof stored[0] === "string"
-    ? stored.map((k: string) => ({ key: k, enabled: true }))
-    : stored;
+      setSectionsState(final);
+      return;
+    }
 
+    const init: Array<{ key: SectionKey; enabled: boolean }> =
+      defaultSectionOrder.map((k) => ({ key: k, enabled: true }));
 
-if (Array.isArray(normalizedStored) && normalizedStored.length) {
-  // Fallback: enable all AI sections by default
-const fallback = defaultSectionOrder.map((key) => ({
-  key,
-  enabled: true,
-}));
+    setSectionsState(init);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [structure?.sections, localContent?._builder?.sections]);
 
-setSectionsState(fallback);
-    const next: Array<{ key: SectionKey; enabled: boolean }> = normalizedStored
-      .map((x: any) => ({
-        key: String(x?.key || "").toLowerCase() as SectionKey,
-        enabled: x?.enabled !== false,
-      }))
-      .filter((x) => Object.keys(SECTION_LABELS).includes(x.key));
+  const setSections = useCallback(
+    (next: Array<{ key: SectionKey; enabled: boolean }>) => {
+      const hasContact = next.some((s) => s.key === "contact");
+      const final: Array<{ key: SectionKey; enabled: boolean }> = hasContact
+        ? next
+        : [...next, { key: "contact", enabled: true }];
 
-    // Always ensure contact exists last
-    const hasContact = next.some((s) => s.key === "contact");
-    const final: Array<{ key: SectionKey; enabled: boolean }> = hasContact
-      ? next
-      : [...next, { key: "contact", enabled: true }];
+      setSectionsState(final);
 
-    setSectionsState(final);
-    return;
-  }
-
-  // else: default from structure
-  const init: Array<{ key: SectionKey; enabled: boolean }> =
-    defaultSectionOrder.map((k) => ({ key: k, enabled: true }));
-
-  setSectionsState(init);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [structure?.sections, localContent?._builder?.sections]);
-
-const setSections = useCallback(
-  (next: Array<{ key: SectionKey; enabled: boolean }>) => {
-    // Always force contact to exist at least once
-    const hasContact = next.some((s) => s.key === "contact");
-    const final: Array<{ key: SectionKey; enabled: boolean }> = hasContact
-      ? next
-      : [...next, { key: "contact", enabled: true }];
-
-    setSectionsState(final);
-
-    // persist to content builder meta
-    const updated = ensureBuilderMeta(localContent);
-    updated._builder.sections = final.map((s) => ({
-      key: s.key,
-      enabled: s.enabled,
-    }));
-
-    setLocalContent(updated);
-    save(updated);
-  },
-  [localContent, save]
-);
-
+      const updated = ensureBuilderMeta(localContent);
+      updated._builder.sections = final.map((s) => ({ key: s.key, enabled: s.enabled }));
+      setLocalContent(updated);
+      save(updated);
+    },
+    [localContent, save]
+  );
 
   const setTone = useCallback(
     (nextTone: Tone) => {
@@ -1855,14 +1845,14 @@ const setSections = useCallback(
   );
 
   const setEditorView = useCallback(
-  (next: "auto" | "light" | "dark") => {
-    const updated = ensureBuilderMeta(localContent);
-    updated._builder.editorView = next;
-    setLocalContent(updated);
-    save(updated);
-  },
-  [localContent, save]
-);
+    (next: "auto" | "light" | "dark") => {
+      const updated = ensureBuilderMeta(localContent);
+      updated._builder.editorView = next;
+      setLocalContent(updated);
+      save(updated);
+    },
+    [localContent, save]
+  );
 
   const update = useCallback(
     (next: any) => {
@@ -1922,7 +1912,14 @@ const setSections = useCallback(
     [editMode, localContent, t, update, username]
   );
 
-  const enabledSectionKeys = useMemo(() => sections.filter((s) => s.enabled).map((s) => s.key), [sections]);
+  const enabledSectionKeys = useMemo(
+    () => sections.filter((s) => s.enabled).map((s) => s.key),
+    [sections]
+  );
+
+  // Layout: sidebar in edit mode (desktop), stacked on mobile
+  const shellClass = editMode ? "lg:grid lg:grid-cols-[360px_1fr] lg:gap-6" : "";
+  const sidebarWrapClass = editMode ? "hidden lg:block lg:sticky lg:top-6 lg:self-start lg:h-[calc(100vh-48px)]" : "";
 
   return (
     <main className={cx("min-h-screen", theme.page, theme.editorUiFix)}>
@@ -1944,130 +1941,135 @@ const setSections = useCallback(
         </div>
       ) : null}
 
-      {/* Edit badge */}
-      {editMode && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold shadow">
-            Edit mode • Autosave
-          </div>
-        </div>
-      )}
+      <div className={cx("max-w-[1400px] mx-auto px-4 md:px-6 pt-6", shellClass)}>
+        {/* Sidebar (desktop) */}
+        {editMode && (
+          <aside className={sidebarWrapClass}>
+            <BuilderPanel
+              editMode={editMode}
+              sections={sections}
+              setSections={setSections}
+              tone={tone}
+              setTone={setTone}
+              editorView={editorView}
+              setEditorView={setEditorView}
+              onRegenerate={(k) => regenerateSection(k)}
+              theme={theme}
+            />
+          </aside>
+        )}
 
-            {/* Free plan notice */}
-      {editMode && !plan.can_publish && (
-        <div className="max-w-6xl mx-auto mt-6 px-6">
-          <div
-            className={cx(
-              "rounded-3xl border px-6 py-5 flex items-center justify-between gap-4",
-              theme.outline,
-              theme.surface2
-            )}
-          >
-            <div>
-              <div className={cx("font-semibold", theme.heading)}>
-                Free plan — preview only
-              </div>
-              <div className={cx("text-sm mt-1", theme.subtle)}>
-                Upgrade to publish your site and connect a custom domain.
+        {/* Main */}
+        <div>
+          {/* Free plan notice */}
+          {editMode && !plan.can_publish && (
+            <div className="mb-6">
+              <div className={cx("rounded-3xl border px-6 py-5 flex items-center justify-between gap-4", theme.outline, theme.surface2)}>
+                <div>
+                  <div className={cx("font-semibold", theme.heading)}>Free plan — preview only</div>
+                  <div className={cx("text-sm mt-1", theme.subtle)}>
+                    Upgrade to publish your site and connect a custom domain.
+                  </div>
+                </div>
+                <a href="/pricing" className={cx("px-4 py-2 rounded-xl text-sm font-semibold text-white", theme.accentSolid)}>
+                  Upgrade
+                </a>
               </div>
             </div>
-            <a
-              href="/pricing"
-              className={cx(
-                "px-4 py-2 rounded-xl text-sm font-semibold text-white",
-                theme.accentSolid
-              )}
-            >
-              Upgrade
-            </a>
-          </div>
-        </div>
-      )}
+          )}
 
-
-      {/* Builder panel */}
-      <BuilderPanel
-        editMode={editMode}
-        sections={sections}
-        setSections={setSections}
-        tone={tone}
-        setTone={setTone}
-        editorView={editorView}
-        setEditorView={setEditorView}
-        onRegenerate={(k) => regenerateSection(k)}
-        theme={theme}
-      />
-
-      {/* Contact hint */}
-      {showContactHint && (
-        <div className="max-w-6xl mx-auto mt-6 px-6">
-          <div className={cx("rounded-3xl border px-6 py-5", theme.outline, theme.surface2)}>
-            <div className={cx("font-semibold", theme.heading)}>Finish contact info</div>
-            <div className={cx("mt-1 text-sm", theme.subtle)}>
-              Add your <span className={cx("font-semibold", theme.heading)}>{missing.join(", ")}</span> to publish a real business site.
+          {/* Contact hint */}
+          {showContactHint && (
+            <div className="mb-6">
+              <div className={cx("rounded-3xl border px-6 py-5", theme.outline, theme.surface2)}>
+                <div className={cx("font-semibold", theme.heading)}>Finish contact info</div>
+                <div className={cx("mt-1 text-sm", theme.subtle)}>
+                  Add your <span className={cx("font-semibold", theme.heading)}>{missing.join(", ")}</span> to publish a real business site.
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* HERO always */}
+          <Hero
+            username={username}
+            structure={structure}
+            content={localContent}
+            onUpdate={update}
+            editMode={editMode}
+            theme={theme}
+            enabledSections={enabledSectionKeys}
+          />
+
+          {/* Sections */}
+          {enabledSectionKeys.includes("highlight") && (
+            <HighlightSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("about") && (
+            <AboutSection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("services") && (
+            <ServicesSection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("trust") && (
+            <TrustSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("process") && (
+            <ProcessSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("testimonial") && (
+            <TestimonialSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("faq") && (
+            <FAQSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("gallery") && (
+            <GallerySection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("location") && (
+            <LocationSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {enabledSectionKeys.includes("cta") && (
+            <CTASection content={localContent} editMode={editMode} theme={theme} enabledSections={enabledSectionKeys} />
+          )}
+
+          {/* Generic future-proof sections if they exist in content */}
+          {(["features","pricing","team","portfolio","events","products","menu","hours"] as SectionKey[]).map((k) =>
+            enabledSectionKeys.includes(k) ? (
+              <GenericListSection
+                key={k}
+                username={username}
+                sectionKey={k}
+                content={localContent}
+                onUpdate={update}
+                editMode={editMode}
+                theme={theme}
+              />
+            ) : null
+          )}
+
+          {/* Contact always last if enabled */}
+          {enabledSectionKeys.includes("contact") && (
+            <ContactSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
+          )}
+
+          {/* Footer */}
+          <footer className={cx("py-10 text-center text-sm", theme.subtle)}>
+            © {new Date().getFullYear()} {safeStr(localContent?.business_name, username)}
+          </footer>
         </div>
-      )}
+      </div>
 
-      {/* HERO always */}
-      <Hero
-        username={username}
-        structure={structure}
-        content={localContent}
-        onUpdate={update}
-        editMode={editMode}
-        theme={theme}
-      />
-
-      {/* Sections */}
-      {enabledSectionKeys.includes("highlight") && (
-        <HighlightSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("about") && (
-        <AboutSection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("services") && (
-        <ServicesSection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("trust") && (
-        <TrustSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("process") && (
-        <ProcessSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("testimonial") && (
-        <TestimonialSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("faq") && (
-        <FAQSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("gallery") && (
-        <GallerySection username={username} content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {enabledSectionKeys.includes("cta") && (
-        <CTASection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {/* Contact always last if enabled */}
-      {enabledSectionKeys.includes("contact") && (
-        <ContactSection content={localContent} onUpdate={update} editMode={editMode} theme={theme} />
-      )}
-
-      {/* Footer */}
-      <footer className={cx("py-10 text-center text-sm", theme.subtle)}>
-        © {new Date().getFullYear()} {safeStr(localContent?.business_name, username)}
-      </footer>
-
-      {/* Regen busy overlay (simple + obvious) */}
+      {/* Regen busy overlay */}
       {editMode && regenBusy && (
         <div className="fixed inset-0 z-[70] bg-black/30 flex items-center justify-center">
           <div className="bg-white text-black rounded-2xl px-5 py-4 shadow border border-black/10">
