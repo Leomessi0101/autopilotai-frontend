@@ -1,25 +1,31 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ImageUploader from "./ImageUploader";
 
 /* ======================================================
    TYPES
 ====================================================== */
 
+type ImageData = {
+  id: string;
+  url: string;
+  size: "small" | "medium" | "large";
+  position: number; // Position in section
+};
+
 type AIGeneratedSection = {
   html: string;
   data: Record<string, any>;
-  images?: Record<string, string | null>;
+  images?: ImageData[];
 };
 
 type AIWebsiteData = {
   business_name: string;
   sections: Record<string, AIGeneratedSection>;
-  meta: {
-    primary_color: string;
-    background_style: string;
+  meta?: {
+    primary_color?: string;
+    background_style?: string;
   };
 };
 
@@ -41,8 +47,207 @@ function getApiBase() {
   );
 }
 
+const SIZE_CLASSES = {
+  small: "max-w-sm",
+  medium: "max-w-2xl",
+  large: "max-w-4xl",
+};
+
+const HEIGHT_CLASSES = {
+  small: "h-48",
+  medium: "h-64",
+  large: "h-96",
+};
+
 /* ======================================================
-   EDITABLE SECTION WRAPPER
+   IMAGE COMPONENT
+====================================================== */
+
+function ImageBlock({
+  image,
+  editMode,
+  onResize,
+  onRemove,
+}: {
+  image: ImageData;
+  editMode: boolean;
+  onResize: (id: string, size: "small" | "medium" | "large") => void;
+  onRemove: (id: string) => void;
+}) {
+  const [showControls, setShowControls] = useState(false);
+
+  return (
+    <div
+      className={`mx-auto my-6 ${SIZE_CLASSES[image.size]}`}
+      onMouseEnter={() => editMode && setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      <div className="relative group">
+        <img
+          src={image.url}
+          alt=""
+          className={`w-full ${HEIGHT_CLASSES[image.size]} object-cover rounded-2xl shadow-lg`}
+        />
+
+        {editMode && showControls && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 space-y-3">
+              <div className="text-xs text-white/70 font-medium text-center mb-2">
+                Image Size
+              </div>
+              <div className="flex gap-2">
+                {(["small", "medium", "large"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => onResize(image.id, s)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
+                      image.size === s
+                        ? "bg-indigo-500 text-white"
+                        : "bg-white/20 text-white hover:bg-white/30"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => onRemove(image.id)}
+                className="w-full px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition text-sm font-medium"
+              >
+                Remove Image
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================
+   IMAGE UPLOADER
+====================================================== */
+
+function ImageUploader({
+  onUpload,
+  username,
+}: {
+  onUpload: (url: string) => void;
+  username: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  async function uploadFile(file: File) {
+    const token = localStorage.getItem("autopilot_token");
+    if (!token) {
+      alert("You must be logged in to upload images.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await fetch(`${getApiBase()}/api/restaurants/${username}/upload-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      if (!data?.url) throw new Error("No URL returned");
+
+      onUpload(String(data.url));
+    } catch (e: any) {
+      alert(e?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handlePasteUrl() {
+    const url = window.prompt("Paste image URL:");
+    if (url && url.trim()) {
+      onUpload(url.trim());
+    }
+  }
+
+  return (
+    <div
+      className={`border-2 border-dashed rounded-2xl p-8 transition-colors ${
+        dragOver ? "border-indigo-500 bg-indigo-500/5" : "border-gray-700 bg-gray-900/50"
+      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        const f = e.dataTransfer.files?.[0];
+        if (f) uploadFile(f);
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) uploadFile(f);
+        }}
+      />
+
+      <div className="text-center">
+        <svg
+          className="w-12 h-12 mx-auto text-gray-600 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+
+        <p className="text-white font-medium mb-2">
+          {uploading ? "Uploading..." : "Upload an image"}
+        </p>
+        <p className="text-sm text-gray-500 mb-4">Drag and drop or click below</p>
+
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition font-medium disabled:opacity-50"
+          >
+            Choose File
+          </button>
+          <button
+            onClick={handlePasteUrl}
+            disabled={uploading}
+            className="px-6 py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition font-medium disabled:opacity-50"
+          >
+            Paste URL
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================
+   SECTION WITH TEXT & IMAGES
 ====================================================== */
 
 function EditableSection({
@@ -52,95 +257,46 @@ function EditableSection({
   images,
   editMode,
   onUpdate,
-  onImageUpdate,
+  onImagesUpdate,
   username,
 }: {
   sectionKey: string;
   html: string;
   data: Record<string, any>;
-  images?: Record<string, string | null>;
+  images: ImageData[];
   editMode: boolean;
   onUpdate: (key: string, newData: Record<string, any>) => void;
-  onImageUpdate: (sectionKey: string, slotId: string, url: string | null) => void;
+  onImagesUpdate: (key: string, images: ImageData[]) => void;
   username: string;
 }) {
   const [localData, setLocalData] = useState(data);
-  const [isEditing, setIsEditing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [showImageUploader, setShowImageUploader] = useState(false);
 
-  // Replace template placeholders with actual data
+  // Replace template placeholders
   const renderHTML = (template: string, values: Record<string, any>) => {
     let result = template;
-    
-    Object.keys(values).forEach(key => {
+
+    Object.keys(values).forEach((key) => {
       const value = values[key];
       const placeholder = `{{${key}}}`;
-      
+
       if (Array.isArray(value)) {
-        const joined = value.join('</p><p class="mt-4">');
+        const joined = value.map(v => `<p class="mt-4">${v}</p>`).join('');
         result = result.replace(placeholder, joined);
-      } else if (typeof value === 'object' && value !== null) {
-        Object.keys(value).forEach(nestedKey => {
-          const nestedPlaceholder = `{{${key}.${nestedKey}}}`;
-          result = result.replace(nestedPlaceholder, String(value[nestedKey]));
-        });
       } else {
-        result = result.replace(new RegExp(placeholder, 'g'), String(value));
+        result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(value));
       }
     });
-    
+
     return result;
-  };
-
-  const renderedHTML = renderHTML(html, localData);
-
-  // Inject image uploaders after render
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const imageSlots = containerRef.current.querySelectorAll('[data-image-slot]');
-    
-    imageSlots.forEach((slot) => {
-      const slotId = slot.getAttribute('data-image-slot');
-      if (!slotId) return;
-
-      const currentUrl = images?.[slotId] || null;
-      
-      // Clear the slot
-      slot.innerHTML = '';
-      
-      // Create a container for React component
-      const reactContainer = document.createElement('div');
-      reactContainer.className = 'w-full h-full';
-      slot.appendChild(reactContainer);
-      
-      // Render ImageUploader
-      import('react-dom/client').then(({ createRoot }) => {
-        const root = createRoot(reactContainer);
-        root.render(
-          <ImageUploader
-            slotId={slotId}
-            username={username}
-            currentUrl={currentUrl}
-            onImageUpdate={(id, url) => onImageUpdate(sectionKey, id, url)}
-            editMode={editMode}
-          />
-        );
-      });
-    });
-  }, [renderedHTML, images, editMode, username, sectionKey, onImageUpdate]);
-
-  const handleEdit = () => {
-    if (editMode) {
-      setIsEditing(true);
-    }
   };
 
   const handleSave = async () => {
     onUpdate(sectionKey, localData);
-    setIsEditing(false);
-    
-    // Autosave to backend
+    setIsEditingText(false);
+
+    // Autosave
     try {
       const token = localStorage.getItem("autopilot_token");
       await fetch(`${getApiBase()}/api/restaurants/${username}/save`, {
@@ -151,11 +307,7 @@ function EditableSection({
         },
         body: JSON.stringify({
           sections: {
-            [sectionKey]: {
-              html,
-              data: localData,
-              images: images || {}
-            }
+            [sectionKey]: { html, data: localData, images }
           }
         }),
       });
@@ -164,46 +316,67 @@ function EditableSection({
     }
   };
 
-  if (isEditing) {
+  const handleImageResize = (id: string, size: "small" | "medium" | "large") => {
+    const updated = images.map(img => img.id === id ? { ...img, size } : img);
+    onImagesUpdate(sectionKey, updated);
+  };
+
+  const handleImageRemove = (id: string) => {
+    const updated = images.filter(img => img.id !== id);
+    onImagesUpdate(sectionKey, updated);
+  };
+
+  const handleImageAdd = (url: string) => {
+    const newImage: ImageData = {
+      id: `img-${Date.now()}`,
+      url,
+      size: "medium",
+      position: images.length,
+    };
+    onImagesUpdate(sectionKey, [...images, newImage]);
+    setShowImageUploader(false);
+  };
+
+  if (isEditingText) {
     return (
-      <div className="relative">
-        <div className="absolute top-4 right-4 z-50 flex gap-2">
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-          >
-            Cancel
-          </button>
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 my-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-white text-lg font-semibold">Edit {sectionKey}</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className="px-5 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition font-medium"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditingText(false)}
+              className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-medium"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-        
-        <div className="p-6 bg-gray-900 rounded-lg">
-          <h3 className="text-white mb-4 font-semibold">
-            Editing: {sectionKey}
-          </h3>
-          {Object.keys(localData).map(key => (
-            <div key={key} className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2">
+
+        <div className="space-y-4">
+          {Object.keys(localData).map((key) => (
+            <div key={key}>
+              <label className="block text-sm text-gray-400 mb-2 font-medium">
                 {key}
               </label>
               {Array.isArray(localData[key]) ? (
                 <div className="space-y-2">
                   {localData[key].map((item: any, idx: number) => (
-                    <input
+                    <textarea
                       key={idx}
-                      type="text"
-                      value={typeof item === 'string' ? item : JSON.stringify(item)}
+                      value={typeof item === "string" ? item : JSON.stringify(item)}
                       onChange={(e) => {
                         const newArray = [...localData[key]];
                         newArray[idx] = e.target.value;
                         setLocalData({ ...localData, [key]: newArray });
                       }}
-                      className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white"
+                      rows={3}
+                      className="w-full px-4 py-3 bg-black/40 border border-gray-700 rounded-xl text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
                     />
                   ))}
                 </div>
@@ -212,7 +385,7 @@ function EditableSection({
                   type="text"
                   value={String(localData[key])}
                   onChange={(e) => setLocalData({ ...localData, [key]: e.target.value })}
-                  className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-3 bg-black/40 border border-gray-700 rounded-xl text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
                 />
               )}
             </div>
@@ -223,23 +396,63 @@ function EditableSection({
   }
 
   return (
-    <div className="relative group">
+    <div className="relative group my-6">
+      {/* Edit Controls */}
       {editMode && (
-        <div className="absolute top-4 right-4 z-40 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute -top-3 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
           <button
-            onClick={handleEdit}
-            className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition border border-white/20"
+            onClick={() => setIsEditingText(true)}
+            className="px-4 py-2 bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-white/20 transition border border-white/20 text-sm font-medium"
           >
             ✏️ Edit Text
           </button>
+          <button
+            onClick={() => setShowImageUploader(true)}
+            className="px-4 py-2 bg-indigo-500/80 backdrop-blur-md text-white rounded-lg hover:bg-indigo-500 transition text-sm font-medium"
+          >
+            + Add Image
+          </button>
         </div>
       )}
-      
-      <div
-        ref={containerRef}
-        dangerouslySetInnerHTML={{ __html: renderedHTML }}
-        className={editMode ? "cursor-pointer hover:ring-2 hover:ring-indigo-500/50 rounded-lg transition" : ""}
-      />
+
+      {/* HTML Content */}
+      <div dangerouslySetInnerHTML={{ __html: renderHTML(html, localData) }} />
+
+      {/* Images */}
+      {images.length > 0 && (
+        <div className="space-y-6 mt-8">
+          {images.map((img) => (
+            <ImageBlock
+              key={img.id}
+              image={img}
+              editMode={editMode}
+              onResize={handleImageResize}
+              onRemove={handleImageRemove}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Image Uploader Modal */}
+      {editMode && showImageUploader && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-white text-xl font-semibold">Add Image</h3>
+              <button
+                onClick={() => setShowImageUploader(false)}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <ImageUploader onUpload={handleImageAdd} username={username} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -248,127 +461,82 @@ function EditableSection({
    MAIN RENDERER
 ====================================================== */
 
-export default function AIHTMLWebsiteRenderer({
-  username,
-  content,
-  structure,
-  editMode,
-}: Props) {
+export default function AIHTMLWebsiteRenderer({ username, content, structure, editMode }: Props) {
   const router = useRouter();
   const [localContent, setLocalContent] = useState(content);
 
-  const handleSectionUpdate = useCallback(
-    (sectionKey: string, newData: Record<string, any>) => {
-      setLocalContent(prev => ({
-        ...prev,
-        sections: {
-          ...prev.sections,
-          [sectionKey]: {
-            ...prev.sections[sectionKey],
-            data: newData
-          }
-        }
-      }));
-    },
-    []
-  );
+  const handleSectionUpdate = useCallback((sectionKey: string, newData: Record<string, any>) => {
+    setLocalContent((prev) => ({
+      ...prev,
+      sections: {
+        ...prev.sections,
+        [sectionKey]: {
+          ...prev.sections[sectionKey],
+          data: newData,
+        },
+      },
+    }));
+  }, []);
 
-  const handleImageUpdate = useCallback(
-    async (sectionKey: string, slotId: string, url: string | null) => {
-      setLocalContent(prev => {
-        const section = prev.sections[sectionKey];
-        const updatedImages = {
-          ...(section.images || {}),
-          [slotId]: url
-        };
-        
-        return {
-          ...prev,
-          sections: {
-            ...prev.sections,
-            [sectionKey]: {
-              ...section,
-              images: updatedImages
-            }
-          }
-        };
-      });
-
-      // Autosave image update
-      try {
-        const token = localStorage.getItem("autopilot_token");
-        await fetch(`${getApiBase()}/api/restaurants/${username}/save`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            sections: {
-              [sectionKey]: {
-                ...localContent.sections[sectionKey],
-                images: {
-                  ...(localContent.sections[sectionKey].images || {}),
-                  [slotId]: url
-                }
-              }
-            }
-          }),
-        });
-      } catch (e) {
-        console.error("Image autosave failed:", e);
-      }
-    },
-    [localContent, username]
-  );
+  const handleImagesUpdate = useCallback((sectionKey: string, images: ImageData[]) => {
+    setLocalContent((prev) => ({
+      ...prev,
+      sections: {
+        ...prev.sections,
+        [sectionKey]: {
+          ...prev.sections[sectionKey],
+          images,
+        },
+      },
+    }));
+  }, []);
 
   const sections = structure?.sections || Object.keys(localContent.sections || {});
 
   return (
     <main className="min-h-screen">
-      {/* Edit Mode Indicator */}
+      {/* Edit Mode Banner */}
       {editMode && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-indigo-500 text-white rounded-full shadow-lg font-semibold text-sm">
-          Edit Mode • Hover sections to edit • Click image areas to upload
+        <div className="sticky top-0 z-40 bg-indigo-600 text-white px-6 py-3 text-center text-sm font-medium shadow-lg">
+          🎨 Edit Mode • Hover sections to edit text or add images
         </div>
       )}
 
-      {/* Render Sections */}
-      {sections.map((sectionKey: string) => {
-        const section = localContent.sections[sectionKey];
-        
-        if (!section || !section.html) {
-          return null;
-        }
+      {/* Sections */}
+      <div className="max-w-7xl mx-auto">
+        {sections.map((sectionKey: string) => {
+          const section = localContent.sections[sectionKey];
+          if (!section || !section.html) return null;
 
-        return (
-          <EditableSection
-            key={sectionKey}
-            sectionKey={sectionKey}
-            html={section.html}
-            data={section.data || {}}
-            images={section.images || {}}
-            editMode={editMode}
-            onUpdate={handleSectionUpdate}
-            onImageUpdate={handleImageUpdate}
-            username={username}
-          />
-        );
-      })}
+          return (
+            <EditableSection
+              key={sectionKey}
+              sectionKey={sectionKey}
+              html={section.html}
+              data={section.data || {}}
+              images={section.images || []}
+              editMode={editMode}
+              onUpdate={handleSectionUpdate}
+              onImagesUpdate={handleImagesUpdate}
+              username={username}
+            />
+          );
+        })}
+      </div>
 
       {/* Footer */}
-      <footer className="py-12 text-center text-sm text-gray-500 border-t border-gray-800">
+      <footer className="py-12 text-center text-sm text-gray-500 border-t border-gray-800 mt-20">
         © {new Date().getFullYear()} {localContent.business_name || username}
       </footer>
 
-      {/* Dashboard Link (Edit Mode Only) */}
+      {/* Dashboard Button */}
       {editMode && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => router.push("/dashboard")}
-            className="px-6 py-3 bg-black/80 backdrop-blur-sm text-white rounded-xl hover:bg-black transition border border-white/20 shadow-lg"
+            className="px-6 py-3 bg-black/90 backdrop-blur-md text-white rounded-xl hover:bg-black transition border border-white/20 shadow-xl font-medium"
           >
-            ← Back to Dashboard
+            ← Dashboard
           </button>
         </div>
       )}
