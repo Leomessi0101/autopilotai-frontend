@@ -3,7 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import AIWebsiteRenderer from "@/components/ai/AIWebsiteRenderer";
+import AIHTMLWebsiteRenderer from "@/components/ai/AIHTMLWebsiteRenderer";
 
 /* ======================================================
    TYPES
@@ -148,11 +148,11 @@ export default function WebsitePage() {
   ====================================================== */
 
   return (
-    <AIWebsiteRenderer
-      username={username}
-      structure={aiStructure}
-      content={content}
-      editMode={editMode}
-    />
-  );
+  <AIHTMLWebsiteRenderer
+    username={username}
+    structure={aiStructure}
+    content={content}
+    editMode={editMode}
+  />
+ );
 }
