@@ -22,11 +22,7 @@ type SectionData = {
 type WebsiteContent = {
   business_name: string;
   sections: Record<string, SectionData>;
-  seo?: {
-    title: string;
-    description: string;
-    keywords: string[];
-  };
+  seo?: any;
 };
 
 type Props = {
@@ -35,112 +31,15 @@ type Props = {
   structure: any;
   editMode: boolean;
   userPlan?: string;
+  isPublished?: boolean;
 };
 
 /* ======================================================
-   API & CONSTANTS
+   API
 ====================================================== */
 
 function getApiBase() {
   return process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "https://autopilotai-api.onrender.com";
-}
-
-const THEME_OPTIONS = [
-  { 
-    id: "midnight_purple", 
-    name: "Midnight Purple",
-    preview: "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700"
-  },
-  { 
-    id: "ocean_deep", 
-    name: "Ocean Deep",
-    preview: "bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-700"
-  },
-  { 
-    id: "sunset_fire", 
-    name: "Sunset Fire",
-    preview: "bg-gradient-to-r from-orange-500 via-rose-600 to-pink-600"
-  },
-  { 
-    id: "emerald_forest", 
-    name: "Emerald Forest",
-    preview: "bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600"
-  },
-  { 
-    id: "slate_pro", 
-    name: "Slate Pro",
-    preview: "bg-gradient-to-r from-slate-700 via-gray-800 to-slate-900"
-  },
-];
-
-/* ======================================================
-   INLINE EDITABLE TEXT
-====================================================== */
-
-function InlineEdit({
-  value,
-  onChange,
-  multiline = false,
-  className = "",
-}: {
-  value: string;
-  onChange: (newValue: string) => void;
-  multiline?: boolean;
-  className?: string;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [localValue, setLocalValue] = useState(value);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  useEffect(() => {
-    if (isEditing && ref.current) {
-      ref.current.focus();
-      const range = document.createRange();
-      range.selectNodeContents(ref.current);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    }
-  }, [isEditing]);
-
-  const handleSave = () => {
-    setIsEditing(false);
-    if (localValue !== value) {
-      onChange(localValue);
-    }
-  };
-
-  return (
-    <span
-      ref={ref}
-      contentEditable={isEditing}
-      suppressContentEditableWarning
-      onClick={() => !isEditing && setIsEditing(true)}
-      onBlur={handleSave}
-      onInput={(e) => setLocalValue(e.currentTarget.textContent || "")}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && !multiline) {
-          e.preventDefault();
-          handleSave();
-        }
-        if (e.key === "Escape") {
-          setLocalValue(value);
-          setIsEditing(false);
-        }
-      }}
-      className={`${className} ${
-        isEditing
-          ? "outline outline-2 outline-indigo-500 outline-offset-4 rounded-lg px-2 bg-indigo-500/10"
-          : "cursor-text hover:bg-white/5 rounded-lg px-1 transition-all"
-      }`}
-    >
-      {localValue}
-    </span>
-  );
 }
 
 /* ======================================================
@@ -208,38 +107,27 @@ function ImageManager({
 
   return (
     <div className="my-12 space-y-6">
-      {/* Existing images */}
       {images.map((img) => (
         <div key={img.id} className={`mx-auto ${sizeClasses[img.size]} group relative`}>
-          <img
-            src={img.url}
-            alt=""
-            className="w-full h-full object-cover rounded-3xl shadow-2xl"
-          />
+          <img src={img.url} alt="" className="w-full h-full object-cover rounded-3xl shadow-2xl" />
           
-          {/* Controls on hover */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 space-y-3">
-              <div className="text-xs text-white/70 font-medium text-center">Image Size</div>
-              <div className="flex gap-2">
+              <div className="text-xs text-white/70 font-medium text-center">Size</div>
+              <div class="flex gap-2">
                 {(["small", "medium", "large"] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => resizeImage(img.id, s)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
-                      img.size === s
-                        ? "bg-indigo-500 text-white"
-                        : "bg-white/20 text-white hover:bg-white/30"
+                      img.size === s ? "bg-indigo-500 text-white" : "bg-white/20 text-white hover:bg-white/30"
                     }`}
                   >
                     {s}
                   </button>
                 ))}
               </div>
-              <button
-                onClick={() => removeImage(img.id)}
-                className="w-full px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm font-medium"
-              >
+              <button onClick={() => removeImage(img.id)} className="w-full px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm font-medium">
                 Remove
               </button>
             </div>
@@ -247,53 +135,31 @@ function ImageManager({
         </div>
       ))}
 
-      {/* Add image button */}
       <div className="text-center">
-        <button
-          onClick={() => setShowUploader(true)}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white rounded-2xl font-medium transition-all hover:scale-105"
-        >
+        <button onClick={() => setShowUploader(true)} className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white rounded-2xl font-medium transition-all hover:scale-105">
           + Add Image
         </button>
       </div>
 
-      {/* Upload modal */}
       {showUploader && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-gray-900 border border-white/20 rounded-3xl p-8 max-w-lg w-full">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-white">Add Image</h3>
-              <button
-                onClick={() => setShowUploader(false)}
-                className="text-gray-400 hover:text-white transition"
-              >
+              <button onClick={() => setShowUploader(false)} className="text-gray-400 hover:text-white transition">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadFile(f);
-              }}
-            />
+            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); }} />
 
-            <div
-              className="border-2 border-dashed border-white/20 rounded-2xl p-12 text-center cursor-pointer hover:border-indigo-500/50 hover:bg-white/5 transition"
-              onClick={() => inputRef.current?.click()}
-            >
+            <div className="border-2 border-dashed border-white/20 rounded-2xl p-12 text-center cursor-pointer hover:border-indigo-500/50 hover:bg-white/5 transition" onClick={() => inputRef.current?.click()}>
               <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-white font-medium mb-2">
-                {uploading ? "Uploading..." : "Click to upload"}
-              </p>
+              <p className="text-white font-medium mb-2">{uploading ? "Uploading..." : "Click to upload"}</p>
               <p className="text-sm text-gray-500">or drag and drop</p>
             </div>
           </div>
@@ -304,20 +170,11 @@ function ImageManager({
 }
 
 /* ======================================================
-   SECTION COMPONENT
+   SECTION
 ====================================================== */
 
-function Section({
-  sectionKey,
-  section,
-  editMode,
-  onDataUpdate,
-  onImagesUpdate,
-  username,
-}: {
-  sectionKey: string;
-  section: SectionData;
-  editMode: boolean;
+function Section({ sectionKey, section, editMode, onDataUpdate, onImagesUpdate, username }: {
+  sectionKey: string; section: SectionData; editMode: boolean;
   onDataUpdate: (data: Record<string, any>) => void;
   onImagesUpdate: (images: ImageData[]) => void;
   username: string;
@@ -325,7 +182,6 @@ function Section({
   const [localData, setLocalData] = useState(section.data || {});
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Replace {{placeholders}} with editable text
   useEffect(() => {
     if (!containerRef.current || !editMode) return;
 
@@ -335,22 +191,15 @@ function Section({
     const textNodes: Text[] = [];
     let node;
     while ((node = walker.nextNode())) {
-      if (node.textContent?.trim()) {
-        textNodes.push(node as Text);
-      }
+      if (node.textContent?.trim()) textNodes.push(node as Text);
     }
 
-    // Make matching text nodes editable
     textNodes.forEach((textNode) => {
       const parent = textNode.parentElement;
       if (!parent) return;
 
       const text = textNode.textContent?.trim() || "";
-
-      // Find matching data key
-      const matchingKey = Object.keys(localData).find(
-        (key) => String(localData[key]).trim() === text
-      );
+      const matchingKey = Object.keys(localData).find((key) => String(localData[key]).trim() === text);
 
       if (matchingKey) {
         const span = document.createElement("span");
@@ -368,7 +217,6 @@ function Section({
             span.focus();
             span.classList.add("outline", "outline-2", "outline-indigo-500", "outline-offset-4", "bg-indigo-500/10");
             
-            // Select all
             const range = document.createRange();
             range.selectNodeContents(span);
             const sel = window.getSelection();
@@ -391,14 +239,8 @@ function Section({
         });
 
         span.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            span.blur();
-          }
-          if (e.key === "Escape") {
-            span.textContent = String(localData[matchingKey]);
-            span.blur();
-          }
+          if (e.key === "Enter") { e.preventDefault(); span.blur(); }
+          if (e.key === "Escape") { span.textContent = String(localData[matchingKey]); span.blur(); }
         });
 
         parent.replaceChild(span, textNode);
@@ -406,7 +248,6 @@ function Section({
     });
   }, [section.html, editMode, localData]);
 
-  // Render HTML with placeholders replaced
   const renderHTML = () => {
     let html = section.html;
     Object.keys(localData).forEach((key) => {
@@ -418,122 +259,65 @@ function Section({
 
   return (
     <div>
-      <div
-        ref={containerRef}
-        dangerouslySetInnerHTML={{ __html: renderHTML() }}
-        className="prose-headings:font-bold prose-p:leading-relaxed max-w-none"
-      />
-
-      {editMode && (
-        <ImageManager
-          images={section.images || []}
-          onImagesUpdate={onImagesUpdate}
-          username={username}
-          sectionKey={sectionKey}
-        />
-      )}
+      <div ref={containerRef} dangerouslySetInnerHTML={{ __html: renderHTML() }} className="prose-headings:font-bold prose-p:leading-relaxed max-w-none" />
+      {editMode && <ImageManager images={section.images || []} onImagesUpdate={onImagesUpdate} username={username} sectionKey={sectionKey} />}
     </div>
   );
 }
 
 /* ======================================================
-   FLOATING TOOLBAR
+   TOOLBAR
 ====================================================== */
 
-function FloatingToolbar({
-  userPlan,
-  currentTheme,
-  onThemeChange,
-  onPublish,
-  onExit,
-  saving,
-}: {
-  userPlan: string;
-  currentTheme: string;
-  onThemeChange: (theme: string) => void;
-  onPublish: () => void;
-  onExit: () => void;
-  saving: boolean;
+function Toolbar({ userPlan, onSave, onUndo, onPublish, onUnpublish, onExit, saving, hasChanges, isPublished }: {
+  userPlan: string; onSave: () => void; onUndo: () => void; onPublish: () => void; onUnpublish: () => void; onExit: () => void; saving: boolean; hasChanges: boolean; isPublished: boolean;
 }) {
-  const [showThemes, setShowThemes] = useState(false);
   const isPaid = userPlan === "starter" || userPlan === "pro";
 
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-      <div className="bg-gray-900/90 backdrop-blur-2xl border border-white/30 rounded-2xl shadow-2xl px-8 py-4 flex items-center gap-6">
-        {/* Save status */}
-        <div className={`text-sm font-medium ${saving ? "text-indigo-400" : "text-green-400"}`}>
-          {saving ? "💾 Saving..." : "✓ Saved"}
+      <div className="bg-gray-900/90 backdrop-blur-2xl border border-white/30 rounded-2xl shadow-2xl px-8 py-4 flex items-center gap-4">
+        <div className={`text-sm font-medium ${saving ? "text-indigo-400" : hasChanges ? "text-amber-400" : "text-green-400"}`}>
+          {saving ? "💾 Saving..." : hasChanges ? "● Unsaved" : "✓ Saved"}
         </div>
 
         <div className="h-6 w-px bg-white/20" />
 
-        {/* Theme picker */}
-        <div className="relative">
-          <button
-            onClick={() => setShowThemes(!showThemes)}
-            className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition flex items-center gap-2"
-          >
-            🎨 Theme
-          </button>
+        {hasChanges && (
+          <>
+            <button onClick={onSave} disabled={saving} className="px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white font-medium transition disabled:opacity-50">
+              Save
+            </button>
+            <button onClick={onUndo} disabled={saving} className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition disabled:opacity-50">
+              Undo
+            </button>
+            <div className="h-6 w-px bg-white/20" />
+          </>
+        )}
 
-          {showThemes && (
-            <div className="absolute bottom-full left-0 mb-3 bg-gray-900/95 backdrop-blur-xl border border-white/30 rounded-2xl p-4 shadow-2xl min-w-[240px]">
-              <div className="text-xs text-gray-400 mb-3 font-semibold uppercase tracking-wider">
-                Color Palette
-              </div>
-              <div className="space-y-2">
-                {THEME_OPTIONS.map((theme) => (
-                  <button
-                    key={theme.id}
-                    onClick={() => {
-                      onThemeChange(theme.id);
-                      setShowThemes(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition ${
-                      currentTheme === theme.id ? "bg-white/10 ring-2 ring-indigo-500" : ""
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg ${theme.preview} shadow-lg`} />
-                    <span className="text-white text-sm font-medium">{theme.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Publish */}
         {isPaid ? (
-          <button
-            onClick={onPublish}
-            className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all hover:scale-105 shadow-lg"
-          >
-            ✓ Publish
-          </button>
+          isPublished ? (
+            <button onClick={onUnpublish} className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-all">
+              📤 Unpublish
+            </button>
+          ) : (
+            <button onClick={onPublish} className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all hover:scale-105 shadow-lg">
+              ✓ Publish
+            </button>
+          )
         ) : (
-          <div
-            className="px-6 py-2.5 bg-gray-700/50 text-gray-400 rounded-xl font-medium cursor-not-allowed"
-            title="Upgrade to Pro to publish"
-          >
+          <div className="px-6 py-2.5 bg-gray-700/50 text-gray-400 rounded-xl font-medium cursor-not-allowed" title="Upgrade to publish">
             🔒 Publish (Pro Only)
           </div>
         )}
 
         <div className="h-6 w-px bg-white/20" />
 
-        {/* Exit */}
-        <button
-          onClick={onExit}
-          className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition"
-        >
+        <button onClick={onExit} className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition">
           ← Exit
         </button>
 
-        {/* Help tip */}
-        <div className="text-xs text-gray-400 ml-2">
-          💡 Click any text to edit
-        </div>
+        <div className="text-xs text-gray-400 ml-2">💡 Click text to edit</div>
       </div>
     </div>
   );
@@ -543,72 +327,91 @@ function FloatingToolbar({
    MAIN RENDERER
 ====================================================== */
 
-export default function AIHTMLWebsiteRenderer({
-  username,
-  content,
-  structure,
-  editMode,
-  userPlan = "free",
-}: Props) {
+export default function AIHTMLWebsiteRenderer({ username, content, structure, editMode, userPlan = "free", isPublished: initialPublished = false }: Props) {
   const router = useRouter();
   const [localContent, setLocalContent] = useState(content);
-  const [currentTheme, setCurrentTheme] = useState(structure?.palette_key || "midnight_purple");
+  const [savedContent, setSavedContent] = useState(content);
   const [saving, setSaving] = useState(false);
+  const [isPublished, setIsPublished] = useState(initialPublished);
+
+  const hasChanges = JSON.stringify(localContent) !== JSON.stringify(savedContent);
 
   const handleDataUpdate = (sectionKey: string, data: Record<string, any>) => {
     setLocalContent((prev) => ({
       ...prev,
-      sections: {
-        ...prev.sections,
-        [sectionKey]: {
-          ...prev.sections[sectionKey],
-          data,
-        },
-      },
+      sections: { ...prev.sections, [sectionKey]: { ...prev.sections[sectionKey], data } },
     }));
-
-    // Auto-save
-    setSaving(true);
-    setTimeout(async () => {
-      try {
-        const token = localStorage.getItem("autopilot_token");
-        await fetch(`${getApiBase()}/api/restaurants/${username}/save`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(localContent),
-        });
-      } catch (e) {
-        console.error("Save failed:", e);
-      }
-      setSaving(false);
-    }, 1500);
   };
 
   const handleImagesUpdate = (sectionKey: string, images: ImageData[]) => {
     setLocalContent((prev) => ({
       ...prev,
-      sections: {
-        ...prev.sections,
-        [sectionKey]: {
-          ...prev.sections[sectionKey],
-          images,
-        },
-      },
+      sections: { ...prev.sections, [sectionKey]: { ...prev.sections[sectionKey], images } },
     }));
   };
 
-  const handlePublish = () => {
-    alert("Publishing coming soon! Your site will be live at your custom domain.");
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("autopilot_token");
+      const res = await fetch(`${getApiBase()}/api/restaurants/${username}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(localContent),
+      });
+      if (res.ok) {
+        setSavedContent(localContent);
+        alert("✓ Saved successfully!");
+      }
+    } catch (e) {
+      alert("Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUndo = () => {
+    setLocalContent(savedContent);
+  };
+
+  const handlePublish = async () => {
+    const token = localStorage.getItem("autopilot_token");
+    const res = await fetch(`${getApiBase()}/api/dashboard/websites/${username}/publish`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setIsPublished(true);
+      alert("✓ Website published!");
+    }
+  };
+
+  const handleUnpublish = async () => {
+    const token = localStorage.getItem("autopilot_token");
+    const res = await fetch(`${getApiBase()}/api/dashboard/websites/${username}/unpublish`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setIsPublished(false);
+      alert("✓ Website unpublished");
+    }
   };
 
   const sections = structure?.sections || Object.keys(localContent.sections || {});
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Sections */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+      `}</style>
+
       {sections.map((sectionKey: string) => {
         const section = localContent.sections[sectionKey];
         if (!section?.html) return null;
@@ -626,15 +429,17 @@ export default function AIHTMLWebsiteRenderer({
         );
       })}
 
-      {/* Floating toolbar (edit mode only) */}
       {editMode && (
-        <FloatingToolbar
+        <Toolbar
           userPlan={userPlan}
-          currentTheme={currentTheme}
-          onThemeChange={setCurrentTheme}
+          onSave={handleSave}
+          onUndo={handleUndo}
           onPublish={handlePublish}
+          onUnpublish={handleUnpublish}
           onExit={() => router.push("/dashboard")}
           saving={saving}
+          hasChanges={hasChanges}
+          isPublished={isPublished}
         />
       )}
     </div>
