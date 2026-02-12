@@ -114,7 +114,7 @@ function ImageManager({
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 space-y-3">
               <div className="text-xs text-white/70 font-medium text-center">Size</div>
-              <div class="flex gap-2">
+              <div className="flex gap-2">
                 {(["small", "medium", "large"] as const).map((s) => (
                   <button
                     key={s}
