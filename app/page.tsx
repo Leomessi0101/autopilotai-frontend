@@ -99,21 +99,76 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* VISUAL DEMO */}
-          <div className="relative aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 backdrop-blur-sm shadow-2xl">
-            <div className="absolute inset-0 flex items-center justify-center">
-              {/* Animated demo placeholder - replace with actual video/gif */}
-              <div className="text-center p-12">
-                <div className="inline-block mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">AI Generating Website...</span>
+          {/* ANIMATED VISUAL DEMO */}
+          <div className="relative aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-white/10 shadow-2xl">
+            {/* Browser chrome */}
+            <div className="absolute top-0 left-0 right-0 h-10 bg-gray-800 border-b border-white/10 flex items-center px-4 gap-2">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <div className="flex-1 mx-4 h-6 bg-gray-700 rounded text-xs flex items-center px-3 text-gray-400">
+                autopilotai.app/create
+              </div>
+            </div>
+
+            {/* Demo content */}
+            <div className="pt-10 p-8 h-full overflow-hidden">
+              {/* Input field animation */}
+              <div className="mb-8 animate-fadeIn">
+                <div className="max-w-2xl mx-auto">
+                  <div className="text-sm text-gray-400 mb-2">What's your business?</div>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value="Modern burger restaurant in downtown" 
+                      readOnly
+                      className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white"
+                    />
+                    <button className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg font-semibold">
+                      Generate →
+                    </button>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-4 bg-white/20 rounded-full w-64 mx-auto animate-pulse"></div>
-                  <div className="h-4 bg-white/20 rounded-full w-48 mx-auto animate-pulse" style={{animationDelay: "0.2s"}}></div>
-                  <div className="h-4 bg-white/20 rounded-full w-56 mx-auto animate-pulse" style={{animationDelay: "0.4s"}}></div>
+              </div>
+
+              {/* Generation progress */}
+              <div className="max-w-2xl mx-auto space-y-4 animate-fadeIn" style={{animationDelay: "0.5s"}}>
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">Analyzing business type...</span>
+                  <span className="ml-auto text-green-400 text-sm">✓</span>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">Designing layout...</span>
+                  <span className="ml-auto text-green-400 text-sm">✓</span>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-indigo-500/50">
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">Generating content...</span>
+                  <div className="ml-auto">
+                    <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-progress"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview cards appearing */}
+              <div className="absolute bottom-8 left-8 right-8 grid grid-cols-3 gap-4 animate-fadeIn" style={{animationDelay: "1s"}}>
+                <div className="aspect-video bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg border border-white/10 backdrop-blur-sm p-3">
+                  <div className="h-2 bg-white/20 rounded mb-2"></div>
+                  <div className="h-1 bg-white/10 rounded w-3/4"></div>
+                </div>
+                <div className="aspect-video bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg border border-white/10 backdrop-blur-sm p-3">
+                  <div className="h-2 bg-white/20 rounded mb-2"></div>
+                  <div className="h-1 bg-white/10 rounded w-2/3"></div>
+                </div>
+                <div className="aspect-video bg-gradient-to-br from-pink-500/20 to-red-500/20 rounded-lg border border-white/10 backdrop-blur-sm p-3">
+                  <div className="h-2 bg-white/20 rounded mb-2"></div>
+                  <div className="h-1 bg-white/10 rounded w-4/5"></div>
                 </div>
               </div>
             </div>
@@ -348,6 +403,13 @@ export default function HomePage() {
         }
         .animate-fadeIn {
           animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes progress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+        .animate-progress {
+          animation: progress 2s ease-in-out infinite;
         }
       `}</style>
     </div>
