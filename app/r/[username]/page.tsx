@@ -188,9 +188,12 @@ export default function WebsitePage() {
      RENDER HTML MODE
   ====================================================== */
 
+ return (
   <AIHTMLWebsiteRenderer
     username={username}
-    content={content}
     structure={aiStructure}
-    editMode={editMode} userPlan={""} />
+    content={content}
+    editMode={editMode}
+  />
+);
 }
