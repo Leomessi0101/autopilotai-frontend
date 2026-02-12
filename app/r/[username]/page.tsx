@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import PremiumWebsiteRenderer from "@/components/ai/PremiumWebsiteRenderer";
+import AIHTMLWebsiteRenderer from "@/components/ai/AIHTMLWebsiteRenderer";
 
 /* ======================================================
    TYPES
@@ -188,7 +188,7 @@ export default function WebsitePage() {
      RENDER HTML MODE
   ====================================================== */
 
-  <PremiumWebsiteRenderer
+  <AIHTMLWebsiteRenderer
     username={username}
     content={content}
     structure={aiStructure}
