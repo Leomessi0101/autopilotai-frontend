@@ -34,7 +34,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO - MAIN VALUE PROP */}
+      {/* HERO - WEBSITE BUILDER IS THE STAR */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         {/* Animated background */}
         <div className="absolute inset-0">
@@ -45,19 +45,19 @@ export default function HomePage() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
           {/* THE 3-SECOND PITCH */}
           <div className="inline-block mb-6 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-sm font-medium">
-            🤖 AI-Powered Everything • Websites • Social • Emails • Ads
+            ⚡ AI Website Builder • No Code • 60 Seconds
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight">
-            Your Entire Online Presence,
+          <h1 className="text-5xl md:text-7xl lg:text-9xl font-bold mb-8 leading-tight">
+            Your Website,
             <br />
             <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Built by AI in Seconds
+              Built in 60 Seconds
             </span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Professional websites, social media posts, email campaigns, and ads. All created instantly with AI. All editable with a click.
+            Describe your business. AI creates a professional website instantly. Click any text to edit. Publish with your custom domain.
           </p>
 
           {/* CTA */}
@@ -67,7 +67,7 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
             </a>
             <button onClick={() => document.getElementById('demo')?.scrollIntoView({behavior: 'smooth'})} className="px-10 py-5 border-2 border-white/20 rounded-2xl font-semibold hover:bg-white/5 transition-all">
-              See What It Does →
+              See How It Works →
             </button>
           </div>
 
@@ -79,7 +79,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 border-2 border-black"></div>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-400 to-red-400 border-2 border-black"></div>
               </div>
-              <span>500+ creators using AutopilotAI</span>
+              <span>500+ websites created</span>
             </div>
             <div>⭐ 4.9/5 rating</div>
             <div>🚀 No credit card required</div>
@@ -87,96 +87,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRODUCT SHOWCASE - ALL FEATURES */}
+      {/* WEBSITE BUILDER FEATURES - THE MAIN EVENT */}
       <section id="demo" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Everything You Need in One Tool
+              Professional Websites, Zero Effort
             </h2>
             <p className="text-xl text-gray-400">
-              Stop juggling 10 different tools. AutopilotAI does it all.
+              AI handles the design. You handle the business.
             </p>
           </div>
 
-          {/* MAIN FEATURES GRID */}
+          {/* MAIN WEBSITE FEATURES */}
           <div className="grid md:grid-cols-2 gap-8 mb-20">
-            {/* WEBSITES - PRIMARY */}
-            <div className="md:col-span-2 group relative p-10 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500 hover:scale-[1.02] transition-all">
-              <div className="absolute top-6 right-6 px-3 py-1 bg-indigo-500 rounded-full text-xs font-bold">
-                PRIMARY
-              </div>
+            {/* Feature 1 */}
+            <div className="group relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-indigo-500/50 transition-all hover:scale-[1.02]">
+              <div className="text-5xl mb-6">🤖</div>
+              <h3 className="text-3xl font-bold mb-4">AI-Powered Design</h3>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Every website is unique. No templates. AI creates custom layouts, color schemes, and content specifically for your business.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="group relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-purple-500/50 transition-all hover:scale-[1.02]">
+              <div className="text-5xl mb-6">✏️</div>
+              <h3 className="text-3xl font-bold mb-4">Click-to-Edit</h3>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Click any text to change it. Upload images anywhere. No coding, no complex tools. Just click and type.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="group relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-pink-500/50 transition-all hover:scale-[1.02]">
+              <div className="text-5xl mb-6">📱</div>
+              <h3 className="text-3xl font-bold mb-4">Mobile Perfect</h3>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Looks amazing on phones, tablets, and desktops. Every website is automatically responsive. No extra work needed.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="group relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-indigo-500/50 transition-all hover:scale-[1.02]">
               <div className="text-5xl mb-6">🌐</div>
-              <h3 className="text-3xl font-bold mb-4">AI Website Builder</h3>
-              <p className="text-xl text-gray-300 mb-6 leading-relaxed">
-                Describe your business. AI generates a complete, professional website in 60 seconds. Click any text to edit. Upload images anywhere. Publish with custom domain.
+              <h3 className="text-3xl font-bold mb-4">Custom Domain</h3>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Publish with your own domain. yourcompany.com, not a subdomain. Professional and trustworthy.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <span className="px-4 py-2 bg-white/10 rounded-lg text-sm">Click-to-Edit</span>
-                <span className="px-4 py-2 bg-white/10 rounded-lg text-sm">Custom Domains</span>
-                <span className="px-4 py-2 bg-white/10 rounded-lg text-sm">Mobile Responsive</span>
-                <span className="px-4 py-2 bg-white/10 rounded-lg text-sm">Unique Every Time</span>
-              </div>
-            </div>
-
-            {/* SOCIAL MEDIA */}
-            <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02]">
-              <div className="text-4xl mb-4">📱</div>
-              <h3 className="text-2xl font-bold mb-3">Social Media Content</h3>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                AI writes engaging posts for Instagram, Twitter, LinkedIn, and Facebook. Complete with hashtags, captions, and hooks.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-lg text-xs">Instagram</span>
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs">Twitter</span>
-                <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg text-xs">LinkedIn</span>
-              </div>
-            </div>
-
-            {/* AI IMAGES */}
-            <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02]">
-              <div className="text-4xl mb-4">🎨</div>
-              <h3 className="text-2xl font-bold mb-3">AI Image Generation</h3>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                Create custom images for your brand, social posts, ads, and website. No stock photos needed. Unique visuals in seconds.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-pink-500/20 text-pink-300 rounded-lg text-xs">Brand Assets</span>
-                <span className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-lg text-xs">Social Graphics</span>
-              </div>
-            </div>
-
-            {/* EMAIL CAMPAIGNS */}
-            <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02]">
-              <div className="text-4xl mb-4">✉️</div>
-              <h3 className="text-2xl font-bold mb-3">Email Campaigns</h3>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                AI writes compelling email campaigns. Newsletters, promotions, announcements. Subject lines that get opened.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-lg text-xs">Newsletters</span>
-                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg text-xs">Promotions</span>
-              </div>
-            </div>
-
-            {/* AD COPY */}
-            <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02]">
-              <div className="text-4xl mb-4">📢</div>
-              <h3 className="text-2xl font-bold mb-3">Ad Copy That Converts</h3>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                Generate high-converting ad copy for Google Ads, Facebook, Instagram. Headlines, descriptions, CTAs that drive sales.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-red-500/20 text-red-300 rounded-lg text-xs">Google Ads</span>
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs">Facebook</span>
-              </div>
             </div>
           </div>
 
           {/* HOW IT WORKS */}
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">How It Works</h3>
-            <p className="text-gray-400">Three steps to your entire online presence</p>
+            <h3 className="text-3xl font-bold mb-4">Three Steps to Your Website</h3>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -185,73 +149,90 @@ export default function HomePage() {
                 1
               </div>
               <h3 className="text-xl font-bold mb-2">Describe Your Business</h3>
-              <p className="text-gray-400">Tell AI what you do in one sentence</p>
+              <p className="text-gray-400">Tell us what you do in one sentence</p>
             </div>
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mb-4 text-2xl font-bold">
                 2
               </div>
-              <h3 className="text-xl font-bold mb-2">AI Creates Everything</h3>
-              <p className="text-gray-400">Website, posts, emails, ads - all at once</p>
+              <h3 className="text-xl font-bold mb-2">AI Builds Your Site</h3>
+              <p className="text-gray-400">Watch it generate in real-time</p>
             </div>
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl mb-4 text-2xl font-bold">
                 3
               </div>
               <h3 className="text-xl font-bold mb-2">Edit & Publish</h3>
-              <p className="text-gray-400">Click to edit anything. Publish when ready.</p>
+              <p className="text-gray-400">Click to edit. Publish with custom domain.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* USE CASES */}
+      {/* BONUS TOOLS - SECONDARY */}
       <section className="py-32 bg-gradient-to-b from-black to-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
+            <div className="inline-block mb-4 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm font-medium">
+              Bonus Tools
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Perfect For
+              Plus AI Content Creation
             </h2>
             <p className="text-xl text-gray-400">
-              Whether you're solo or scaling
+              Need more than a website? We've got you covered.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-3xl bg-black/50 border border-white/10">
-              <div className="text-4xl mb-4">👤</div>
-              <h3 className="text-2xl font-bold mb-3">Solopreneurs</h3>
-              <p className="text-gray-400">
-                Launch your business online without hiring a designer, copywriter, or developer.
+          <div className="grid md:grid-cols-4 gap-6">
+            {/* Social Media */}
+            <div className="p-6 rounded-2xl bg-black/50 border border-white/10">
+              <div className="text-3xl mb-3">📱</div>
+              <h3 className="text-lg font-bold mb-2">Social Posts</h3>
+              <p className="text-sm text-gray-400">
+                AI writes Instagram, Twitter, LinkedIn posts with hashtags
               </p>
             </div>
-            <div className="p-8 rounded-3xl bg-black/50 border border-white/10">
-              <div className="text-4xl mb-4">🏢</div>
-              <h3 className="text-2xl font-bold mb-3">Small Businesses</h3>
-              <p className="text-gray-400">
-                Professional online presence and marketing materials in minutes, not weeks.
+
+            {/* AI Images */}
+            <div className="p-6 rounded-2xl bg-black/50 border border-white/10">
+              <div className="text-3xl mb-3">🎨</div>
+              <h3 className="text-lg font-bold mb-2">AI Images</h3>
+              <p className="text-sm text-gray-400">
+                Generate custom images for your brand and content
               </p>
             </div>
-            <div className="p-8 rounded-3xl bg-black/50 border border-white/10">
-              <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-2xl font-bold mb-3">Agencies</h3>
-              <p className="text-gray-400">
-                Deliver client websites and content faster. Scale without hiring more people.
+
+            {/* Emails */}
+            <div className="p-6 rounded-2xl bg-black/50 border border-white/10">
+              <div className="text-3xl mb-3">✉️</div>
+              <h3 className="text-lg font-bold mb-2">Email Copy</h3>
+              <p className="text-sm text-gray-400">
+                Create newsletters, promotions, and campaigns
+              </p>
+            </div>
+
+            {/* Ads */}
+            <div className="p-6 rounded-2xl bg-black/50 border border-white/10">
+              <div className="text-3xl mb-3">📢</div>
+              <h3 className="text-lg font-bold mb-2">Ad Copy</h3>
+              <p className="text-sm text-gray-400">
+                Generate Google Ads and Facebook ad copy
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* PRICING */}
+      {/* PRICING - HONEST & CLEAR */}
       <section className="py-32 relative">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Simple Pricing
+              Simple, Honest Pricing
             </h2>
             <p className="text-xl text-gray-400">
-              Start free. Upgrade when you're ready.
+              Start free. Upgrade when you're ready to publish.
             </p>
           </div>
 
@@ -260,25 +241,31 @@ export default function HomePage() {
             <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
               <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Free</div>
               <div className="text-5xl font-bold mb-2">$0</div>
-              <p className="text-gray-400 mb-8">Try everything</p>
-              <ul className="space-y-4 mb-8">
+              <p className="text-gray-400 mb-8">Try it out</p>
+              <ul className="space-y-4 mb-8 text-sm">
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Full AI suite access</span>
+                  <span><strong>10 AI generations</strong> (websites, posts, emails, ads)</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Create & edit everything</span>
+                  <span>Click-to-edit all content</span>
                 </li>
                 <li className="flex items-center gap-3 opacity-50">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Publish websites</span>
+                  <span>0 AI images</span>
+                </li>
+                <li className="flex items-center gap-3 opacity-50">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Can't publish websites</span>
                 </li>
               </ul>
               <a href="/register" className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition">
@@ -294,21 +281,27 @@ export default function HomePage() {
               <div className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Starter</div>
               <div className="text-5xl font-bold mb-2">$10<span className="text-2xl text-gray-400">/mo</span></div>
               <p className="text-gray-400 mb-8">Go live</p>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-4 mb-8 text-sm">
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Everything in Free</span>
+                  <span><strong>Unlimited AI generations</strong></span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span><strong>20 AI images/month</strong></span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span><strong>Publish websites</strong></span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span><strong>Custom domain</strong></span>
@@ -323,22 +316,28 @@ export default function HomePage() {
             <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
               <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Pro</div>
               <div className="text-5xl font-bold mb-2">$20<span className="text-2xl text-gray-400">/mo</span></div>
-              <p className="text-gray-400 mb-8">Scale up</p>
-              <ul className="space-y-4 mb-8">
+              <p className="text-gray-400 mb-8">Power user</p>
+              <ul className="space-y-4 mb-8 text-sm">
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Everything in Starter</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span><strong>50 AI images/month</strong></span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span><strong>3 websites</strong></span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Priority support</span>
@@ -359,13 +358,13 @@ export default function HomePage() {
         </div>
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-6xl font-bold mb-6">
-            Stop Doing It All Manually
+            Ready to Build Your Website?
           </h2>
           <p className="text-xl text-gray-400 mb-12">
-            Let AI handle your websites, social media, emails, and ads. You focus on growing.
+            Join 500+ businesses who chose speed over complexity
           </p>
           <a href="/register" className="inline-block px-12 py-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl font-bold text-xl hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
-            Start Creating for Free →
+            Start Free - No Credit Card →
           </a>
         </div>
       </section>
@@ -385,16 +384,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
