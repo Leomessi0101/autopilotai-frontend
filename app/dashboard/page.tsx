@@ -2,6 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  FileText,
+  Mail,
+  Megaphone,
+  Briefcase,
+  Globe,
+  Zap,
+  BarChart3,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
 
@@ -38,7 +50,13 @@ export default function DashboardPage() {
   ========================= */
 
   const [initial, setInitial] = useState("U");
+  const [userName, setUserName] = useState<string | null>(null);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
+  const [usage, setUsage] = useState<{
+    used: number;
+    limit: number | null;
+  }>({ used: 0, limit: null });
+  const [workCount, setWorkCount] = useState(0);
 
   /* =========================
      WEBSITE STATE
@@ -84,18 +102,31 @@ export default function DashboardPage() {
 
     async function load() {
       try {
-        const me = await api.get("/api/auth/me");
-        if (me.data?.name) {
-          setInitial(me.data.name.charAt(0).toUpperCase());
+        const [meRes, siteRes, workRes] = await Promise.all([
+          api.get("/api/auth/me"),
+          api.get("/api/dashboard/websites/me"),
+          api.get("/api/work").catch(() => ({ data: [] })),
+        ]);
+
+        const me = meRes.data;
+        if (me?.name) {
+          setInitial(me.name.charAt(0).toUpperCase());
+          setUserName(me.name);
         }
-        if (me.data?.subscription) {
-          setSubscriptionPlan(me.data.subscription);
+        if (me?.subscription) setSubscriptionPlan(me.subscription);
+        if (me?.used_generations != null || me?.monthly_limit != null) {
+          setUsage({
+            used: me?.used_generations ?? 0,
+            limit: me?.monthly_limit ?? null,
+          });
         }
 
-        const site = await api.get("/api/dashboard/websites/me");
-        if (site.data?.exists && site.data.username) {
-          setExistingSite({ username: site.data.username });
+        if (siteRes.data?.exists && siteRes.data.username) {
+          setExistingSite({ username: siteRes.data.username });
         }
+
+        const workItems = Array.isArray(workRes.data) ? workRes.data : [];
+        setWorkCount(workItems.length);
       } catch {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
@@ -205,7 +236,110 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <main className="max-w-4xl mx-auto px-6 py-16 md:py-24 relative">
+      <main className="max-w-6xl mx-auto px-6 py-10 md:py-14 relative">
+        {/* Welcome + Stats */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="mb-10"
+        >
+          <h1 className="text-2xl md:text-3xl font-semibold text-white mb-6">
+            Welcome back{userName ? `, ${userName.split(" ")[0]}` : ""}
+          </h1>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <StatCard
+              icon={<Globe className="w-4 h-4" />}
+              label="Website"
+              value={existingSite ? "Live" : "Not created"}
+              sub={existingSite ? existingSite.username : "Create with AI below"}
+              accent={existingSite ? "emerald" : "slate"}
+            />
+            <StatCard
+              icon={<BarChart3 className="w-4 h-4" />}
+              label="Usage"
+              value={
+                usage.limit == null
+                  ? "Unlimited"
+                  : `${usage.used} / ${usage.limit}`
+              }
+              sub={usage.limit != null ? "generations this month" : "generations"}
+              accent="indigo"
+            />
+            <StatCard
+              icon={<Briefcase className="w-4 h-4" />}
+              label="My Work"
+              value={String(workCount)}
+              sub="saved items"
+              accent="violet"
+            />
+            <StatCard
+              icon={<Zap className="w-4 h-4" />}
+              label="Plan"
+              value={subscriptionPlan ? String(subscriptionPlan).charAt(0).toUpperCase() + String(subscriptionPlan).slice(1) : "Free"}
+              sub="current plan"
+              accent="amber"
+            />
+          </div>
+        </motion.section>
+
+        {/* Shortcuts: Content, Email, Ads, My Work */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          className="mb-10"
+        >
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            Quick access
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ShortcutCard
+              icon={<FileText className="w-5 h-5" />}
+              title="Content"
+              description="Create and manage AI content and images"
+              href="/dashboard/content"
+              onClick={() => router.push("/dashboard/content")}
+              accent="indigo"
+            />
+            <ShortcutCard
+              icon={<Mail className="w-5 h-5" />}
+              title="Emails"
+              description="Generate and send email copy"
+              href="/dashboard/email"
+              onClick={() => router.push("/dashboard/email")}
+              accent="violet"
+            />
+            <ShortcutCard
+              icon={<Megaphone className="w-5 h-5" />}
+              title="Ads"
+              description="Create ad copy and creatives"
+              href="/dashboard/ads"
+              onClick={() => router.push("/dashboard/ads")}
+              accent="rose"
+            />
+            <ShortcutCard
+              icon={<Briefcase className="w-5 h-5" />}
+              title="My Work"
+              description="View and manage your saved work"
+              href="/dashboard/work"
+              onClick={() => router.push("/dashboard/work")}
+              badge={workCount > 0 ? workCount : undefined}
+              accent="emerald"
+            />
+          </div>
+        </motion.section>
+
+        {/* AI Website — main feature */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+        >
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400/80" />
+            AI Website
+          </h2>
         {existingSite ? (
           <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
@@ -435,8 +569,116 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+        </motion.section>
       </main>
       </div>
     </div>
+  );
+}
+
+/* =========================
+   DASHBOARD WIDGETS
+========================= */
+
+function StatCard({
+  icon,
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub: string;
+  accent: "emerald" | "slate" | "indigo" | "violet" | "amber";
+}) {
+  const accentClasses = {
+    emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    slate: "bg-slate-500/10 border-slate-500/20 text-slate-400",
+    indigo: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    violet: "bg-violet-500/10 border-violet-500/20 text-violet-400",
+    amber: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+  };
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-sm p-4 md:p-5 hover:border-white/[0.12] hover:bg-slate-900/60 transition-all duration-300">
+      <div className="flex items-center gap-3 mb-2">
+        <div
+          className={cx(
+            "w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0",
+            accentClasses[accent]
+          )}
+        >
+          {icon}
+        </div>
+        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+          {label}
+        </span>
+      </div>
+      <p className="text-lg md:text-xl font-semibold text-white tabular-nums">
+        {value}
+      </p>
+      <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
+    </div>
+  );
+}
+
+function ShortcutCard({
+  icon,
+  title,
+  description,
+  href,
+  onClick,
+  badge,
+  accent,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  href: string;
+  onClick: () => void;
+  badge?: number;
+  accent: "indigo" | "violet" | "rose" | "emerald";
+}) {
+  const accentClasses = {
+    indigo: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/15",
+    violet: "bg-violet-500/10 border-violet-500/20 text-violet-400 group-hover:bg-violet-500/15",
+    rose: "bg-rose-500/10 border-rose-500/20 text-rose-400 group-hover:bg-rose-500/15",
+    emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/15",
+  };
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.99 }}
+      className="group w-full text-left rounded-2xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-sm p-5 hover:border-white/[0.14] hover:bg-slate-900/60 transition-all duration-300 relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors" />
+      <div className="relative">
+        <div
+          className={cx(
+            "w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 mb-3 transition-colors",
+            accentClasses[accent]
+          )}
+        >
+          {icon}
+        </div>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-semibold text-white">{title}</h3>
+          {badge != null && badge > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-medium text-slate-300">
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors pr-8">
+          {description}
+        </p>
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all">
+          <ChevronRight className="w-5 h-5" />
+        </span>
+      </div>
+    </motion.button>
   );
 }
