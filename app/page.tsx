@@ -270,7 +270,7 @@ export default function HomePage() {
             <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
               <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Free</div>
               <div className="text-5xl font-bold mb-2">$0</div>
-              <p className="text-gray-400 mb-8">Test it out</p>
+              <p className="text-gray-400 mb-8">Try it risk-free</p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,11 +284,17 @@ export default function HomePage() {
                   </svg>
                   <span>Click-to-edit</span>
                 </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Upload images</span>
+                </li>
                 <li className="flex items-center gap-3 opacity-50">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Custom domain</span>
+                  <span>Publish to web</span>
                 </li>
               </ul>
               <a href="/register" className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition">
@@ -297,13 +303,13 @@ export default function HomePage() {
             </div>
 
             {/* STARTER - POPULAR */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500 relative">
+            <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500 relative transform scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-indigo-500 rounded-full text-sm font-bold">
-                POPULAR
+                MOST POPULAR
               </div>
               <div className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Starter</div>
-              <div className="text-5xl font-bold mb-2">$9<span className="text-2xl text-gray-400">/mo</span></div>
-              <p className="text-gray-400 mb-8">For serious creators</p>
+              <div className="text-5xl font-bold mb-2">$10<span className="text-2xl text-gray-400">/mo</span></div>
+              <p className="text-gray-400 mb-8">For professionals</p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,16 +321,22 @@ export default function HomePage() {
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
+                  <span><strong>Publish to web</strong></span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span><strong>Custom domain</strong></span>
                 </li>
                 <li className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Remove branding</span>
+                  <span>Remove "Powered by AutopilotAI"</span>
                 </li>
               </ul>
-              <a href="/register" className="block w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 rounded-xl font-semibold text-center transition-all">
+              <a href="/register" className="block w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 rounded-xl font-semibold text-center transition-all shadow-lg">
                 Get Started
               </a>
             </div>
@@ -332,8 +344,8 @@ export default function HomePage() {
             {/* PRO */}
             <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
               <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Pro</div>
-              <div className="text-5xl font-bold mb-2">$29<span className="text-2xl text-gray-400">/mo</span></div>
-              <p className="text-gray-400 mb-8">For agencies</p>
+              <div className="text-5xl font-bold mb-2">$20<span className="text-2xl text-gray-400">/mo</span></div>
+              <p className="text-gray-400 mb-8">For power users</p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,13 +357,19 @@ export default function HomePage() {
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span><strong>Unlimited pages</strong></span>
+                  <span><strong>3 websites</strong></span>
                 </li>
                 <li className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Priority support</span>
+                  <span><strong>Multiple pages per site</strong></span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Priority email support</span>
                 </li>
               </ul>
               <a href="/register" className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition">
