@@ -43,6 +43,104 @@ function getApiBase() {
 }
 
 /* ======================================================
+   THEME (from structure – ensures each site can look different)
+====================================================== */
+
+const ACCENT_COLORS: Record<string, { solid: string; solidHover: string; soft: string; muted: string }> = {
+  indigo: { solid: "#4f46e5", solidHover: "#6366f1", soft: "rgba(99,102,241,0.15)", muted: "rgba(99,102,241,0.4)" },
+  emerald: { solid: "#059669", solidHover: "#10b981", soft: "rgba(16,185,129,0.15)", muted: "rgba(16,185,129,0.4)" },
+  orange: { solid: "#ea580c", solidHover: "#f97316", soft: "rgba(249,115,22,0.15)", muted: "rgba(249,115,22,0.4)" },
+  neutral: { solid: "#171717", solidHover: "#404040", soft: "rgba(0,0,0,0.08)", muted: "rgba(0,0,0,0.5)" },
+  violet: { solid: "#7c3aed", solidHover: "#8b5cf6", soft: "rgba(139,92,246,0.15)", muted: "rgba(139,92,246,0.4)" },
+  rose: { solid: "#e11d48", solidHover: "#f43f5e", soft: "rgba(244,63,94,0.15)", muted: "rgba(244,63,94,0.4)" },
+};
+
+function getThemeFromStructure(structure: any): {
+  palette: "light" | "dark";
+  accent: string;
+  pageClassName: string;
+  cssVars: Record<string, string>;
+} {
+  const palette = (structure?.theme?.palette === "dark" ? "dark" : "light") as "light" | "dark";
+  const accentKey = structure?.theme?.accent || "indigo";
+  const accent = ACCENT_COLORS[accentKey] || ACCENT_COLORS.indigo;
+
+  const pageClassName =
+    palette === "dark"
+      ? "min-h-screen bg-[#0a0a0f] text-white"
+      : "min-h-screen bg-[#fafafa] text-gray-900";
+
+  const cssVars: Record<string, string> = {
+    "--theme-accent": accent.solid,
+    "--theme-accent-hover": accent.solidHover,
+    "--theme-accent-soft": accent.soft,
+    "--theme-accent-muted": accent.muted,
+  };
+  if (palette === "dark") {
+    cssVars["--theme-bg"] = "#0a0a0f";
+    cssVars["--theme-surface"] = "rgba(255,255,255,0.06)";
+    cssVars["--theme-text"] = "#ffffff";
+    cssVars["--theme-muted"] = "rgba(255,255,255,0.65)";
+    cssVars["--theme-border"] = "rgba(255,255,255,0.12)";
+  } else {
+    cssVars["--theme-bg"] = "#fafafa";
+    cssVars["--theme-surface"] = "#ffffff";
+    cssVars["--theme-text"] = "#111827";
+    cssVars["--theme-muted"] = "rgba(0,0,0,0.6)";
+    cssVars["--theme-border"] = "rgba(0,0,0,0.1)";
+  }
+  return { palette, accent: accentKey, pageClassName, cssVars };
+}
+
+/** Injected styles so backend-generated HTML respects structure.theme (accent + palette) */
+function ThemeStyleBlock({ cssVars }: { cssVars: Record<string, string> }) {
+  const varDecl = Object.entries(cssVars)
+    .map(([k, v]) => `${k}: ${v};`)
+    .join("\n  ");
+
+  return (
+    <style dangerouslySetInnerHTML={{ __html: `
+.ai-html-theme-wrapper {
+  ${varDecl}
+}
+/* Remap common Tailwind accent classes to theme so backend HTML varies by site */
+.ai-html-theme-wrapper .bg-indigo-500,
+.ai-html-theme-wrapper .bg-indigo-600,
+.ai-html-theme-wrapper [class*="bg-indigo"] { background-color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .hover\\:bg-indigo-500:hover,
+.ai-html-theme-wrapper .hover\\:bg-indigo-600:hover,
+.ai-html-theme-wrapper [class*="hover:bg-indigo"]:hover { background-color: var(--theme-accent-hover) !important; }
+.ai-html-theme-wrapper .text-indigo-500,
+.ai-html-theme-wrapper .text-indigo-600,
+.ai-html-theme-wrapper [class*="text-indigo"] { color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .border-indigo-500,
+.ai-html-theme-wrapper .border-indigo-600,
+.ai-html-theme-wrapper [class*="border-indigo"] { border-color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .ring-indigo-500,
+.ai-html-theme-wrapper [class*="ring-indigo"] { --tw-ring-color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .bg-indigo-500\\/10,
+.ai-html-theme-wrapper .bg-indigo-500\\/20,
+.ai-html-theme-wrapper [class*="bg-indigo-500/"] { background-color: var(--theme-accent-soft) !important; }
+/* Support other accent names so backend can send any and we still override to chosen theme */
+.ai-html-theme-wrapper .bg-emerald-500,
+.ai-html-theme-wrapper .bg-emerald-600,
+.ai-html-theme-wrapper .bg-orange-500,
+.ai-html-theme-wrapper .bg-violet-500,
+.ai-html-theme-wrapper .bg-rose-500 { background-color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .text-emerald-500,
+.ai-html-theme-wrapper .text-emerald-600,
+.ai-html-theme-wrapper .text-orange-500,
+.ai-html-theme-wrapper .text-violet-500,
+.ai-html-theme-wrapper .text-rose-500 { color: var(--theme-accent) !important; }
+.ai-html-theme-wrapper .border-emerald-500,
+.ai-html-theme-wrapper .border-orange-500,
+.ai-html-theme-wrapper .border-violet-500,
+.ai-html-theme-wrapper .border-rose-500 { border-color: var(--theme-accent) !important; }
+` }} />
+  );
+}
+
+/* ======================================================
    IMAGE MANAGER
 ====================================================== */
 
@@ -399,9 +497,11 @@ export default function AIHTMLWebsiteRenderer({ username, content, structure, ed
   };
 
   const sections = structure?.sections || Object.keys(localContent.sections || {});
+  const theme = getThemeFromStructure(structure);
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className={`ai-html-theme-wrapper ${theme.pageClassName}`} style={theme.cssVars as React.CSSProperties}>
+      <ThemeStyleBlock cssVars={theme.cssVars} />
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }

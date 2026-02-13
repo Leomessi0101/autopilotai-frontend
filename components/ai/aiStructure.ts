@@ -109,7 +109,7 @@ export type SectionType = CoreSectionType | UniversalSectionType | (string & {})
 
 export type ThemePalette = "light" | "dark";
 
-export type AccentColor = "indigo" | "orange" | "emerald" | "neutral";
+export type AccentColor = "indigo" | "orange" | "emerald" | "neutral" | "violet" | "rose";
 
 export type ThemeRadius = "sm" | "md" | "lg" | "xl";
 export type ThemeDensity = "compact" | "comfortable" | "spacious";
