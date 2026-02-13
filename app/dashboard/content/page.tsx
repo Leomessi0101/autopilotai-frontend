@@ -53,6 +53,7 @@ export default function ContentPage() {
   const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
 
   const [imageStyle, setImageStyle] = useState<(typeof IMAGE_STYLES)[number]["value"]>("clean");
+  const [saveToast, setSaveToast] = useState(false);
 
   const isPaid = useMemo(() => {
     return !!subscriptionPlan && subscriptionPlan !== "free";
@@ -138,7 +139,8 @@ export default function ContentPage() {
       image_style: imageStyle,
     });
 
-    alert("Saved to My Work");
+    setSaveToast(true);
+    setTimeout(() => setSaveToast(false), 2500);
   };
 
   const downloadImage = () => {
@@ -176,29 +178,32 @@ export default function ContentPage() {
   const selectedStyle = IMAGE_STYLES.find((s) => s.value === imageStyle);
 
   return (
-    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
-      {/* cinematic glow bg */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
-        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
-      </div>
-
+    <div className="min-h-screen bg-[#050810] text-white relative">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(99,102,241,0.08),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b06_1px,transparent_1px),linear-gradient(to_bottom,#1e293b06_1px,transparent_1px)] bg-[size:28px_28px]" />
+      <div className="relative">
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
+      {saveToast && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-emerald-500/95 text-white border border-emerald-400/30 shadow-lg backdrop-blur-xl">
+          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+          <span className="font-medium">Saved to My Work</span>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-        {/* HEADER */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           className="mb-16"
         >
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
-              <h1 className="text-5xl md:text-6xl font-light">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 Content Generator
               </h1>
-              <p className="mt-6 text-xl text-gray-300 max-w-3xl">
+              <p className="mt-5 text-lg md:text-xl text-slate-400 max-w-3xl leading-relaxed">
                 Craft compelling posts — and optionally pair them with AI images.
               </p>
             </div>
@@ -206,13 +211,13 @@ export default function ContentPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => router.push("/dashboard/work")}
-                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-[#2b4e8d] transition"
+                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 font-medium transition-all duration-300"
               >
                 My Work →
               </button>
               <button
                 onClick={clearAll}
-                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-white/30 transition"
+                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 font-medium transition-all duration-300"
               >
                 Clear
               </button>
@@ -220,257 +225,226 @@ export default function ContentPage() {
           </div>
         </motion.section>
 
-        {/* MAIN GRID */}
         <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-16">
-          {/* LEFT PANEL */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 shadow-[0_60px_140px_rgba(0,0,0,.55)]"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-8 md:p-10 shadow-2xl shadow-black/40"
           >
-            {/* Title */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Title / Topic (optional)
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Product announcement, mindset post, launch news"
-                className="w-full px-5 py-4 rounded-2xl bg-black/25 border border-white/20 text-white focus:ring-2 focus:ring-[#6d8ce8] outline-none"
-              />
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px]" />
 
-            {/* Details */}
-            <div className="mb-10">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Details
-              </label>
-              <textarea
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                rows={8}
-                placeholder="Platform, tone, audience, instructions…"
-                className="w-full px-5 py-4 rounded-2xl bg-black/25 border border-white/20 text-white focus:ring-2 focus:ring-[#6d8ce8] resize-none outline-none"
-              />
-              <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
-                <span>Tip: Include audience + goal + CTA for best results.</span>
-                <span>{details.length} chars</span>
-              </div>
-            </div>
-
-            {/* Templates */}
-            <div className="mb-10">
-              <p className="text-sm font-medium text-gray-300 mb-3">
-                Quick templates
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {quickTemplates.map((t, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setDetails(t)}
-                    className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-[#6d8ce8]/60 hover:bg-white/10 transition text-sm"
-                  >
-                    {t.split(" — ")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* IMAGE TOGGLE */}
-            <div className="mb-6 flex items-center justify-between border border-white/15 rounded-2xl px-6 py-4 bg-black/15">
+            <div className="relative space-y-8">
               <div>
-                <p className="text-sm font-medium text-white">
-                  Generate AI Image
-                </p>
-                <p className="text-xs text-gray-400">
-                  Paid feature • Shows only 1 caption when enabled
-                </p>
-              </div>
-
-              <label className="relative inline-flex cursor-pointer">
+                <label className="block text-sm font-semibold text-slate-400 mb-2">
+                  Title / Topic (optional)
+                </label>
                 <input
-                  type="checkbox"
-                  checked={generateImage}
-                  onChange={handleToggle}
-                  className="sr-only peer"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Product announcement, mindset post, launch news"
+                  className="w-full px-5 py-4 rounded-2xl bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 text-white placeholder:text-slate-500 focus:outline-none transition-all duration-300"
                 />
-                <div className="w-12 h-6 bg-gray-600 rounded-full peer peer-checked:bg-[#6d8ce8] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6"></div>
-              </label>
-            </div>
-
-            {showUpgradeNotice && (
-              <div className="mb-8 rounded-2xl border border-yellow-200 bg-yellow-50 text-black px-6 py-5">
-                <p className="text-sm font-medium mb-2">
-                  AI Image generation is a paid feature.
-                </p>
-                <p className="text-xs text-black/70 mb-4">
-                  Upgrade to unlock premium image generation for your content.
-                </p>
-                <button
-                  onClick={() =>
-                    window.open("https://www.autopilotai.dev/upgrade", "_blank")
-                  }
-                  className="px-5 py-2 bg-[#1b2f54] text-white rounded-xl"
-                >
-                  Upgrade Plan
-                </button>
               </div>
-            )}
 
-            {/* STYLE SELECT (premium cards, not old dropdown) */}
-            {generateImage && (
-              <div className="mb-10">
-                <div className="flex items-end justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Image Style
-                  </label>
-                  {selectedStyle && (
-                    <span className="text-xs text-gray-400">
-                      {selectedStyle.desc}
-                    </span>
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">
+                  Details
+                </label>
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  rows={8}
+                  placeholder="Platform, tone, audience, instructions…"
+                  className="w-full px-5 py-4 rounded-2xl bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 text-white placeholder:text-slate-500 resize-none focus:outline-none transition-all duration-300"
+                />
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                  <span>Tip: Include audience + goal + CTA for best results.</span>
+                  <span className="tabular-nums font-medium">{details.length} chars</span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-400 mb-3">
+                  Quick templates
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {quickTemplates.map((t, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setDetails(t)}
+                      className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/40 text-sm text-slate-200 font-medium transition-all duration-300"
+                    >
+                      {t.split(" — ")[0]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-6 py-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    Generate AI Image
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Paid feature • Shows only 1 caption when enabled
+                  </p>
+                </div>
+                <label className="relative inline-flex cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={generateImage}
+                    onChange={handleToggle}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6 bg-slate-600 rounded-full peer peer-checked:bg-indigo-500 after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6 after:shadow-md" />
+                </label>
+              </div>
+
+              {showUpgradeNotice && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-6 py-5">
+                  <p className="text-sm font-semibold text-amber-200 mb-1">
+                    AI Image generation is a paid feature.
+                  </p>
+                  <p className="text-xs text-slate-400 mb-4">
+                    Upgrade to unlock premium image generation for your content.
+                  </p>
+                  <button
+                    onClick={() => router.push("/upgrade")}
+                    className="px-5 py-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-200 rounded-xl font-medium hover:bg-amber-500/30 transition-colors"
+                  >
+                    Upgrade Plan
+                  </button>
+                </div>
+              )}
+
+              {generateImage && (
+                <div>
+                  <div className="flex items-end justify-between mb-3">
+                    <label className="block text-sm font-semibold text-slate-400">
+                      Image Style
+                    </label>
+                    {selectedStyle && (
+                      <span className="text-xs text-slate-500">
+                        {selectedStyle.desc}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    {IMAGE_STYLES.map((s) => {
+                      const active = imageStyle === s.value;
+                      return (
+                        <button
+                          key={s.value}
+                          onClick={() => setImageStyle(s.value)}
+                          className={`text-left rounded-2xl border px-5 py-4 transition-all duration-300 ${
+                            active
+                              ? "border-indigo-500/60 bg-indigo-500/15 shadow-[0_0_30px_rgba(99,102,241,.2)]"
+                              : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className={`text-sm font-medium ${active ? "text-white" : "text-slate-200"}`}>
+                              {s.title}
+                            </p>
+                            <span className={`text-xs ${active ? "text-indigo-400" : "text-slate-500"}`}>
+                              {active ? "Selected" : "Select"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-2">{s.desc}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!isPaid && (
+                    <p className="mt-3 text-xs text-slate-500">
+                      Image styles apply when you upgrade (paid plans).
+                    </p>
                   )}
                 </div>
+              )}
 
-                <div className="grid gap-3">
-                  {IMAGE_STYLES.map((s) => {
-                    const active = imageStyle === s.value;
-                    return (
-                      <button
-                        key={s.value}
-                        onClick={() => setImageStyle(s.value)}
-                        className={`text-left rounded-2xl border px-5 py-4 transition ${
-                          active
-                            ? "border-[#6d8ce8]/70 bg-[#6d8ce8]/15 shadow-[0_0_40px_rgba(109,140,232,.15)]"
-                            : "border-white/10 bg-white/5 hover:border-white/25"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p
-                            className={`text-sm font-medium ${
-                              active ? "text-white" : "text-gray-200"
-                            }`}
-                          >
-                            {s.title}
-                          </p>
-                          <span
-                            className={`text-xs ${
-                              active ? "text-[#6d8ce8]" : "text-gray-500"
-                            }`}
-                          >
-                            {active ? "Selected" : "Select"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">{s.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {!isPaid && (
-                  <p className="mt-3 text-xs text-gray-500">
-                    Image styles apply when you upgrade (paid plans).
-                  </p>
-                )}
+              <div className="flex items-center justify-between gap-6 pt-2">
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  className="relative overflow-hidden px-10 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl font-semibold disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.99]"
+                >
+                  <span className="relative z-10">
+                    {loading ? "Generating…" : "Generate"}
+                  </span>
+                  {!loading && <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />}
+                </button>
+                {error && <p className="text-sm text-red-400 font-medium">{error}</p>}
               </div>
-            )}
-
-            {/* CTA ROW */}
-            <div className="flex items-center justify-between gap-6">
-              <button
-                onClick={handleGenerate}
-                disabled={loading}
-                className="relative px-10 py-4 bg-[#6d8ce8] text-black rounded-2xl disabled:opacity-60 hover:bg-white transition font-medium shadow-[0_20px_60px_rgba(109,140,232,.25)]"
-              >
-                {loading ? "Generating…" : "Generate"}
-              </button>
-
-              {error && <p className="text-red-400">{error}</p>}
             </div>
           </motion.div>
 
-          {/* RIGHT SIDEBAR (real now) */}
           <motion.aside
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.25 }}
-            className="space-y-8"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-6"
           >
-            {/* Premium helper */}
-            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 shadow-[0_40px_100px_rgba(0,0,0,.45)]">
-              <p className="text-sm text-gray-300">
+            <div className="rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-6 shadow-xl shadow-black/30">
+              <p className="text-sm font-semibold text-slate-200 mb-3">
                 Quality inputs = premium outputs.
               </p>
-              <div className="mt-4 space-y-3 text-xs text-gray-400">
-                <p>• Audience: who is this for?</p>
-                <p>• Outcome: what do you want them to do?</p>
-                <p>• Tone: calm, bold, luxury, casual…</p>
-                <p>• Offer: what’s the value / benefit?</p>
-              </div>
+              <ul className="space-y-2 text-xs text-slate-400">
+                <li>• Audience: who is this for?</li>
+                <li>• Outcome: what do you want them to do?</li>
+                <li>• Tone: calm, bold, luxury, casual…</li>
+                <li>• Offer: what’s the value / benefit?</li>
+              </ul>
             </div>
 
-            {/* Quick actions */}
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-7">
-              <p className="text-sm font-medium text-gray-200 mb-4">
+            <div className="rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-6 shadow-xl shadow-black/30">
+              <p className="text-sm font-semibold text-slate-200 mb-4">
                 Quick actions
               </p>
-
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 <button
                   onClick={copyCaption}
                   disabled={!result}
-                  className="px-5 py-3 rounded-2xl bg-black/25 border border-white/10 hover:border-[#6d8ce8]/60 transition disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <p className="text-sm text-gray-200">Copy caption</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Copy your generated text instantly
-                  </p>
+                  <p className="text-sm font-medium text-slate-200">Copy caption</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Copy your generated text instantly</p>
                 </button>
-
                 <button
                   onClick={() => router.push("/dashboard/work")}
-                  className="px-5 py-3 rounded-2xl bg-black/25 border border-white/10 hover:border-[#2b4e8d] transition text-left"
+                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition text-left"
                 >
-                  <p className="text-sm text-gray-200">Open My Work</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    See saved content + images
-                  </p>
+                  <p className="text-sm font-medium text-slate-200">Open My Work</p>
+                  <p className="text-xs text-slate-500 mt-0.5">See saved content + images</p>
                 </button>
-
                 <button
                   onClick={clearAll}
-                  className="px-5 py-3 rounded-2xl bg-black/25 border border-white/10 hover:border-white/25 transition text-left"
+                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition text-left"
                 >
-                  <p className="text-sm text-gray-200">Reset form</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Clear inputs and start fresh
-                  </p>
+                  <p className="text-sm font-medium text-slate-200">Reset form</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Clear inputs and start fresh</p>
                 </button>
               </div>
             </div>
 
-            {/* Plan */}
-            <div className="rounded-3xl border border-[#2b4e8d]/40 bg-gradient-to-br from-[#111b2d] to-[#1b2f54] p-7 shadow-[0_40px_100px_rgba(0,0,0,.55)]">
-              <p className="text-xs uppercase tracking-wide text-white/70">
+            <div className="rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-slate-900/80 to-indigo-950/40 p-6 shadow-xl shadow-black/30">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Current Plan
               </p>
-              <p className="text-2xl font-semibold mt-2">
-                {subscriptionPlan
-                  ? subscriptionPlan.charAt(0).toUpperCase() +
-                    subscriptionPlan.slice(1)
-                  : "Free"}
+              <p className="text-xl font-bold text-white mt-2">
+                {subscriptionPlan ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1) : "Free"}
               </p>
-              <p className="text-sm text-white/80 mt-3">
+              <p className="text-sm text-slate-300 mt-2">
                 {isPaid
                   ? "You have access to premium image generation."
                   : "Upgrade to unlock premium images and faster workflows."}
               </p>
-
               {!isPaid && (
                 <button
                   onClick={() => router.push("/upgrade")}
-                  className="mt-6 w-full py-3 bg-white text-[#1b2f54] rounded-2xl font-medium hover:bg-gray-200 transition"
+                  className="mt-5 w-full py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-slate-100 transition-colors"
                 >
                   Upgrade
                 </button>
@@ -479,37 +453,33 @@ export default function ContentPage() {
           </motion.aside>
         </section>
 
-        {/* SOCIAL MEDIA PREVIEW */}
         {(result || imageUrl) && (
           <motion.section
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.5 }}
             className="mb-24"
           >
-            <div className="max-w-xl mx-auto bg-white rounded-3xl border shadow-[0_40px_90px_rgba(0,0,0,.6)] overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center gap-3 p-5">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1b2f54] to-[#6d8ce8]" />
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">
-                    autopilot.creator <span className="text-blue-500">✔</span>
+            <div className="max-w-xl mx-auto rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden">
+              <div className="flex items-center gap-3 p-5 border-b border-white/10">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white">
+                    autopilot.creator <span className="text-indigo-400">✔</span>
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     Sponsored • Generated with AutopilotAI
                   </p>
                 </div>
-
                 <button
                   onClick={copyCaption}
                   disabled={!result}
-                  className="text-xs px-4 py-2 rounded-xl border border-gray-200 hover:border-gray-400 transition disabled:opacity-60"
+                  className="text-xs px-4 py-2 rounded-xl bg-white/10 border border-white/10 hover:bg-white/15 text-slate-200 font-medium transition disabled:opacity-50"
                 >
                   Copy
                 </button>
               </div>
 
-              {/* Image */}
               {imageUrl && (
                 <img
                   src={imageUrl}
@@ -518,45 +488,31 @@ export default function ContentPage() {
                 />
               )}
 
-              {/* Actions */}
-              <div className="flex items-center justify-between px-5 pt-4 text-gray-700">
-                <div className="flex gap-4 text-2xl">❤️ 💬 🔁</div>
+              <div className="flex items-center justify-between px-5 py-4 text-slate-400">
+                <div className="flex gap-5 text-xl">❤️ 💬 🔁</div>
                 <span className="text-lg">⭐</span>
               </div>
 
-              {/* Caption */}
-              <div className="p-6">
+              <div className="px-6 pb-6">
                 <p className="text-sm">
-                  <span className="font-semibold mr-2 text-gray-900">
-                    autopilot.creator
-                  </span>
-                  <span className="whitespace-pre-wrap leading-relaxed text-gray-800">
-                    {result}
-                  </span>
+                  <span className="font-semibold mr-2 text-white">autopilot.creator</span>
+                  <span className="whitespace-pre-wrap leading-relaxed text-slate-300">{result}</span>
                 </p>
-
-                <p className="text-xs text-gray-500 mt-4">
-                  View all 239 comments
-                </p>
-
-                <p className="text-xs text-gray-400 mt-2">
-                  Posted just now • Powered by AutopilotAI
-                </p>
+                <p className="text-xs text-slate-500 mt-4">View all 239 comments</p>
+                <p className="text-xs text-slate-600 mt-1">Posted just now • Powered by AutopilotAI</p>
               </div>
 
-              {/* Buttons */}
               {imageUrl && (
-                <div className="flex justify-end gap-3 p-5 border-t bg-gray-50">
+                <div className="flex justify-end gap-3 p-5 border-t border-white/10 bg-black/20">
                   <button
                     onClick={downloadImage}
-                    className="px-6 py-2 border rounded-xl hover:border-[#1b2f54] transition"
+                    className="px-5 py-2.5 rounded-xl border border-white/20 text-slate-200 font-medium hover:bg-white/10 transition"
                   >
                     Download
                   </button>
-
                   <button
                     onClick={saveImage}
-                    className="px-6 py-2 bg-[#1b2f54] text-white rounded-xl hover:bg-[#2b4e8d] transition"
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-500 transition"
                   >
                     Save to My Work
                   </button>
@@ -566,6 +522,7 @@ export default function ContentPage() {
           </motion.section>
         )}
       </main>
+      </div>
     </div>
   );
 }
