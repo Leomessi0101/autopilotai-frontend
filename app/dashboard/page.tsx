@@ -160,51 +160,65 @@ export default function DashboardPage() {
 
   if (loadingSite) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-950 text-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin"></div>
+      <div className="min-h-screen bg-[#050810] text-white flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b08_1px,transparent_1px),linear-gradient(to_bottom,#1e293b08_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="relative flex flex-col items-center gap-6">
+          <div className="relative w-14 h-14">
+            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/30" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-indigo-400 border-r-violet-400 animate-spin" />
+            <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-violet-400 border-l-indigo-400 animate-spin [animation-duration:1.5s] [animation-direction:reverse]" />
           </div>
-          <p className="text-slate-400 font-medium">Loading your workspace</p>
+          <p className="text-slate-400 font-medium tracking-wide">Loading your workspace</p>
+          <div className="h-1 w-24 rounded-full bg-slate-800 overflow-hidden">
+            <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 loading-bar-shimmer" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-950 text-white">
+    <div className="min-h-screen bg-[#050810] text-white relative">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(99,102,241,0.08),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b06_1px,transparent_1px),linear-gradient(to_bottom,#1e293b06_1px,transparent_1px)] bg-[size:28px_28px]" />
+      <div className="relative">
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
       {toast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
           <div
             className={cx(
-              "px-6 py-3 rounded-2xl text-sm font-medium backdrop-blur-xl shadow-2xl",
+              "px-6 py-3.5 rounded-2xl text-sm font-medium backdrop-blur-xl shadow-2xl border flex items-center gap-3",
               toast.type === "ok"
-                ? "bg-emerald-500/90 text-white border border-emerald-400/20"
-                : "bg-red-500/90 text-white border border-red-400/20"
+                ? "bg-emerald-500/95 text-white border-emerald-400/30 shadow-emerald-500/20"
+                : "bg-red-500/95 text-white border-red-400/30 shadow-red-500/20"
             )}
           >
+            {toast.type === "ok" ? (
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+            ) : (
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+            )}
             {toast.msg}
           </div>
         </div>
       )}
 
-      <main className="max-w-4xl mx-auto px-6 py-16 md:py-24">
+      <main className="max-w-4xl mx-auto px-6 py-16 md:py-24 relative">
         {existingSite ? (
-          <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-slate-900/80 via-slate-900/50 to-black/80 backdrop-blur-sm shadow-2xl">
-            {/* Ambient glow effect */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 left-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
             
             <div className="relative p-8 md:p-12">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="text-sm font-medium text-emerald-300">Live & Ready</span>
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/25 mb-8">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                <span className="text-sm font-semibold text-emerald-300 tracking-wide">Live & Ready</span>
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-4">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
                 Your AI Website
               </h1>
               
@@ -213,64 +227,64 @@ export default function DashboardPage() {
                 refine the layout, or adjust the tone to match your vision.
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <div className="mt-12 flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() =>
                     router.push(`/r/${existingSite.username}?edit=1`)
                   }
-                  className="group relative overflow-hidden flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 font-semibold text-lg transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02]"
+                  className="group relative overflow-hidden flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 font-semibold text-lg transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.99]"
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10 flex items-center justify-center gap-2.5">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Edit Website
                   </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <div className="absolute inset-0 bg-white/15 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 </button>
 
                 <a
                   href={`/r/${existingSite.username}`}
                   target="_blank"
-                  className="flex-1 py-4 px-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 text-center font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 group"
+                  className="flex-1 py-4 px-6 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/25 text-center font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2.5 group"
                 >
                   <span>View Live</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
               </div>
 
-              {/* Stats or quick info */}
-              <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm text-slate-500 mb-1">Your URL</p>
-                  <p className="text-slate-300 font-mono text-sm">autopilotai.dev/r/{existingSite.username}</p>
+              <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-2 gap-8">
+                <div className="rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Your URL</p>
+                  <p className="text-slate-300 font-mono text-sm break-all">autopilotai.dev/r/{existingSite.username}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500 mb-1">Status</p>
-                  <p className="text-emerald-400 font-medium">Published</p>
+                <div className="rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Status</p>
+                  <p className="text-emerald-400 font-semibold">Published</p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-slate-900/80 via-slate-900/50 to-black/80 backdrop-blur-sm shadow-2xl">
-            {/* Ambient glow effect */}
-            <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl"></div>
+          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 right-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
             
             <div className="relative p-8 md:p-12">
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-6">
+              <div className="mb-10">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/25 mb-8">
                   <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13 7H7v6h6V7z" />
                     <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm font-medium text-indigo-300">AI Website Builder</span>
+                  <span className="text-sm font-semibold text-indigo-300 tracking-wide">AI Website Builder</span>
                 </div>
 
-                <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-4">
+                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
                   Build Your Website with AI
                 </h1>
                 
@@ -280,11 +294,10 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              <div className="space-y-5 mb-8">
-                {/* Business description */}
+              <div className="space-y-6 mb-10">
                 <div className="group">
-                  <label className="block text-sm font-medium text-slate-400 mb-2.5 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Describe your business
@@ -295,18 +308,17 @@ export default function DashboardPage() {
                       onChange={(e) => setBusinessDescription(e.target.value)}
                       rows={6}
                       placeholder="Example: I run a local basketball program for homeless youth in Oslo. We organize weekly training sessions, accept donations, and want people to volunteer or support us."
-                      className="w-full rounded-2xl px-6 py-4 bg-black/40 border border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:bg-black/60 resize-none focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-600 shadow-inner"
+                      className="w-full rounded-2xl px-6 py-4 bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 focus:bg-black/60 resize-none focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-500 shadow-inner"
                     />
-                    <div className="absolute bottom-4 right-4 text-xs text-slate-600">
+                    <div className="absolute bottom-4 right-4 text-xs text-slate-500 font-medium tabular-nums">
                       {businessDescription.length} characters
                     </div>
                   </div>
                 </div>
 
-                {/* Website name */}
                 <div className="group">
-                  <label className="block text-sm font-medium text-slate-400 mb-2.5 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                     </svg>
                     Website name
@@ -317,12 +329,12 @@ export default function DashboardPage() {
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="my-business"
                       className={cx(
-                        "w-full rounded-2xl pl-6 pr-32 py-4 bg-black/40 border transition-all duration-300 focus:outline-none shadow-inner font-mono text-slate-100 placeholder:text-slate-600",
+                        "w-full rounded-2xl pl-6 pr-32 py-4 bg-black/50 border transition-all duration-300 focus:outline-none focus:ring-2 shadow-inner font-mono text-slate-100 placeholder:text-slate-500",
                         usernameValid
-                          ? "border-white/10 hover:border-white/20 focus:border-emerald-500/50 focus:bg-black/60"
+                          ? "border-white/10 hover:border-white/20 focus:border-emerald-500/50 focus:ring-emerald-500/20 focus:bg-black/60"
                           : username.length > 0 
-                          ? "border-red-500/40 focus:border-red-500/60 bg-red-500/5"
-                          : "border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:bg-black/60"
+                          ? "border-red-500/40 focus:border-red-500/60 focus:ring-red-500/20 bg-red-500/5"
+                          : "border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-indigo-500/20 focus:bg-black/60"
                       )}
                     />
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">
@@ -357,14 +369,15 @@ export default function DashboardPage() {
                 className={cx(
                   "group relative overflow-hidden w-full py-5 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-xl mt-8",
                   creating
-                    ? "bg-slate-700 text-slate-300 cursor-not-allowed"
-                    : "bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]"
+                    ? "bg-slate-700/80 text-slate-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.99]"
                 )}
               >
-                <span className="relative z-10 flex items-center justify-center gap-2">
+                <span className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <span className="relative z-10 flex items-center justify-center gap-2.5">
                   {creating ? (
                     <>
-                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -372,22 +385,21 @@ export default function DashboardPage() {
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       <span>Generate Website</span>
                     </>
                   )}
                 </span>
                 {!creating && (
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <div className="absolute inset-0 bg-white/15 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 )}
               </button>
 
-              {/* Features list */}
-              <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
+                  <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -397,8 +409,8 @@ export default function DashboardPage() {
                     <p className="text-sm text-slate-500">Content written by advanced AI</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
+                  <div className="w-11 h-11 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -408,8 +420,8 @@ export default function DashboardPage() {
                     <p className="text-sm text-slate-500">Customize every element</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -424,6 +436,7 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }
