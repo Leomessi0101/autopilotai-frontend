@@ -13,13 +13,10 @@ import {
   BarChart3,
   ChevronRight,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
-
-/* =========================
-   UTILS
-========================= */
 
 function cx(...c: Array<string | false | null | undefined>) {
   return c.filter(Boolean).join(" ");
@@ -38,17 +35,8 @@ function isValidSlug(slug: string) {
   return /^[a-z0-9-]{3,30}$/.test(slug);
 }
 
-/* =========================
-   PAGE
-========================= */
-
 export default function DashboardPage() {
   const router = useRouter();
-
-  /* =========================
-     USER
-  ========================= */
-
   const [initial, setInitial] = useState("U");
   const [userName, setUserName] = useState<string | null>(null);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
@@ -57,20 +45,10 @@ export default function DashboardPage() {
     limit: number | null;
   }>({ used: 0, limit: null });
   const [workCount, setWorkCount] = useState(0);
-
-  /* =========================
-     WEBSITE STATE
-  ========================= */
-
   const [loadingSite, setLoadingSite] = useState(true);
   const [existingSite, setExistingSite] = useState<null | {
     username: string;
   }>(null);
-
-  /* =========================
-     INPUTS (CREATE FLOW)
-  ========================= */
-
   const [username, setUsername] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
   const [creating, setCreating] = useState(false);
@@ -88,10 +66,6 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<
     null | { type: "ok" | "err"; msg: string }
   >(null);
-
-  /* =========================
-     LOAD USER + WEBSITE
-  ========================= */
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -138,10 +112,6 @@ export default function DashboardPage() {
     load();
   }, [router]);
 
-  /* =========================
-     CREATE WEBSITE (AI)
-  ========================= */
-
   async function generateWebsite() {
     if (!usernameValid) {
       setToast({
@@ -184,10 +154,6 @@ export default function DashboardPage() {
       setCreating(false);
     }
   }
-
-  /* =========================
-     RENDER
-  ========================= */
 
   if (loadingSite) {
     return (
@@ -237,7 +203,39 @@ export default function DashboardPage() {
       )}
 
       <main className="max-w-6xl mx-auto px-6 py-10 md:py-14 relative">
-        {/* Welcome + Stats */}
+        {subscriptionPlan === "free" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-10 relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 backdrop-blur-xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-rose-500/5"></div>
+            <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 mb-4">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Free Account</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  Ready to Publish Your Website?
+                </h2>
+                <p className="text-gray-300 text-lg">
+                  Upgrade to Starter ($10/mo) to publish your website with a custom domain
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/upgrade")}
+                className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-2xl font-bold text-lg text-white overflow-hidden shadow-2xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:scale-105 flex items-center gap-2"
+              >
+                <span className="relative z-10">Upgrade Now</span>
+                <ArrowRight className="relative z-10 w-5 h-5" />
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -283,7 +281,6 @@ export default function DashboardPage() {
           </div>
         </motion.section>
 
-        {/* Shortcuts: Content, Email, Ads, My Work */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -330,7 +327,6 @@ export default function DashboardPage() {
           </div>
         </motion.section>
 
-        {/* AI Website — main feature */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -575,10 +571,6 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-/* =========================
-   DASHBOARD WIDGETS
-========================= */
 
 function StatCard({
   icon,
