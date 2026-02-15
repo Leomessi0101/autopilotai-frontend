@@ -60,7 +60,24 @@ export default function RegisterPage() {
       if (subscription)
         localStorage.setItem("autopilot_subscription", subscription);
 
-      router.push("/dashboard");
+      // ✅ FIX: Check if they came from pricing page
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedPlan = urlParams.get("plan");
+      
+      if (selectedPlan === "starter" || selectedPlan === "pro") {
+        // They selected a paid plan - send to Stripe
+        try {
+          const stripeRes = await api.post(`/api/stripe/create-checkout-session?plan=${selectedPlan}`);
+          window.location.href = stripeRes.data.checkout_url;
+          return;
+        } catch {
+          // Stripe failed, go to dashboard
+          router.push("/dashboard");
+        }
+      } else {
+        // Free plan or no plan - go to dashboard
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       const backendError = err.response?.data?.detail;
       setError(
