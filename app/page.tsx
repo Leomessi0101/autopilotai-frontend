@@ -27,7 +27,7 @@ export default function HomePage() {
             <a href="/login" className="px-4 py-2 text-gray-300 hover:text-white transition">
               Login
             </a>
-            <a href="/register" className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+            <a href="/upgrade" className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
               Create Free Website
             </a>
           </div>
@@ -62,7 +62,7 @@ export default function HomePage() {
 
           {/* PRIMARY CTA - MASSIVE AND CLEAR */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <a href="/register" className="group relative px-12 py-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl font-bold text-xl overflow-hidden hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
+            <a href="/upgrade" className="group relative px-12 py-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl font-bold text-xl overflow-hidden hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
               <span className="relative z-10">Create Your Website Free →</span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
             </a>
@@ -129,7 +129,7 @@ export default function HomePage() {
 
           {/* SECONDARY CTA */}
           <div className="text-center mt-16">
-            <a href="/register" className="inline-block px-10 py-4 bg-white/10 hover:bg-white/20 border-2 border-white/20 rounded-2xl font-semibold text-lg transition-all hover:scale-105">
+            <a href="/upgrade" className="inline-block px-10 py-4 bg-white/10 hover:bg-white/20 border-2 border-white/20 rounded-2xl font-semibold text-lg transition-all hover:scale-105">
               Start Building Free →
             </a>
           </div>
@@ -263,7 +263,7 @@ export default function HomePage() {
                   <span>Can't publish</span>
                 </li>
               </ul>
-              <a href="/register" className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition">
+              <a href="/upgrade" className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition">
                 Start Free
               </a>
             </div>
@@ -294,7 +294,7 @@ export default function HomePage() {
                   <span>20 AI images/month</span>
                 </li>
               </ul>
-              <a href="/register" className="block w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 rounded-xl font-semibold text-center transition-all shadow-lg">
+              <a href="/upgrade" className="block w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 rounded-xl font-semibold text-center transition-all shadow-lg">
                 Start Free, Upgrade Later
               </a>
             </div>
@@ -314,7 +314,7 @@ export default function HomePage() {
           <p className="text-xl text-gray-400 mb-12">
             Join 500+ businesses. Free to start, $10/mo to publish.
           </p>
-          <a href="/register" className="inline-block px-12 py-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl font-bold text-xl hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
+          <a href="/upgrade" className="inline-block px-12 py-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl font-bold text-xl hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
             Create Your Website Free →
           </a>
           <p className="text-sm text-gray-500 mt-6">No credit card required • Cancel anytime</p>
