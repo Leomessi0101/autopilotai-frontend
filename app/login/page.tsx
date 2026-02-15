@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react";
 
@@ -12,6 +12,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  // ✅ Check if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("autopilot_token");
+    if (token) {
+      // Already logged in, redirect to dashboard
+      router.push("/dashboard");
+    } else {
+      setChecking(false);
+    }
+  }, [router]);
 
   const handleLogin = async () => {
     setError("");
@@ -38,6 +50,18 @@ export default function LoginPage() {
       );
     }
   };
+
+  // Show loading while checking login status
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+          <p className="text-gray-400">Checking login status...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen text-white bg-[#0a0a0f] relative flex items-center justify-center px-6 overflow-hidden">
