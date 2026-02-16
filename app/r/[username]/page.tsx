@@ -24,15 +24,6 @@ function getApiBase() {
   return process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "https://autopilotai-api.onrender.com";
 }
 
-function getUserIdFromToken(token: string): number | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.user_id ?? null;
-  } catch {
-    return null;
-  }
-}
-
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("autopilot_token") || sessionStorage.getItem("autopilot_token");
@@ -65,23 +56,38 @@ export default function WebsitePage() {
         setLoading(true);
         const token = getAuthToken();
 
-        // CHANGE: Use public endpoint
-        const res = await fetch(
-          `${getApiBase()}/api/public/websites/${username}`
-        );
+        // For draft websites (?edit=1), use preview endpoint with auth
+        // For published websites, use public endpoint (no auth needed)
+        let url: string;
+        const headers: HeadersInit = {};
+
+        if (editRequested) {
+          url = `${getApiBase()}/api/public/websites/${username}/preview`;
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+        } else {
+          url = `${getApiBase()}/api/public/websites/${username}`;
+        }
+
+        const res = await fetch(url, { headers });
 
         if (!res.ok) {
           if (res.status === 404) {
             throw new Error("Website not found");
           } else if (res.status === 403) {
-            throw new Error("Website is not published yet");
+            if (editRequested) {
+              throw new Error("You must be logged in as the owner to edit this website");
+            } else {
+              throw new Error("This website is private");
+            }
           } else {
             throw new Error(`Server error: ${res.statusText}`);
           }
         }
 
         const response = await res.json();
-        
+
         if (!response.ok || !response.data) {
           throw new Error("Invalid response format");
         }
@@ -93,15 +99,13 @@ export default function WebsitePage() {
         console.log("✅ Website loaded:", {
           username: website.username,
           theme: website.metadata?.theme,
-          industry: website.metadata?.industry,
-          published: website.publish_status === "published",
+          status: website.publish_status,
         });
 
         setWebsiteData(website);
 
-        // Check if user can edit
+        // Check if user can edit (only if ?edit=1 and authenticated)
         if (editRequested && token) {
-          // Fetch user info to verify ownership
           try {
             const userRes = await fetch(`${getApiBase()}/api/auth/me`, {
               headers: { Authorization: `Bearer ${token}` },
@@ -110,11 +114,9 @@ export default function WebsitePage() {
             if (userRes.ok) {
               const userData = await userRes.json();
               if (userData.ok || userData.data?.id) {
-                // User owns this site, can edit
                 setCanEdit(true);
                 setEditMode(true);
                 setUserPlan(userData.data?.subscription_plan || userData.subscription_plan || "free");
-
                 console.log("✏️ Edit mode enabled for", username);
               }
             }
