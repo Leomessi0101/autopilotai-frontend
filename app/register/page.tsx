@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { ArrowRight, Lock, Mail, User, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
+  <script src="https://t.contentsquare.net/uxa/d95128c47868e.js"></script>
   const router = useRouter();
 
   const [name, setName] = useState("");

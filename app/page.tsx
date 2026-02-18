@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  <script src="https://t.contentsquare.net/uxa/d95128c47868e.js"></script>
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);

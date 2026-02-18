@@ -39,6 +39,7 @@ function isValidSlug(slug: string) {
 }
 
 export default function DashboardPage() {
+  <script src="https://t.contentsquare.net/uxa/d95128c47868e.js"></script>
   const router = useRouter();
   const [initial, setInitial] = useState("U");
   const [userName, setUserName] = useState<string | null>(null);
