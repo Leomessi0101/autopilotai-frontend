@@ -53,23 +53,27 @@ export default function DashboardPage() {
     username: string;
     status: "draft" | "published";
   }>(null);
-  const [username, setUsername] = useState("");
+
+  // ── FORM STATE ────────────────────────────────────────────────────────────
+  // BUG 2 FIX: Three separate fields — businessName, businessDescription, username.
+  // We NEVER derive businessName from businessDescription.
+  // The API receives: { name: businessName, prompt: businessDescription, username }
+  const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
+  const [username, setUsername] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const cleanedUsername = useMemo(
-    () => normalizeSlug(username),
-    [username]
-  );
-
-  const usernameValid = useMemo(
-    () => isValidSlug(cleanedUsername),
-    [cleanedUsername]
-  );
+  const cleanedUsername = useMemo(() => normalizeSlug(username), [username]);
+  const usernameValid = useMemo(() => isValidSlug(cleanedUsername), [cleanedUsername]);
 
   const [toast, setToast] = useState<
     null | { type: "ok" | "err" | "info"; msg: string }
   >(null);
+
+  function showToast(type: "ok" | "err" | "info", msg: string, ms = 3000) {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), ms);
+  }
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
@@ -82,7 +86,7 @@ export default function DashboardPage() {
       try {
         const [meRes, siteRes, workRes] = await Promise.all([
           api.get("/api/auth/me"),
-          api.get("/api/dashboard/websites").catch(() => ({ data: { websites: [] } })),
+          api.get("/api/dashboard/websites").catch(() => ({ data: { data: { websites: [] } } })),
           api.get("/api/work").catch(() => ({ data: [] })),
         ]);
 
@@ -99,13 +103,12 @@ export default function DashboardPage() {
           });
         }
 
-        // Get first website from list
         const websites = siteRes.data?.data?.websites || [];
         if (websites.length > 0) {
           const site = websites[0];
-          setExistingSite({ 
+          setExistingSite({
             username: site.username,
-            status: site.publish_status || "draft"
+            status: site.publish_status || "draft",
           });
         }
 
@@ -124,21 +127,17 @@ export default function DashboardPage() {
   }, [router]);
 
   async function generateWebsite() {
-    if (!usernameValid) {
-      setToast({
-        type: "err",
-        msg: "Website name must be 3–30 characters (a–z, 0–9, hyphen)",
-      });
-      setTimeout(() => setToast(null), 2500);
+    // ── Validation ────────────────────────────────────────────────────────
+    if (!businessName.trim()) {
+      showToast("err", "Enter your business name so AI knows what to call it");
       return;
     }
-
     if (!businessDescription.trim()) {
-      setToast({
-        type: "err",
-        msg: "Describe your business so the AI knows what to build",
-      });
-      setTimeout(() => setToast(null), 2500);
+      showToast("err", "Describe your business so the AI knows what to build");
+      return;
+    }
+    if (!usernameValid) {
+      showToast("err", "Website address must be 3–30 characters (a–z, 0–9, hyphen)");
       return;
     }
 
@@ -146,46 +145,37 @@ export default function DashboardPage() {
     setToast(null);
 
     try {
+      // ── BUG 2 FIX: name and prompt are ALWAYS separate values ─────────
+      // name  = actual business name the user typed (shown in nav/footer)
+      // prompt = business description (used by AI for copy generation only)
       const res = await api.post("/api/dashboard/websites/create", {
         username: cleanedUsername,
+        name: businessName.trim(),
         prompt: businessDescription.trim(),
-        name: businessDescription.split(".")[0].trim(),
       });
 
       if (res.data?.ok) {
         const newUsername = res.data.data?.username || cleanedUsername;
-        setExistingSite({ 
-          username: newUsername,
-          status: "draft"
-        });
-        setUsername("");
+        setExistingSite({ username: newUsername, status: "draft" });
+        setBusinessName("");
         setBusinessDescription("");
-        
-        setToast({
-          type: "ok",
-          msg: "Website created! Redirecting to editor...",
-        });
-        
-        setTimeout(() => {
-          router.push(`/r/${newUsername}?edit=1`);
-        }, 1500);
+        setUsername("");
+        showToast("ok", "Website created! Redirecting to editor...", 1500);
+        setTimeout(() => router.push(`/r/${newUsername}?edit=1`), 1500);
       } else {
         throw new Error(res.data?.message || "Failed to create website");
       }
     } catch (err: any) {
-      setToast({
-        type: "err",
-        msg:
-          err?.response?.data?.detail ||
-          err?.message ||
-          "Failed to generate website. Try again.",
-      });
-      setTimeout(() => setToast(null), 3000);
+      showToast(
+        "err",
+        err?.response?.data?.detail || err?.message || "Failed to generate website. Try again."
+      );
     } finally {
       setCreating(false);
     }
   }
 
+  // ── Loading screen ────────────────────────────────────────────────────────
   if (loadingSite) {
     return (
       <div className="min-h-screen bg-[#050810] text-white flex items-center justify-center relative overflow-hidden">
@@ -203,15 +193,16 @@ export default function DashboardPage() {
     );
   }
 
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#050810] text-white relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(99,102,241,0.08),transparent_50%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b06_1px,transparent_1px),linear-gradient(to_bottom,#1e293b06_1px,transparent_1px)] bg-[size:28px_28px]" />
-      
+
       <div className="relative">
         <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
-        {/* TOAST NOTIFICATIONS */}
+        {/* TOAST */}
         {toast && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -229,22 +220,17 @@ export default function DashboardPage() {
                   : "bg-blue-500/95 text-white border-blue-400/30 shadow-blue-500/20"
               )}
             >
-              {toast.type === "ok" && (
-                <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              )}
-              {toast.type === "err" && (
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              )}
-              {toast.type === "info" && (
-                <Clock className="w-5 h-5 flex-shrink-0" />
-              )}
+              {toast.type === "ok" && <CheckCircle className="w-5 h-5 flex-shrink-0" />}
+              {toast.type === "err" && <AlertCircle className="w-5 h-5 flex-shrink-0" />}
+              {toast.type === "info" && <Clock className="w-5 h-5 flex-shrink-0" />}
               {toast.msg}
             </div>
           </motion.div>
         )}
 
         <main className="max-w-6xl mx-auto px-6 py-10 md:py-14 relative">
-          {/* UPGRADE BANNER - FREE USERS ONLY */}
+
+          {/* UPGRADE BANNER */}
           {subscriptionPlan === "free" && existingSite && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -252,19 +238,15 @@ export default function DashboardPage() {
               transition={{ duration: 0.6 }}
               className="mb-10 relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 backdrop-blur-xl"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-rose-500/5"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-rose-500/5" />
               <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex-1">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 mb-4">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Free Account</span>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                    Ready to Publish Your Website?
-                  </h2>
-                  <p className="text-gray-300 text-lg">
-                    Upgrade to Starter ($10/mo) to publish with a custom domain
-                  </p>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Ready to Publish Your Website?</h2>
+                  <p className="text-gray-300 text-lg">Upgrade to Starter ($10/mo) to publish with a custom domain</p>
                 </div>
                 <button
                   onClick={() => router.push("/upgrade")}
@@ -277,7 +259,7 @@ export default function DashboardPage() {
             </motion.div>
           )}
 
-          {/* STATS SECTION */}
+          {/* STATS */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -298,11 +280,7 @@ export default function DashboardPage() {
               <StatCard
                 icon={<BarChart3 className="w-4 h-4" />}
                 label="Usage"
-                value={
-                  usage.limit == null
-                    ? "Unlimited"
-                    : `${usage.used} / ${usage.limit}`
-                }
+                value={usage.limit == null ? "Unlimited" : `${usage.used} / ${usage.limit}`}
                 sub={usage.limit != null ? "generations" : "this month"}
                 accent="indigo"
               />
@@ -316,23 +294,25 @@ export default function DashboardPage() {
               <StatCard
                 icon={<Zap className="w-4 h-4" />}
                 label="Plan"
-                value={subscriptionPlan ? String(subscriptionPlan).charAt(0).toUpperCase() + String(subscriptionPlan).slice(1) : "Free"}
+                value={
+                  subscriptionPlan
+                    ? String(subscriptionPlan).charAt(0).toUpperCase() + String(subscriptionPlan).slice(1)
+                    : "Free"
+                }
                 sub="current plan"
                 accent="amber"
               />
             </div>
           </motion.section>
 
-          {/* QUICK ACCESS SHORTCUTS */}
+          {/* QUICK ACCESS */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
             className="mb-10"
           >
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-              Quick access
-            </h2>
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Quick access</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <ShortcutCard
                 icon={<FileText className="w-5 h-5" />}
@@ -366,7 +346,7 @@ export default function DashboardPage() {
             </div>
           </motion.section>
 
-          {/* MAIN WEBSITE SECTION */}
+          {/* WEBSITE SECTION */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -380,14 +360,16 @@ export default function DashboardPage() {
             {existingSite ? (
               <ExistingSiteCard site={existingSite} router={router} />
             ) : (
-              <WebsiteBuilderCard 
+              <WebsiteBuilderCard
+                businessName={businessName}
+                businessDescription={businessDescription}
                 username={username}
                 cleanedUsername={cleanedUsername}
                 usernameValid={usernameValid}
-                businessDescription={businessDescription}
                 creating={creating}
-                onUsernameChange={setUsername}
+                onBusinessNameChange={setBusinessName}
                 onDescriptionChange={setBusinessDescription}
+                onUsernameChange={setUsername}
                 onGenerate={generateWebsite}
               />
             )}
@@ -399,15 +381,11 @@ export default function DashboardPage() {
 }
 
 // ============================================================================
-// STAT CARD COMPONENT
+// STAT CARD
 // ============================================================================
 
 function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  accent,
+  icon, label, value, sub, accent,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -417,46 +395,32 @@ function StatCard({
 }) {
   const accentClasses = {
     emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-    slate: "bg-slate-500/10 border-slate-500/20 text-slate-400",
-    indigo: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
-    violet: "bg-violet-500/10 border-violet-500/20 text-violet-400",
-    amber: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+    slate:   "bg-slate-500/10 border-slate-500/20 text-slate-400",
+    indigo:  "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    violet:  "bg-violet-500/10 border-violet-500/20 text-violet-400",
+    amber:   "bg-amber-500/10 border-amber-500/20 text-amber-400",
   };
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-sm p-4 md:p-5 hover:border-white/[0.12] hover:bg-slate-900/60 transition-all duration-300">
       <div className="flex items-center gap-3 mb-2">
-        <div
-          className={cx(
-            "w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0",
-            accentClasses[accent]
-          )}
-        >
+        <div className={cx("w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0", accentClasses[accent])}>
           {icon}
         </div>
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-          {label}
-        </span>
+        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{label}</span>
       </div>
-      <p className="text-lg md:text-xl font-semibold text-white tabular-nums">
-        {value}
-      </p>
+      <p className="text-lg md:text-xl font-semibold text-white tabular-nums">{value}</p>
       <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
     </div>
   );
 }
 
 // ============================================================================
-// SHORTCUT CARD COMPONENT
+// SHORTCUT CARD
 // ============================================================================
 
 function ShortcutCard({
-  icon,
-  title,
-  description,
-  onClick,
-  badge,
-  accent,
+  icon, title, description, onClick, badge, accent,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -466,9 +430,9 @@ function ShortcutCard({
   accent: "indigo" | "violet" | "rose" | "emerald";
 }) {
   const accentClasses = {
-    indigo: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/15",
-    violet: "bg-violet-500/10 border-violet-500/20 text-violet-400 group-hover:bg-violet-500/15",
-    rose: "bg-rose-500/10 border-rose-500/20 text-rose-400 group-hover:bg-rose-500/15",
+    indigo:  "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/15",
+    violet:  "bg-violet-500/10 border-violet-500/20 text-violet-400 group-hover:bg-violet-500/15",
+    rose:    "bg-rose-500/10 border-rose-500/20 text-rose-400 group-hover:bg-rose-500/15",
     emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/15",
   };
 
@@ -482,25 +446,16 @@ function ShortcutCard({
     >
       <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors" />
       <div className="relative">
-        <div
-          className={cx(
-            "w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 mb-3 transition-colors",
-            accentClasses[accent]
-          )}
-        >
+        <div className={cx("w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 mb-3 transition-colors", accentClasses[accent])}>
           {icon}
         </div>
         <div className="flex items-center gap-2 mb-1">
           <h3 className="font-semibold text-white">{title}</h3>
           {badge != null && badge > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-medium text-slate-300">
-              {badge}
-            </span>
+            <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-medium text-slate-300">{badge}</span>
           )}
         </div>
-        <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">
-          {description}
-        </p>
+        <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">{description}</p>
       </div>
       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
     </motion.button>
@@ -511,11 +466,10 @@ function ShortcutCard({
 // EXISTING SITE CARD
 // ============================================================================
 
-function ExistingSiteCard({ 
-  site, 
-  router 
-}: { 
-  site: { username: string; status: "draft" | "published" }; 
+function ExistingSiteCard({
+  site, router,
+}: {
+  site: { username: string; status: "draft" | "published" };
   router: any;
 }) {
   return (
@@ -523,20 +477,17 @@ function ExistingSiteCard({
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
       <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
       <div className="absolute bottom-0 left-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
-      
+
       <div className="relative p-8 md:p-12">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8" style={{
-          backgroundColor: site.status === "published" ? "rgba(52, 211, 153, 0.1)" : "rgba(99, 102, 241, 0.1)",
-          border: site.status === "published" ? "1px solid rgba(52, 211, 153, 0.25)" : "1px solid rgba(99, 102, 241, 0.25)",
-        }}>
-          <div className={cx(
-            "w-2 h-2 rounded-full animate-pulse",
-            site.status === "published" ? "bg-emerald-400" : "bg-indigo-400"
-          )} />
-          <span className={cx(
-            "text-sm font-semibold tracking-wide",
-            site.status === "published" ? "text-emerald-300" : "text-indigo-300"
-          )}>
+        <div
+          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
+          style={{
+            backgroundColor: site.status === "published" ? "rgba(52,211,153,0.1)" : "rgba(99,102,241,0.1)",
+            border: site.status === "published" ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(99,102,241,0.25)",
+          }}
+        >
+          <div className={cx("w-2 h-2 rounded-full animate-pulse", site.status === "published" ? "bg-emerald-400" : "bg-indigo-400")} />
+          <span className={cx("text-sm font-semibold tracking-wide", site.status === "published" ? "text-emerald-300" : "text-indigo-300")}>
             {site.status === "published" ? "Published & Live" : "Draft"}
           </span>
         </div>
@@ -544,9 +495,8 @@ function ExistingSiteCard({
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
           {site.status === "published" ? "Your Website is Live" : "Website Ready to Edit"}
         </h1>
-        
         <p className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed mb-12">
-          {site.status === "published" 
+          {site.status === "published"
             ? "Your website is live and attracting visitors. Make edits anytime to improve performance."
             : "Your website is ready. Edit content, refine the design, and publish when ready."}
         </p>
@@ -563,7 +513,6 @@ function ExistingSiteCard({
               Edit Website
             </span>
           </button>
-
           <a
             href={`/r/${site.username}`}
             target="_blank"
@@ -584,10 +533,7 @@ function ExistingSiteCard({
           </div>
           <div className="rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Status</p>
-            <p className={cx(
-              "font-semibold",
-              site.status === "published" ? "text-emerald-400" : "text-indigo-400"
-            )}>
+            <p className={cx("font-semibold", site.status === "published" ? "text-emerald-400" : "text-indigo-400")}>
               {site.status === "published" ? "Published" : "Draft"}
             </p>
           </div>
@@ -599,33 +545,42 @@ function ExistingSiteCard({
 
 // ============================================================================
 // WEBSITE BUILDER CARD
+// BUG 2 FIX: businessName and businessDescription are always separate fields.
+// businessName → sent as `name` to API → used in nav/footer/headings
+// businessDescription → sent as `prompt` to API → used only for AI copy generation
 // ============================================================================
 
 function WebsiteBuilderCard({
+  businessName,
+  businessDescription,
   username,
   cleanedUsername,
   usernameValid,
-  businessDescription,
   creating,
-  onUsernameChange,
+  onBusinessNameChange,
   onDescriptionChange,
+  onUsernameChange,
   onGenerate,
 }: {
+  businessName: string;
+  businessDescription: string;
   username: string;
   cleanedUsername: string;
   usernameValid: boolean;
-  businessDescription: string;
   creating: boolean;
-  onUsernameChange: (val: string) => void;
+  onBusinessNameChange: (val: string) => void;
   onDescriptionChange: (val: string) => void;
+  onUsernameChange: (val: string) => void;
   onGenerate: () => void;
 }) {
+  const canSubmit = businessName.trim().length > 0 && businessDescription.trim().length > 0 && usernameValid;
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
       <div className="absolute top-0 left-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
       <div className="absolute bottom-0 right-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
-      
+
       <div className="relative p-8 md:p-12">
         <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/25 mb-8">
           <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
@@ -638,52 +593,87 @@ function WebsiteBuilderCard({
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
           Build Your Website with AI
         </h1>
-        
         <p className="text-lg text-slate-400 max-w-2xl leading-relaxed mb-10">
-          Describe your business. Our AI writes compelling content, designs layouts, and builds a complete website you can edit anytime.
+          Tell us your business name and what you do. Our AI writes the copy, designs the layout, and builds a complete website you can edit anytime.
         </p>
 
-        <div className="space-y-6 mb-10">
-          {/* Business Description */}
+        <div className="space-y-8 mb-10">
+
+          {/* ── FIELD 1: Business Name ─────────────────────────────────────────
+              This value is sent as `name` to the API.
+              website_ai.py uses it as self.name — shown in nav, footer, headings.
+              NEVER derived from the description field.
+          ──────────────────────────────────────────────────────────────────── */}
+          <div className="group">
+            <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
+              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Business name
+              <span className="text-red-400 ml-0.5">*</span>
+            </label>
+            <input
+              value={businessName}
+              onChange={(e) => onBusinessNameChange(e.target.value)}
+              placeholder="e.g. Joe's Plumbing, Apex Fitness, Blue Ridge Legal"
+              maxLength={80}
+              className="w-full rounded-2xl px-6 py-4 bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 focus:bg-black/60 focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-500 shadow-inner"
+            />
+            <p className="text-xs text-slate-600 mt-1.5 pl-1">
+              This appears in your nav, footer, and page headings — exactly as written.
+            </p>
+          </div>
+
+          {/* ── FIELD 2: Business Description ─────────────────────────────────
+              This value is sent as `prompt` to the API.
+              website_ai.py uses it only for AI copy generation — NEVER for display name.
+          ──────────────────────────────────────────────────────────────────── */}
           <div className="group">
             <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
               <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Describe your business
+              <span className="text-red-400 ml-0.5">*</span>
             </label>
             <div className="relative">
               <textarea
                 value={businessDescription}
                 onChange={(e) => onDescriptionChange(e.target.value)}
                 rows={5}
-                placeholder="Example: I'm a fitness trainer specializing in weight loss programs. I offer 1-on-1 training, group classes, and nutrition coaching."
+                maxLength={500}
+                placeholder="Example: We're a fitness studio offering personal training, group classes, and nutrition coaching for people looking to lose weight and build strength."
                 className="w-full rounded-2xl px-6 py-4 bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 focus:bg-black/60 resize-none focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-500 shadow-inner"
               />
               <div className="absolute bottom-4 right-4 text-xs text-slate-500 font-medium tabular-nums">
                 {businessDescription.length} / 500
               </div>
             </div>
+            <p className="text-xs text-slate-600 mt-1.5 pl-1">
+              The AI uses this to write your copy — include your services, audience, and any key details.
+            </p>
           </div>
 
-          {/* Website Name/Username */}
+          {/* ── FIELD 3: Website URL slug ──────────────────────────────────── */}
           <div className="group">
             <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
               <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
               </svg>
-              Website name
+              Website address
+              <span className="text-red-400 ml-0.5">*</span>
             </label>
             <div className="relative">
               <input
                 value={username}
                 onChange={(e) => onUsernameChange(e.target.value)}
                 placeholder="my-fitness-studio"
+                maxLength={30}
                 className={cx(
-                  "w-full rounded-2xl pl-6 pr-32 py-4 bg-black/50 border transition-all duration-300 focus:outline-none focus:ring-2 shadow-inner font-mono text-slate-100 placeholder:text-slate-500",
+                  "w-full rounded-2xl pl-6 pr-36 py-4 bg-black/50 border transition-all duration-300 focus:outline-none focus:ring-2 shadow-inner font-mono text-slate-100 placeholder:text-slate-500",
                   usernameValid
                     ? "border-white/10 hover:border-white/20 focus:border-emerald-500/50 focus:ring-emerald-500/20 focus:bg-black/60"
-                    : username.length > 0 
+                    : username.length > 0
                     ? "border-red-500/40 focus:border-red-500/60 focus:ring-red-500/20 bg-red-500/5"
                     : "border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-indigo-500/20 focus:bg-black/60"
                 )}
@@ -691,31 +681,34 @@ function WebsiteBuilderCard({
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono pointer-events-none">
                 .autopilotai.dev
               </div>
-              {username.length > 0 && (
-                <div className="absolute -bottom-6 left-2 flex items-center gap-1.5 text-xs">
-                  {usernameValid ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400 font-medium">Available</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-4 h-4 text-red-400" />
-                      <span className="text-red-400 font-medium">3-30 chars, letters & hyphens only</span>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
+            {username.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs mt-2 pl-1">
+                {usernameValid ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400 font-medium">
+                      autopilotai.dev/r/{cleanedUsername}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4 text-red-400" />
+                    <span className="text-red-400 font-medium">3–30 chars, letters, numbers & hyphens only</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
+        {/* GENERATE BUTTON */}
         <button
           onClick={onGenerate}
-          disabled={creating || !usernameValid || !businessDescription.trim()}
+          disabled={creating || !canSubmit}
           className={cx(
-            "group relative overflow-hidden w-full py-5 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-xl mt-8 flex items-center justify-center gap-2",
-            creating || !usernameValid || !businessDescription.trim()
+            "group relative overflow-hidden w-full py-5 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-xl flex items-center justify-center gap-2",
+            creating || !canSubmit
               ? "bg-slate-700/80 text-slate-400 cursor-not-allowed"
               : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.99]"
           )}
@@ -723,10 +716,10 @@ function WebsiteBuilderCard({
           {creating ? (
             <>
               <svg className="w-5 h-5 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              <span>Creating your website...</span>
+              <span>Building your website...</span>
             </>
           ) : (
             <>
@@ -738,6 +731,7 @@ function WebsiteBuilderCard({
           )}
         </button>
 
+        {/* FEATURE TILES */}
         <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
             <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center flex-shrink-0">
