@@ -43,21 +43,11 @@ export default function DashboardPage() {
   const [initial, setInitial] = useState("U");
   const [userName, setUserName] = useState<string | null>(null);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
-  const [usage, setUsage] = useState<{
-    used: number;
-    limit: number | null;
-  }>({ used: 0, limit: null });
+  const [usage, setUsage] = useState<{ used: number; limit: number | null }>({ used: 0, limit: null });
   const [workCount, setWorkCount] = useState(0);
   const [loadingSite, setLoadingSite] = useState(true);
-  const [existingSite, setExistingSite] = useState<null | {
-    username: string;
-    status: "draft" | "published";
-  }>(null);
+  const [existingSite, setExistingSite] = useState<null | { username: string; status: "draft" | "published" }>(null);
 
-  // ── FORM STATE ────────────────────────────────────────────────────────────
-  // BUG 2 FIX: Three separate fields — businessName, businessDescription, username.
-  // We NEVER derive businessName from businessDescription.
-  // The API receives: { name: businessName, prompt: businessDescription, username }
   const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
   const [username, setUsername] = useState("");
@@ -66,9 +56,7 @@ export default function DashboardPage() {
   const cleanedUsername = useMemo(() => normalizeSlug(username), [username]);
   const usernameValid = useMemo(() => isValidSlug(cleanedUsername), [cleanedUsername]);
 
-  const [toast, setToast] = useState<
-    null | { type: "ok" | "err" | "info"; msg: string }
-  >(null);
+  const [toast, setToast] = useState<null | { type: "ok" | "err" | "info"; msg: string }>(null);
 
   function showToast(type: "ok" | "err" | "info", msg: string, ms = 3000) {
     setToast({ type, msg });
@@ -77,10 +65,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    if (!token) { router.push("/login"); return; }
 
     async function load() {
       try {
@@ -89,453 +74,728 @@ export default function DashboardPage() {
           api.get("/api/dashboard/websites").catch(() => ({ data: { data: { websites: [] } } })),
           api.get("/api/work").catch(() => ({ data: [] })),
         ]);
-
         const me = meRes.data;
-        if (me?.name) {
-          setInitial(me.name.charAt(0).toUpperCase());
-          setUserName(me.name);
-        }
+        if (me?.name) { setInitial(me.name.charAt(0).toUpperCase()); setUserName(me.name); }
         if (me?.subscription_plan) setSubscriptionPlan(me.subscription_plan);
         if (me?.used_generations != null || me?.monthly_limit != null) {
-          setUsage({
-            used: me?.used_generations ?? 0,
-            limit: me?.monthly_limit ?? null,
-          });
+          setUsage({ used: me?.used_generations ?? 0, limit: me?.monthly_limit ?? null });
         }
-
         const websites = siteRes.data?.data?.websites || [];
         if (websites.length > 0) {
           const site = websites[0];
-          setExistingSite({
-            username: site.username,
-            status: site.publish_status || "draft",
-          });
+          setExistingSite({ username: site.username, status: site.publish_status || "draft" });
         }
-
         const workItems = Array.isArray(workRes.data) ? workRes.data : [];
         setWorkCount(workItems.length);
-      } catch (err) {
-        console.error("Load error:", err);
+      } catch {
         localStorage.removeItem("autopilot_token");
         router.push("/login");
       } finally {
         setLoadingSite(false);
       }
     }
-
     load();
   }, [router]);
 
   async function generateWebsite() {
-    // ── Validation ────────────────────────────────────────────────────────
-    if (!businessName.trim()) {
-      showToast("err", "Enter your business name so AI knows what to call it");
-      return;
-    }
-    if (!businessDescription.trim()) {
-      showToast("err", "Describe your business so the AI knows what to build");
-      return;
-    }
-    if (!usernameValid) {
-      showToast("err", "Website address must be 3–30 characters (a–z, 0–9, hyphen)");
-      return;
-    }
+    if (!businessName.trim()) { showToast("err", "Enter your business name"); return; }
+    if (!businessDescription.trim()) { showToast("err", "Describe your business so AI knows what to build"); return; }
+    if (!usernameValid) { showToast("err", "Website address must be 3–30 characters (a–z, 0–9, hyphens)"); return; }
 
     setCreating(true);
     setToast(null);
-
     try {
-      // ── BUG 2 FIX: name and prompt are ALWAYS separate values ─────────
-      // name  = actual business name the user typed (shown in nav/footer)
-      // prompt = business description (used by AI for copy generation only)
       const res = await api.post("/api/dashboard/websites/create", {
         username: cleanedUsername,
         name: businessName.trim(),
         prompt: businessDescription.trim(),
       });
-
       if (res.data?.ok) {
         const newUsername = res.data.data?.username || cleanedUsername;
         setExistingSite({ username: newUsername, status: "draft" });
-        setBusinessName("");
-        setBusinessDescription("");
-        setUsername("");
-        showToast("ok", "Website created! Redirecting to editor...", 1500);
+        setBusinessName(""); setBusinessDescription(""); setUsername("");
+        showToast("ok", "Website created! Taking you to the editor...", 1500);
         setTimeout(() => router.push(`/r/${newUsername}?edit=1`), 1500);
       } else {
         throw new Error(res.data?.message || "Failed to create website");
       }
     } catch (err: any) {
-      showToast(
-        "err",
-        err?.response?.data?.detail || err?.message || "Failed to generate website. Try again."
-      );
+      showToast("err", err?.response?.data?.detail || err?.message || "Failed to generate website. Try again.");
     } finally {
       setCreating(false);
     }
   }
 
-  // ── Loading screen ────────────────────────────────────────────────────────
   if (loadingSite) {
     return (
-      <div className="min-h-screen bg-[#050810] text-white flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b08_1px,transparent_1px),linear-gradient(to_bottom,#1e293b08_1px,transparent_1px)] bg-[size:24px_24px]" />
-        <div className="relative flex flex-col items-center gap-6">
-          <div className="relative w-14 h-14">
-            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/30" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-indigo-400 border-r-violet-400 animate-spin" />
-            <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-violet-400 border-l-indigo-400 animate-spin [animation-duration:1.5s] [animation-direction:reverse]" />
-          </div>
-          <p className="text-slate-400 font-medium tracking-wide">Loading your workspace</p>
+      <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, border: "2px solid #222", borderTop: "2px solid #059669", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#555" }}>Loading your workspace</p>
         </div>
       </div>
     );
   }
 
-  // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#050810] text-white relative">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(99,102,241,0.08),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b06_1px,transparent_1px),linear-gradient(to_bottom,#1e293b06_1px,transparent_1px)] bg-[size:28px_28px]" />
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "white" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
 
-      <div className="relative">
-        <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
+        * { box-sizing: border-box; }
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
+        .font-sans { font-family: 'DM Sans', system-ui, sans-serif; }
 
-        {/* TOAST */}
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-8 left-1/2 -translate-x-1/2 z-50"
-          >
-            <div
-              className={cx(
-                "px-6 py-3.5 rounded-2xl text-sm font-medium backdrop-blur-xl shadow-2xl border flex items-center gap-3",
-                toast.type === "ok"
-                  ? "bg-emerald-500/95 text-white border-emerald-400/30 shadow-emerald-500/20"
-                  : toast.type === "err"
-                  ? "bg-red-500/95 text-white border-red-400/30 shadow-red-500/20"
-                  : "bg-blue-500/95 text-white border-blue-400/30 shadow-blue-500/20"
-              )}
-            >
-              {toast.type === "ok" && <CheckCircle className="w-5 h-5 flex-shrink-0" />}
-              {toast.type === "err" && <AlertCircle className="w-5 h-5 flex-shrink-0" />}
-              {toast.type === "info" && <Clock className="w-5 h-5 flex-shrink-0" />}
-              {toast.msg}
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+
+        .anim-1 { animation: fadeUp 0.5s ease forwards; animation-delay: 0.05s; opacity: 0; }
+        .anim-2 { animation: fadeUp 0.5s ease forwards; animation-delay: 0.12s; opacity: 0; }
+        .anim-3 { animation: fadeUp 0.5s ease forwards; animation-delay: 0.2s; opacity: 0; }
+        .anim-4 { animation: fadeUp 0.5s ease forwards; animation-delay: 0.28s; opacity: 0; }
+
+        .stat-card {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 16px;
+          padding: 20px 22px;
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .stat-card:hover {
+          border-color: #2a2a2a;
+          background: #141414;
+        }
+
+        .shortcut-card {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 16px;
+          padding: 20px;
+          cursor: pointer;
+          width: 100%;
+          text-align: left;
+          transition: border-color 0.2s, background 0.2s, transform 0.2s;
+          position: relative;
+          overflow: hidden;
+        }
+        .shortcut-card:hover {
+          border-color: #2a2a2a;
+          background: #141414;
+          transform: translateY(-2px);
+        }
+
+        .main-card {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 24px;
+          overflow: hidden;
+        }
+
+        .input-field {
+          width: 100%;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 12px;
+          padding: 14px 18px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          color: #e5e5e5;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field::placeholder { color: #444; }
+        .input-field:hover { border-color: #333; }
+        .input-field:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+
+        .input-field-mono {
+          font-family: 'DM Mono', 'Fira Code', 'Courier New', monospace;
+        }
+
+        .input-field-error { border-color: #7f1d1d !important; box-shadow: 0 0 0 3px rgba(127,29,29,0.1) !important; }
+
+        .textarea-field {
+          width: 100%;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 12px;
+          padding: 14px 18px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          color: #e5e5e5;
+          outline: none;
+          resize: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          line-height: 1.6;
+        }
+        .textarea-field::placeholder { color: #444; }
+        .textarea-field:hover { border-color: #333; }
+        .textarea-field:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+
+        .btn-generate {
+          width: 100%;
+          padding: 16px;
+          border-radius: 14px;
+          border: none;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+          letter-spacing: -0.01em;
+        }
+        .btn-generate:hover:not(:disabled) {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+          box-shadow: 0 12px 40px rgba(5,150,105,0.3);
+        }
+        .btn-generate:disabled {
+          background: #1e1e1e;
+          color: #444;
+          cursor: not-allowed;
+        }
+
+        .btn-primary {
+          background: #fff;
+          color: #111;
+          border: none;
+          border-radius: 12px;
+          padding: 13px 24px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.2s;
+          display: flex; align-items: center; gap: 8px;
+          text-decoration: none;
+        }
+        .btn-primary:hover { background: #eee; transform: translateY(-1px); }
+
+        .btn-secondary {
+          background: transparent;
+          color: #888;
+          border: 1px solid #2a2a2a;
+          border-radius: 12px;
+          padding: 13px 24px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: border-color 0.2s, color 0.2s;
+          display: flex; align-items: center; gap: 8px;
+          text-decoration: none;
+        }
+        .btn-secondary:hover { border-color: #444; color: #ccc; }
+
+        .upgrade-banner {
+          background: #111;
+          border: 1px solid #2a1a00;
+          border-radius: 20px;
+          padding: 24px 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+
+        .label-text {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #555;
+          margin-bottom: 10px;
+          display: block;
+        }
+
+        .section-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #444;
+          margin-bottom: 16px;
+        }
+
+        .url-preview {
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          display: flex; align-items: center; gap: 6px;
+          margin-top: 8px;
+          padding-left: 2px;
+        }
+
+        .feature-pill {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 18px;
+          background: #0d0d0d;
+          border: 1px solid #1e1e1e;
+          border-radius: 12px;
+        }
+
+        .icon-box {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+      `}</style>
+
+      <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
+
+      {/* TOAST */}
+      {toast && (
+        <div
+          className="font-sans"
+          style={{
+            position: "fixed",
+            top: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+            padding: "12px 20px",
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            background:
+              toast.type === "ok" ? "#052e16" :
+              toast.type === "err" ? "#1c0a0a" : "#0c1a2e",
+            border: `1px solid ${toast.type === "ok" ? "#166534" : toast.type === "err" ? "#7f1d1d" : "#1e3a5f"}`,
+            color:
+              toast.type === "ok" ? "#4ade80" :
+              toast.type === "err" ? "#f87171" : "#60a5fa",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {toast.type === "ok" && <CheckCircle size={16} />}
+          {toast.type === "err" && <AlertCircle size={16} />}
+          {toast.type === "info" && <Clock size={16} />}
+          {toast.msg}
+        </div>
+      )}
+
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+
+        {/* UPGRADE BANNER */}
+        {subscriptionPlan === "free" && existingSite && (
+          <div className="upgrade-banner anim-1">
+            <div>
+              <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#d97706", marginBottom: 6 }}>
+                Free Plan
+              </div>
+              <div className="font-display" style={{ fontSize: 20, color: "white", marginBottom: 4 }}>
+                Ready to go live?
+              </div>
+              <p className="font-sans" style={{ fontSize: 14, color: "#666" }}>
+                Upgrade to Starter for $10/mo to publish with your own domain.
+              </p>
             </div>
-          </motion.div>
+            <button
+              onClick={() => router.push("/upgrade")}
+              className="font-sans"
+              style={{
+                background: "#d97706",
+                color: "white",
+                border: "none",
+                borderRadius: 12,
+                padding: "11px 22px",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                transition: "filter 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+            >
+              Upgrade Now <ArrowRight size={14} />
+            </button>
+          </div>
         )}
 
-        <main className="max-w-6xl mx-auto px-6 py-10 md:py-14 relative">
-
-          {/* UPGRADE BANNER */}
-          {subscriptionPlan === "free" && existingSite && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-10 relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 backdrop-blur-xl"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-rose-500/5" />
-              <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 mb-4">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Free Account</span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Ready to Publish Your Website?</h2>
-                  <p className="text-gray-300 text-lg">Upgrade to Starter ($10/mo) to publish with a custom domain</p>
-                </div>
-                <button
-                  onClick={() => router.push("/upgrade")}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-2xl font-bold text-lg text-white overflow-hidden shadow-2xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:scale-105 flex items-center gap-2"
-                >
-                  <span className="relative z-10">Upgrade Now</span>
-                  <ArrowRight className="relative z-10 w-5 h-5" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* STATS */}
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="mb-10"
+        {/* GREETING */}
+        <div className="anim-1" style={{ marginBottom: 32 }}>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: "clamp(28px, 3.5vw, 40px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "white",
+              lineHeight: 1.1,
+            }}
           >
-            <h1 className="text-2xl md:text-3xl font-semibold text-white mb-6">
-              Welcome back{userName ? `, ${userName.split(" ")[0]}` : ""}
-            </h1>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-              <StatCard
-                icon={<Globe className="w-4 h-4" />}
-                label="Website"
-                value={existingSite ? "Live" : "Not created"}
-                sub={existingSite ? existingSite.username : "Create one below"}
-                accent={existingSite ? "emerald" : "slate"}
-              />
-              <StatCard
-                icon={<BarChart3 className="w-4 h-4" />}
-                label="Usage"
-                value={usage.limit == null ? "Unlimited" : `${usage.used} / ${usage.limit}`}
-                sub={usage.limit != null ? "generations" : "this month"}
-                accent="indigo"
-              />
-              <StatCard
-                icon={<Briefcase className="w-4 h-4" />}
-                label="Saved Work"
-                value={String(workCount)}
-                sub="items"
-                accent="violet"
-              />
-              <StatCard
-                icon={<Zap className="w-4 h-4" />}
-                label="Plan"
-                value={
-                  subscriptionPlan
-                    ? String(subscriptionPlan).charAt(0).toUpperCase() + String(subscriptionPlan).slice(1)
-                    : "Free"
-                }
-                sub="current plan"
-                accent="amber"
-              />
-            </div>
-          </motion.section>
-
-          {/* QUICK ACCESS */}
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="mb-10"
-          >
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Quick access</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <ShortcutCard
-                icon={<FileText className="w-5 h-5" />}
-                title="Content"
-                description="AI-powered content generator"
-                onClick={() => router.push("/dashboard/content")}
-                accent="indigo"
-              />
-              <ShortcutCard
-                icon={<Mail className="w-5 h-5" />}
-                title="Emails"
-                description="Email copy and campaigns"
-                onClick={() => router.push("/dashboard/email")}
-                accent="violet"
-              />
-              <ShortcutCard
-                icon={<Megaphone className="w-5 h-5" />}
-                title="Ads"
-                description="Ad copy for all platforms"
-                onClick={() => router.push("/dashboard/ads")}
-                accent="rose"
-              />
-              <ShortcutCard
-                icon={<Briefcase className="w-5 h-5" />}
-                title="My Work"
-                description="Your saved creations"
-                onClick={() => router.push("/dashboard/work")}
-                badge={workCount > 0 ? workCount : undefined}
-                accent="emerald"
-              />
-            </div>
-          </motion.section>
-
-          {/* WEBSITE SECTION */}
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-          >
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400/80" />
-              Your Website
-            </h2>
-
-            {existingSite ? (
-              <ExistingSiteCard site={existingSite} router={router} />
+            {userName ? (
+              <>Welcome back, <em style={{ color: "#059669" }}>{userName.split(" ")[0]}</em></>
             ) : (
-              <WebsiteBuilderCard
-                businessName={businessName}
-                businessDescription={businessDescription}
-                username={username}
-                cleanedUsername={cleanedUsername}
-                usernameValid={usernameValid}
-                creating={creating}
-                onBusinessNameChange={setBusinessName}
-                onDescriptionChange={setBusinessDescription}
-                onUsernameChange={setUsername}
-                onGenerate={generateWebsite}
-              />
+              "Your workspace"
             )}
-          </motion.section>
-        </main>
-      </div>
+          </h1>
+        </div>
+
+        {/* STATS */}
+        <div
+          className="anim-2"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 12,
+            marginBottom: 36,
+          }}
+        >
+          <StatCard
+            icon={<Globe size={15} />}
+            label="Website"
+            value={existingSite ? (existingSite.status === "published" ? "Live" : "Draft") : "None"}
+            sub={existingSite ? existingSite.username : "Create one below"}
+            accentColor={existingSite ? (existingSite.status === "published" ? "#059669" : "#0ea5e9") : "#333"}
+          />
+          <StatCard
+            icon={<BarChart3 size={15} />}
+            label="Usage"
+            value={usage.limit == null ? "∞" : `${usage.used} / ${usage.limit}`}
+            sub="AI generations"
+            accentColor="#8b5cf6"
+          />
+          <StatCard
+            icon={<Briefcase size={15} />}
+            label="Saved Work"
+            value={String(workCount)}
+            sub="items"
+            accentColor="#0ea5e9"
+          />
+          <StatCard
+            icon={<Zap size={15} />}
+            label="Plan"
+            value={subscriptionPlan ? (subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)) : "Free"}
+            sub="current plan"
+            accentColor="#f59e0b"
+          />
+        </div>
+
+        {/* TOOLS */}
+        <div className="anim-3" style={{ marginBottom: 36 }}>
+          <div className="section-label">Tools</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            <ShortcutCard
+              icon={<FileText size={16} />}
+              title="Content"
+              sub="AI content generator"
+              iconColor="#8b5cf6"
+              onClick={() => router.push("/dashboard/content")}
+            />
+            <ShortcutCard
+              icon={<Mail size={16} />}
+              title="Emails"
+              sub="Campaigns & copy"
+              iconColor="#0ea5e9"
+              onClick={() => router.push("/dashboard/email")}
+            />
+            <ShortcutCard
+              icon={<Megaphone size={16} />}
+              title="Ads"
+              sub="All platforms"
+              iconColor="#ef4444"
+              onClick={() => router.push("/dashboard/ads")}
+            />
+            <ShortcutCard
+              icon={<Briefcase size={16} />}
+              title="My Work"
+              sub="Saved creations"
+              iconColor="#059669"
+              badge={workCount > 0 ? workCount : undefined}
+              onClick={() => router.push("/dashboard/work")}
+            />
+          </div>
+        </div>
+
+        {/* WEBSITE SECTION */}
+        <div className="anim-4">
+          <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={11} style={{ color: "#f59e0b" }} />
+            Your Website
+          </div>
+
+          {existingSite ? (
+            <ExistingSiteCard site={existingSite} router={router} />
+          ) : (
+            <WebsiteBuilderCard
+              businessName={businessName}
+              businessDescription={businessDescription}
+              username={username}
+              cleanedUsername={cleanedUsername}
+              usernameValid={usernameValid}
+              creating={creating}
+              onBusinessNameChange={setBusinessName}
+              onDescriptionChange={setBusinessDescription}
+              onUsernameChange={setUsername}
+              onGenerate={generateWebsite}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }
 
-// ============================================================================
+// ─────────────────────────────────────────────
 // STAT CARD
-// ============================================================================
+// ─────────────────────────────────────────────
 
-function StatCard({
-  icon, label, value, sub, accent,
-}: {
+function StatCard({ icon, label, value, sub, accentColor }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   sub: string;
-  accent: "emerald" | "slate" | "indigo" | "violet" | "amber";
+  accentColor: string;
 }) {
-  const accentClasses = {
-    emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-    slate:   "bg-slate-500/10 border-slate-500/20 text-slate-400",
-    indigo:  "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
-    violet:  "bg-violet-500/10 border-violet-500/20 text-violet-400",
-    amber:   "bg-amber-500/10 border-amber-500/20 text-amber-400",
-  };
-
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-sm p-4 md:p-5 hover:border-white/[0.12] hover:bg-slate-900/60 transition-all duration-300">
-      <div className="flex items-center gap-3 mb-2">
-        <div className={cx("w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0", accentClasses[accent])}>
+    <div className="stat-card">
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: `${accentColor}18`,
+            border: `1px solid ${accentColor}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: accentColor,
+          }}
+        >
           {icon}
         </div>
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{label}</span>
+        <span
+          className="font-sans"
+          style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#444" }}
+        >
+          {label}
+        </span>
       </div>
-      <p className="text-lg md:text-xl font-semibold text-white tabular-nums">{value}</p>
-      <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
+      <div
+        className="font-display"
+        style={{ fontSize: 24, color: "white", lineHeight: 1, marginBottom: 4, letterSpacing: "-0.02em" }}
+      >
+        {value}
+      </div>
+      <div className="font-sans" style={{ fontSize: 12, color: "#444" }}>{sub}</div>
     </div>
   );
 }
 
-// ============================================================================
+// ─────────────────────────────────────────────
 // SHORTCUT CARD
-// ============================================================================
+// ─────────────────────────────────────────────
 
-function ShortcutCard({
-  icon, title, description, onClick, badge, accent,
-}: {
+function ShortcutCard({ icon, title, sub, iconColor, onClick, badge }: {
   icon: React.ReactNode;
   title: string;
-  description: string;
+  sub: string;
+  iconColor: string;
   onClick: () => void;
   badge?: number;
-  accent: "indigo" | "violet" | "rose" | "emerald";
 }) {
-  const accentClasses = {
-    indigo:  "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/15",
-    violet:  "bg-violet-500/10 border-violet-500/20 text-violet-400 group-hover:bg-violet-500/15",
-    rose:    "bg-rose-500/10 border-rose-500/20 text-rose-400 group-hover:bg-rose-500/15",
-    emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/15",
-  };
-
   return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
-      className="group w-full text-left rounded-2xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-sm p-5 hover:border-white/[0.14] hover:bg-slate-900/60 transition-all duration-300 relative overflow-hidden"
-    >
-      <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors" />
-      <div className="relative">
-        <div className={cx("w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 mb-3 transition-colors", accentClasses[accent])}>
+    <button className="shortcut-card" onClick={onClick}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: `${iconColor}18`,
+            border: `1px solid ${iconColor}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: iconColor,
+          }}
+        >
           {icon}
         </div>
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-semibold text-white">{title}</h3>
-          {badge != null && badge > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-medium text-slate-300">{badge}</span>
-          )}
-        </div>
-        <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">{description}</p>
+        {badge != null && (
+          <span
+            className="font-sans"
+            style={{
+              background: "#1e1e1e",
+              color: "#888",
+              padding: "2px 8px",
+              borderRadius: 100,
+              fontSize: 11,
+              fontWeight: 700,
+            }}
+          >
+            {badge}
+          </span>
+        )}
       </div>
-      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
-    </motion.button>
+      <div className="font-sans" style={{ fontWeight: 600, fontSize: 14, color: "white", marginBottom: 3 }}>{title}</div>
+      <div className="font-sans" style={{ fontSize: 12, color: "#555" }}>{sub}</div>
+      <ChevronRight
+        size={14}
+        style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", color: "#333" }}
+      />
+    </button>
   );
 }
 
-// ============================================================================
+// ─────────────────────────────────────────────
 // EXISTING SITE CARD
-// ============================================================================
+// ─────────────────────────────────────────────
 
-function ExistingSiteCard({
-  site, router,
-}: {
+function ExistingSiteCard({ site, router }: {
   site: { username: string; status: "draft" | "published" };
   router: any;
 }) {
+  const isLive = site.status === "published";
+
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
-      <div className="absolute bottom-0 left-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
+    <div className="main-card">
+      {/* Top accent bar */}
+      <div
+        style={{
+          height: 3,
+          background: isLive
+            ? "linear-gradient(90deg, #059669, #0ea5e9)"
+            : "linear-gradient(90deg, #333, #555)",
+        }}
+      />
+      <div style={{ padding: "36px 40px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            {/* Status pill */}
+            <div
+              className="font-sans"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "5px 14px",
+                borderRadius: 100,
+                fontSize: 12,
+                fontWeight: 700,
+                marginBottom: 20,
+                background: isLive ? "rgba(5,150,105,0.12)" : "rgba(30,30,30,0.8)",
+                border: isLive ? "1px solid rgba(5,150,105,0.3)" : "1px solid #2a2a2a",
+                color: isLive ? "#4ade80" : "#888",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: isLive ? "#4ade80" : "#555",
+                  animation: isLive ? "pulse-dot 2s ease infinite" : "none",
+                  display: "inline-block",
+                }}
+              />
+              {isLive ? "Published & Live" : "Draft"}
+            </div>
 
-      <div className="relative p-8 md:p-12">
-        <div
-          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
-          style={{
-            backgroundColor: site.status === "published" ? "rgba(52,211,153,0.1)" : "rgba(99,102,241,0.1)",
-            border: site.status === "published" ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(99,102,241,0.25)",
-          }}
-        >
-          <div className={cx("w-2 h-2 rounded-full animate-pulse", site.status === "published" ? "bg-emerald-400" : "bg-indigo-400")} />
-          <span className={cx("text-sm font-semibold tracking-wide", site.status === "published" ? "text-emerald-300" : "text-indigo-300")}>
-            {site.status === "published" ? "Published & Live" : "Draft"}
-          </span>
-        </div>
+            <h2
+              className="font-display"
+              style={{
+                fontSize: "clamp(28px, 3vw, 40px)",
+                fontWeight: 400,
+                letterSpacing: "-0.03em",
+                color: "white",
+                marginBottom: 10,
+                lineHeight: 1.1,
+              }}
+            >
+              {isLive ? (
+                <>Your site is <em style={{ color: "#4ade80" }}>live</em></>
+              ) : (
+                <>Ready to <em style={{ color: "#0ea5e9" }}>edit</em></>
+              )}
+            </h2>
+            <p
+              className="font-sans"
+              style={{ fontSize: 15, color: "#555", lineHeight: 1.6, maxWidth: 440, marginBottom: 28 }}
+            >
+              {isLive
+                ? "Customers can find you right now. Keep your site fresh — edit anytime."
+                : "Your website is built. Customize it, then hit publish to go live."}
+            </p>
 
-        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
-          {site.status === "published" ? "Your Website is Live" : "Website Ready to Edit"}
-        </h1>
-        <p className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed mb-12">
-          {site.status === "published"
-            ? "Your website is live and attracting visitors. Make edits anytime to improve performance."
-            : "Your website is ready. Edit content, refine the design, and publish when ready."}
-        </p>
+            {/* URL display */}
+            <div
+              className="font-sans"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "#0d0d0d",
+                border: "1px solid #1e1e1e",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 13,
+                color: "#666",
+                fontFamily: "monospace",
+              }}
+            >
+              <Globe size={13} style={{ color: "#444" }} />
+              autopilotai.dev/r/
+              <span style={{ color: "#ccc" }}>{site.username}</span>
+            </div>
+          </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button
-            onClick={() => router.push(`/r/${site.username}?edit=1`)}
-            className="group relative overflow-hidden flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 font-semibold text-lg transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.99] text-white"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2.5">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          {/* Action buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 200 }}>
+            <button
+              className="btn-primary font-sans"
+              onClick={() => router.push(`/r/${site.username}?edit=1`)}
+            >
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               Edit Website
-            </span>
-          </button>
-          <a
-            href={`/r/${site.username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-4 px-6 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/25 text-center font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2.5 group"
-          >
-            <span>View Live</span>
-            <svg className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-2 gap-8">
-          <div className="rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Website URL</p>
-            <p className="text-slate-300 font-mono text-sm break-all">autopilotai.dev/r/{site.username}</p>
-          </div>
-          <div className="rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Status</p>
-            <p className={cx("font-semibold", site.status === "published" ? "text-emerald-400" : "text-indigo-400")}>
-              {site.status === "published" ? "Published" : "Draft"}
-            </p>
+            </button>
+            <a
+              href={`/r/${site.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary font-sans"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              View Live
+            </a>
           </div>
         </div>
       </div>
@@ -543,24 +803,14 @@ function ExistingSiteCard({
   );
 }
 
-// ============================================================================
+// ─────────────────────────────────────────────
 // WEBSITE BUILDER CARD
-// BUG 2 FIX: businessName and businessDescription are always separate fields.
-// businessName → sent as `name` to API → used in nav/footer/headings
-// businessDescription → sent as `prompt` to API → used only for AI copy generation
-// ============================================================================
+// ─────────────────────────────────────────────
 
 function WebsiteBuilderCard({
-  businessName,
-  businessDescription,
-  username,
-  cleanedUsername,
-  usernameValid,
-  creating,
-  onBusinessNameChange,
-  onDescriptionChange,
-  onUsernameChange,
-  onGenerate,
+  businessName, businessDescription, username, cleanedUsername,
+  usernameValid, creating, onBusinessNameChange, onDescriptionChange,
+  onUsernameChange, onGenerate,
 }: {
   businessName: string;
   businessDescription: string;
@@ -568,199 +818,202 @@ function WebsiteBuilderCard({
   cleanedUsername: string;
   usernameValid: boolean;
   creating: boolean;
-  onBusinessNameChange: (val: string) => void;
-  onDescriptionChange: (val: string) => void;
-  onUsernameChange: (val: string) => void;
+  onBusinessNameChange: (v: string) => void;
+  onDescriptionChange: (v: string) => void;
+  onUsernameChange: (v: string) => void;
   onGenerate: () => void;
 }) {
   const canSubmit = businessName.trim().length > 0 && businessDescription.trim().length > 0 && usernameValid;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl shadow-2xl shadow-black/40">
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-      <div className="absolute top-0 left-0 w-[420px] h-[420px] bg-indigo-500/12 rounded-full blur-[100px]" />
-      <div className="absolute bottom-0 right-0 w-[380px] h-[380px] bg-violet-500/12 rounded-full blur-[100px]" />
+    <div className="main-card">
+      <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
 
-      <div className="relative p-8 md:p-12">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/25 mb-8">
-          <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13 7H7v6h6V7z" />
-            <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm font-semibold text-indigo-300 tracking-wide">AI Website Builder</span>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+        {/* LEFT — form */}
+        <div style={{ padding: "36px 40px", borderRight: "1px solid #1a1a1a" }}>
+          <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: 12 }}>
+            AI Builder
+          </div>
+          <h2
+            className="font-display"
+            style={{
+              fontSize: "clamp(24px, 2.5vw, 34px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "white",
+              marginBottom: 8,
+              lineHeight: 1.1,
+            }}
+          >
+            Build your website
+            <br />
+            <em style={{ color: "#059669" }}>in 60 seconds</em>
+          </h2>
+          <p className="font-sans" style={{ fontSize: 14, color: "#555", lineHeight: 1.6, marginBottom: 32 }}>
+            Describe your business — AI writes the copy, designs the layout, builds everything.
+          </p>
 
-        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mb-5">
-          Build Your Website with AI
-        </h1>
-        <p className="text-lg text-slate-400 max-w-2xl leading-relaxed mb-10">
-          Tell us your business name and what you do. Our AI writes the copy, designs the layout, and builds a complete website you can edit anytime.
-        </p>
-
-        <div className="space-y-8 mb-10">
-
-          {/* ── FIELD 1: Business Name ─────────────────────────────────────────
-              This value is sent as `name` to the API.
-              website_ai.py uses it as self.name — shown in nav, footer, headings.
-              NEVER derived from the description field.
-          ──────────────────────────────────────────────────────────────────── */}
-          <div className="group">
-            <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Business name
-              <span className="text-red-400 ml-0.5">*</span>
+          {/* Business name */}
+          <div style={{ marginBottom: 20 }}>
+            <label className="label-text">
+              Business name <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
+              className="input-field"
               value={businessName}
               onChange={(e) => onBusinessNameChange(e.target.value)}
-              placeholder="e.g. Joe's Plumbing, Apex Fitness, Blue Ridge Legal"
+              placeholder="e.g. Joe's Plumbing, Apex Fitness"
               maxLength={80}
-              className="w-full rounded-2xl px-6 py-4 bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 focus:bg-black/60 focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-500 shadow-inner"
             />
-            <p className="text-xs text-slate-600 mt-1.5 pl-1">
-              This appears in your nav, footer, and page headings — exactly as written.
+            <p className="font-sans" style={{ fontSize: 12, color: "#444", marginTop: 6, paddingLeft: 2 }}>
+              Appears in your nav, footer, and headings.
             </p>
           </div>
 
-          {/* ── FIELD 2: Business Description ─────────────────────────────────
-              This value is sent as `prompt` to the API.
-              website_ai.py uses it only for AI copy generation — NEVER for display name.
-          ──────────────────────────────────────────────────────────────────── */}
-          <div className="group">
-            <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Describe your business
-              <span className="text-red-400 ml-0.5">*</span>
+          {/* Description */}
+          <div style={{ marginBottom: 20 }}>
+            <label className="label-text">
+              Describe your business <span style={{ color: "#dc2626" }}>*</span>
             </label>
-            <div className="relative">
+            <div style={{ position: "relative" }}>
               <textarea
+                className="textarea-field"
+                rows={5}
                 value={businessDescription}
                 onChange={(e) => onDescriptionChange(e.target.value)}
-                rows={5}
                 maxLength={500}
-                placeholder="Example: We're a fitness studio offering personal training, group classes, and nutrition coaching for people looking to lose weight and build strength."
-                className="w-full rounded-2xl px-6 py-4 bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 focus:bg-black/60 resize-none focus:outline-none transition-all duration-300 text-slate-100 placeholder:text-slate-500 shadow-inner"
+                placeholder="e.g. We're a fitness studio offering personal training and nutrition coaching for busy professionals looking to lose weight..."
               />
-              <div className="absolute bottom-4 right-4 text-xs text-slate-500 font-medium tabular-nums">
-                {businessDescription.length} / 500
+              <div
+                className="font-sans"
+                style={{ position: "absolute", bottom: 12, right: 14, fontSize: 11, color: "#333" }}
+              >
+                {businessDescription.length}/500
               </div>
             </div>
-            <p className="text-xs text-slate-600 mt-1.5 pl-1">
-              The AI uses this to write your copy — include your services, audience, and any key details.
+            <p className="font-sans" style={{ fontSize: 12, color: "#444", marginTop: 6, paddingLeft: 2 }}>
+              The AI uses this to write your copy — be specific.
             </p>
           </div>
 
-          {/* ── FIELD 3: Website URL slug ──────────────────────────────────── */}
-          <div className="group">
-            <label className="block text-sm font-semibold text-slate-400 mb-2.5 flex items-center gap-2">
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-              Website address
-              <span className="text-red-400 ml-0.5">*</span>
+          {/* URL slug */}
+          <div style={{ marginBottom: 28 }}>
+            <label className="label-text">
+              Website address <span style={{ color: "#dc2626" }}>*</span>
             </label>
-            <div className="relative">
+            <div style={{ position: "relative" }}>
               <input
+                className={`input-field input-field-mono ${username.length > 0 && !usernameValid ? "input-field-error" : ""}`}
                 value={username}
                 onChange={(e) => onUsernameChange(e.target.value)}
-                placeholder="my-fitness-studio"
+                placeholder="my-business-name"
                 maxLength={30}
-                className={cx(
-                  "w-full rounded-2xl pl-6 pr-36 py-4 bg-black/50 border transition-all duration-300 focus:outline-none focus:ring-2 shadow-inner font-mono text-slate-100 placeholder:text-slate-500",
-                  usernameValid
-                    ? "border-white/10 hover:border-white/20 focus:border-emerald-500/50 focus:ring-emerald-500/20 focus:bg-black/60"
-                    : username.length > 0
-                    ? "border-red-500/40 focus:border-red-500/60 focus:ring-red-500/20 bg-red-500/5"
-                    : "border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-indigo-500/20 focus:bg-black/60"
-                )}
+                style={{ paddingRight: 140 }}
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono pointer-events-none">
+              <div
+                className="font-sans"
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: 12,
+                  color: "#444",
+                  pointerEvents: "none",
+                  fontFamily: "monospace",
+                }}
+              >
                 .autopilotai.dev
               </div>
             </div>
             {username.length > 0 && (
-              <div className="flex items-center gap-1.5 text-xs mt-2 pl-1">
-                {usernameValid ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400 font-medium">
-                      autopilotai.dev/r/{cleanedUsername}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-red-400" />
-                    <span className="text-red-400 font-medium">3–30 chars, letters, numbers & hyphens only</span>
-                  </>
-                )}
+              <div
+                className="url-preview font-sans"
+                style={{ color: usernameValid ? "#059669" : "#ef4444" }}
+              >
+                {usernameValid ? <CheckCircle size={13} /> : <AlertCircle size={13} />}
+                {usernameValid
+                  ? `autopilotai.dev/r/${cleanedUsername}`
+                  : "3–30 characters, letters, numbers & hyphens only"}
               </div>
             )}
           </div>
+
+          <button className="btn-generate" onClick={onGenerate} disabled={creating || !canSubmit}>
+            {creating ? (
+              <>
+                <div
+                  style={{
+                    width: 16,
+                    height: 16,
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    borderTop: "2px solid white",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite",
+                  }}
+                />
+                Building your website...
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                Generate Website
+              </>
+            )}
+          </button>
         </div>
 
-        {/* GENERATE BUTTON */}
-        <button
-          onClick={onGenerate}
-          disabled={creating || !canSubmit}
-          className={cx(
-            "group relative overflow-hidden w-full py-5 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-xl flex items-center justify-center gap-2",
-            creating || !canSubmit
-              ? "bg-slate-700/80 text-slate-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.99]"
-          )}
-        >
-          {creating ? (
-            <>
-              <svg className="w-5 h-5 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Building your website...</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Generate Website</span>
-            </>
-          )}
-        </button>
+        {/* RIGHT — what you get */}
+        <div style={{ padding: "36px 40px", background: "#0d0d0d" }}>
+          <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: 12 }}>
+            What you get
+          </div>
+          <h3
+            className="font-display"
+            style={{ fontSize: 24, fontWeight: 400, color: "white", marginBottom: 8, letterSpacing: "-0.02em" }}
+          >
+            A complete website,
+            <br />
+            <em style={{ color: "#0ea5e9" }}>ready to publish</em>
+          </h3>
+          <p className="font-sans" style={{ fontSize: 14, color: "#555", lineHeight: 1.6, marginBottom: 32 }}>
+            Not a template. AI writes your copy, designs for your industry, and structures every page for conversions.
+          </p>
 
-        {/* FEATURE TILES */}
-        <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-            <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-1">AI-Powered</h3>
-              <p className="text-sm text-slate-500">Industry-specific design</p>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { icon: "⚡", title: "Built in ~60 seconds", sub: "Industry-specific copy and layout" },
+              { icon: "✏️", title: "Click-to-edit anything", sub: "Change text, images, colors — no code" },
+              { icon: "📱", title: "Mobile responsive", sub: "Looks perfect on every device" },
+              { icon: "📊", title: "Conversion optimized", sub: "CTAs, forms, and trust signals built in" },
+              { icon: "🌐", title: "Custom domain ready", sub: "Publish to yourcompany.com" },
+            ].map((f, i) => (
+              <div key={i} className="feature-pill">
+                <div style={{ fontSize: 18, width: 32, flexShrink: 0 }}>{f.icon}</div>
+                <div>
+                  <div className="font-sans" style={{ fontSize: 13, fontWeight: 600, color: "white", marginBottom: 2 }}>{f.title}</div>
+                  <div className="font-sans" style={{ fontSize: 12, color: "#555" }}>{f.sub}</div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-            <div className="w-11 h-11 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-1">Fully Editable</h3>
-              <p className="text-sm text-slate-500">Change anything anytime</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-1">Instant Live</h3>
-              <p className="text-sm text-slate-500">Publish in one click</p>
-            </div>
+
+          <div
+            className="font-sans"
+            style={{
+              marginTop: 28,
+              padding: "16px 18px",
+              background: "rgba(5,150,105,0.06)",
+              border: "1px solid rgba(5,150,105,0.15)",
+              borderRadius: 12,
+              fontSize: 13,
+              color: "#4ade80",
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ fontWeight: 700 }}>Free to build.</strong>
+            {" "}Edit as much as you want before paying. Upgrade for $10/mo when you're ready to publish.
           </div>
         </div>
       </div>

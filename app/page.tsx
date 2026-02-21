@@ -1502,7 +1502,7 @@ export default function HomePage() {
                 "Publish your website",
                 "Custom domain (yourco.com)",
                 "Unlimited AI generations",
-                "100 AI images/month",
+                "20 AI images/month",
                 "Advanced analytics",
                 "Priority support",
               ].map((label, i) => (
