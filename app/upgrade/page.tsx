@@ -648,7 +648,6 @@ export default function PublicUpgradePage() {
                 marginTop: 12,
               }}
             >
-              14-day free trial included
             </p>
           </div>
         </div>
