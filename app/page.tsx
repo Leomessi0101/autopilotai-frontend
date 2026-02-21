@@ -18,7 +18,7 @@ const TESTIMONIALS = [
     text: "Had zero idea how to build a website. AutopilotAI made mine in 2 minutes. Got my first client within a week.",
     revenue: "+$4,200/mo",
     initials: "SC",
-    bg: "from-violet-500 to-indigo-500",
+    color: "#8b5cf6",
   },
   {
     name: "Mike Rodriguez",
@@ -27,7 +27,7 @@ const TESTIMONIALS = [
     text: "Spent $0 on design. Got 3 new clients the first month. ROI on $10/mo is genuinely absurd.",
     revenue: "+$8,500/mo",
     initials: "MR",
-    bg: "from-amber-500 to-orange-500",
+    color: "#f59e0b",
   },
   {
     name: "Lisa Thompson",
@@ -36,7 +36,7 @@ const TESTIMONIALS = [
     text: "I'm not tech savvy at all. Created my whole site in 5 minutes. My phone hasn't stopped ringing.",
     revenue: "+$12,000/mo",
     initials: "LT",
-    bg: "from-emerald-500 to-teal-500",
+    color: "#10b981",
   },
 ];
 
@@ -65,26 +65,9 @@ export default function HomePage() {
   const [activeExample, setActiveExample] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [heroVisible, setHeroVisible] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setHeroVisible(true);
-    const handleScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
-
-    const interval = setInterval(() => {
-      setActiveExample((prev) => (prev + 1) % SITE_EXAMPLES.length);
-    }, 2200);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearInterval(interval);
-    };
-  }, []);
-
-  const handleTry = () => {
-    window.location.href = `/upgrade?prompt=${encodeURIComponent(inputValue)}`;
-  };
 
   const placeholderTexts = [
     "I'm a fitness trainer in NYC...",
@@ -92,193 +75,678 @@ export default function HomePage() {
     "I'm a freelance photographer...",
     "I own a restaurant in Miami...",
   ];
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    setHeroVisible(true);
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll);
+
+    const exampleInterval = setInterval(() => {
+      setActiveExample((prev) => (prev + 1) % SITE_EXAMPLES.length);
+    }, 2200);
+
+    const placeholderInterval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length);
     }, 2500);
-    return () => clearInterval(interval);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearInterval(exampleInterval);
+      clearInterval(placeholderInterval);
+    };
   }, []);
 
+  const handleTry = () => {
+    window.location.href = `/upgrade?prompt=${encodeURIComponent(inputValue)}`;
+  };
+
   return (
-    <div
-      className="min-h-screen text-gray-900"
-      style={{
-        background: "#FAFAF8",
-        fontFamily: "'Georgia', 'Times New Roman', serif",
-      }}
-    >
+    <div className="page-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
-        * { box-sizing: border-box; }
-        
-        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
-        .font-sans { font-family: 'DM Sans', system-ui, sans-serif; }
-        
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --green: #059669;
+          --green-light: #4ade80;
+          --blue: #0ea5e9;
+          --purple: #8b5cf6;
+          --amber: #f59e0b;
+          --bg: #FAFAF8;
+          --bg-dark: #111111;
+          --text: #111111;
+          --muted: #666;
+          --border: #e5e5e5;
+          --white: #ffffff;
+          --serif: 'Instrument Serif', Georgia, serif;
+          --sans: 'DM Sans', system-ui, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        .page-root {
+          min-height: 100vh;
+          background: var(--bg);
+          color: var(--text);
+          font-family: var(--sans);
+          overflow-x: hidden;
+        }
+
+        /* ── ANIMATIONS ── */
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(24px); }
+          from { opacity: 0; transform: translateY(28px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        @keyframes slideRight {
-          from { transform: translateX(-8px); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         @keyframes marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-
-        .animate-fadeUp { animation: fadeUp 0.7s ease forwards; }
-        .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
-        .anim-d1 { animation-delay: 0.1s; }
-        .anim-d2 { animation-delay: 0.25s; }
-        .anim-d3 { animation-delay: 0.4s; }
-        .anim-d4 { animation-delay: 0.55s; }
-        .opacity-0-init { opacity: 0; }
-
-        .hero-input:focus {
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-12px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        .cta-btn {
+        .anim-fade-up { animation: fadeUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .anim-fade-in { animation: fadeIn 0.5s ease both; }
+        .d1 { animation-delay: 0.08s; }
+        .d2 { animation-delay: 0.2s; }
+        .d3 { animation-delay: 0.34s; }
+        .d4 { animation-delay: 0.48s; }
+        .d5 { animation-delay: 0.6s; }
+        .hidden-init { opacity: 0; }
+
+        /* ── HEADER ── */
+        .header {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 100;
+          transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+          border-bottom: 1px solid transparent;
+        }
+        .header.scrolled {
+          background: rgba(250, 250, 248, 0.92);
+          backdrop-filter: blur(20px);
+          border-color: var(--border);
+        }
+        .header-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .logo {
+          font-family: var(--serif);
+          font-size: 22px;
+          color: var(--text);
+          text-decoration: none;
+          letter-spacing: -0.02em;
+        }
+        .header-nav {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .nav-link {
+          padding: 8px 16px;
+          font-size: 14px;
+          color: #555;
+          text-decoration: none;
+          font-weight: 500;
+          border-radius: 8px;
+          transition: color 0.2s, background 0.2s;
+        }
+        .nav-link:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 20px;
+          font-size: 14px;
+          font-weight: 600;
+          background: var(--text);
+          color: white;
+          border-radius: 10px;
+          text-decoration: none;
+          border: none;
+          cursor: pointer;
+          font-family: var(--sans);
+          letter-spacing: -0.01em;
+          transition: transform 0.2s, box-shadow 0.2s;
           position: relative;
           overflow: hidden;
-          background: #111;
-          color: white;
-          transition: transform 0.2s, box-shadow 0.2s;
         }
-        .cta-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.25);
-        }
-        .cta-btn::after {
+        .btn-primary::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
           pointer-events: none;
         }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
-        .emerald-btn {
+        .btn-green {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 13px 24px;
+          font-size: 15px;
+          font-weight: 700;
           background: linear-gradient(135deg, #059669, #0ea5e9);
           color: white;
+          border-radius: 12px;
+          text-decoration: none;
+          border: none;
+          cursor: pointer;
+          font-family: var(--sans);
+          letter-spacing: -0.01em;
           transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+          white-space: nowrap;
         }
-        .emerald-btn:hover {
+        .btn-green:hover {
           transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(5, 150, 105, 0.4);
-          filter: brightness(1.08);
+          box-shadow: 0 12px 36px rgba(5,150,105,0.35);
+          filter: brightness(1.06);
         }
 
-        .card-hover {
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        .hamburger {
+          display: none;
+          flex-direction: column;
+          gap: 5px;
+          cursor: pointer;
+          padding: 8px;
+          background: none;
+          border: none;
         }
-        .card-hover:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        .hamburger span {
+          display: block;
+          width: 22px;
+          height: 2px;
+          background: var(--text);
+          border-radius: 2px;
+          transition: all 0.3s;
         }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        .testimonial-card {
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        .mobile-menu {
+          display: none;
+          position: fixed;
+          top: 64px; left: 0; right: 0;
+          background: rgba(250,250,248,0.97);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid var(--border);
+          padding: 20px 24px 28px;
+          z-index: 99;
+          flex-direction: column;
+          gap: 12px;
+          animation: slideDown 0.25s ease;
         }
-        .testimonial-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 24px 64px rgba(0,0,0,0.12);
+        .mobile-menu.open { display: flex; }
+        .mobile-menu .nav-link {
+          font-size: 16px;
+          padding: 12px 16px;
+          border-radius: 10px;
         }
+        .mobile-menu .btn-primary { width: 100%; justify-content: center; padding: 14px; font-size: 15px; }
 
-        .marquee-track {
-          animation: marquee 20s linear infinite;
+        /* ── HERO ── */
+        .hero {
+          min-height: 100vh;
           display: flex;
-          gap: 0;
-        }
-
-        .faq-answer {
+          align-items: center;
+          padding: 100px 24px 80px;
+          position: relative;
           overflow: hidden;
-          transition: max-height 0.35s ease, opacity 0.35s ease;
         }
+        .hero-bg-orb-1 {
+          position: absolute;
+          top: 100px; right: -80px;
+          width: 500px; height: 500px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(5,150,105,0.09) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .hero-bg-orb-2 {
+          position: absolute;
+          bottom: 0; left: -100px;
+          width: 400px; height: 400px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .hero-grid {
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 72px;
+          align-items: center;
+        }
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          padding: 5px 14px;
+          border-radius: 100px;
+          margin-bottom: 24px;
+        }
+        .hero-title {
+          font-family: var(--serif);
+          font-size: clamp(44px, 5.5vw, 72px);
+          line-height: 1.04;
+          font-weight: 400;
+          letter-spacing: -0.03em;
+          color: var(--text);
+          margin-bottom: 24px;
+        }
+        .hero-title em { font-style: italic; color: var(--green); }
+        .hero-subtitle {
+          font-size: 17px;
+          color: var(--muted);
+          line-height: 1.7;
+          margin-bottom: 40px;
+          max-width: 440px;
+        }
+        .hero-subtitle strong { color: var(--text); font-weight: 600; }
 
-        .live-preview {
+        .input-wrap {
           background: white;
+          border: 2px solid var(--border);
           border-radius: 16px;
-          box-shadow: 0 40px 120px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
-          overflow: hidden;
+          padding: 8px;
+          display: flex;
+          gap: 8px;
+          margin-bottom: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+          transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .input-wrap:focus-within {
+          border-color: var(--green);
+          box-shadow: 0 4px 24px rgba(5,150,105,0.18);
+        }
+        .hero-input {
+          flex: 1;
+          border: none;
+          background: transparent;
+          font-size: 15px;
+          color: var(--text);
+          padding: 10px 14px;
+          outline: none;
+          font-family: var(--sans);
+          min-width: 0;
+        }
+        .hero-input::placeholder { color: #aaa; }
+        .input-btn {
+          flex-shrink: 0;
         }
 
+        .trust-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .avatars { display: flex; }
+        .avatar {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          border: 2.5px solid var(--bg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 700;
+          color: white;
+          margin-left: -10px;
+        }
+        .avatar:first-child { margin-left: 0; }
+        .trust-text-title { font-weight: 600; font-size: 14px; color: var(--text); }
+        .trust-text-sub { font-size: 12px; color: #888; }
+
+        /* ── PREVIEW MOCKUP ── */
+        .preview-wrap { position: relative; }
+        .preview-float-label {
+          position: absolute;
+          top: -16px; left: 50%;
+          transform: translateX(-50%);
+          background: var(--text);
+          color: white;
+          padding: 6px 16px;
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          z-index: 10;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .live-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: #22c55e;
+          animation: pulse-dot 2s ease infinite;
+        }
+        .mockup-card {
+          background: white;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 40px 100px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06);
+        }
         .browser-bar {
-          background: #f0f0f0;
+          background: #f2f2f2;
           border-bottom: 1px solid #e0e0e0;
           padding: 10px 16px;
           display: flex;
           align-items: center;
           gap: 8px;
         }
-
-        .badge-new {
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: white;
-          padding: 4px 10px;
-          border-radius: 100px;
+        .browser-dots { display: flex; gap: 6px; }
+        .browser-dot { width: 11px; height: 11px; border-radius: 50%; }
+        .browser-url {
+          flex: 1;
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          padding: 5px 12px;
+          font-size: 12px;
+          color: #666;
+          margin-left: 10px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          overflow: hidden;
+          white-space: nowrap;
         }
-
-        .step-number {
-          font-family: 'Instrument Serif', Georgia, serif;
-          font-size: 72px;
-          line-height: 1;
-          color: #111;
-          opacity: 0.08;
-          position: absolute;
-          top: -16px;
-          left: 20px;
-          user-select: none;
-        }
-
-        .divider-line {
-          width: 48px;
-          height: 2px;
-          background: #111;
-        }
-
-        .metric-block {
-          border-left: 3px solid;
-          padding-left: 20px;
-        }
-
-        .noise-bg {
+        .mockup-body {
           position: relative;
+          height: 360px;
+          overflow: hidden;
+          background: white;
         }
-        .noise-bg::before {
-          content: '';
+        .mockup-slide {
           position: absolute;
           inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-          pointer-events: none;
-          opacity: 0.4;
+          padding: 24px;
+          transition: opacity 0.55s ease;
+        }
+        .mockup-tabs {
+          background: #f7f7f7;
+          border-top: 1px solid #eee;
+          padding: 12px 14px;
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .mockup-tab {
+          padding: 4px 12px;
+          border-radius: 100px;
+          border: 1px solid;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: transparent;
+          font-family: var(--sans);
+        }
+        .preview-time-badge {
+          position: absolute;
+          bottom: -16px; right: 20px;
+          background: white;
+          border: 1.5px solid var(--border);
+          border-radius: 12px;
+          padding: 10px 16px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          animation: float 4s ease-in-out infinite;
         }
 
-        section { position: relative; }
+        /* ── MARQUEE ── */
+        .marquee-outer {
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          background: white;
+          padding: 18px 0;
+          overflow: hidden;
+        }
+        .marquee-track {
+          animation: marquee 22s linear infinite;
+          display: flex;
+          gap: 0;
+        }
+        .marquee-item {
+          padding: 0 36px;
+          font-size: 13px;
+          font-weight: 500;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 0;
+        }
+        .marquee-sep { margin-left: 36px; color: #ddd; }
 
+        /* ── SECTIONS ── */
+        .section { padding: 120px 24px; }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-inner-md { max-width: 900px; margin: 0 auto; }
+        .section-inner-sm { max-width: 720px; margin: 0 auto; }
+        .section-label {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--green);
+          margin-bottom: 16px;
+        }
+        .section-heading {
+          font-family: var(--serif);
+          font-size: clamp(36px, 4vw, 56px);
+          font-weight: 400;
+          letter-spacing: -0.03em;
+          color: var(--text);
+          line-height: 1.06;
+          margin-bottom: 16px;
+        }
+        .section-heading em { font-style: italic; }
+        .section-sub {
+          font-size: 17px;
+          color: var(--muted);
+          max-width: 480px;
+          line-height: 1.6;
+        }
+        .section-center { text-align: center; margin-bottom: 72px; }
+        .section-center .section-sub { margin: 0 auto; }
+
+        /* ── HOW IT WORKS ── */
+        .steps-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 28px;
+        }
+        .step-card {
+          background: white;
+          border: 1.5px solid var(--border);
+          border-radius: 20px;
+          padding: 40px 32px;
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+        }
+        .step-card:hover { transform: translateY(-5px); box-shadow: 0 24px 60px rgba(0,0,0,0.09); }
+        .step-ghost-num {
+          font-family: var(--serif);
+          font-size: 80px;
+          line-height: 1;
+          position: absolute;
+          top: -18px; left: 18px;
+          opacity: 0.06;
+          user-select: none;
+          color: var(--text);
+        }
+        .step-icon { font-size: 32px; margin-bottom: 18px; }
+        .step-divider { width: 40px; height: 2.5px; border-radius: 2px; margin-bottom: 18px; }
+        .step-title {
+          font-family: var(--serif);
+          font-size: 22px;
+          font-weight: 400;
+          color: var(--text);
+          margin-bottom: 10px;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+        }
+        .step-body { font-size: 14px; color: var(--muted); line-height: 1.75; }
+
+        /* ── TESTIMONIALS ── */
+        .section-dark {
+          background: var(--bg-dark);
+          position: relative;
+          overflow: hidden;
+        }
+        .section-dark .section-heading { color: white; }
+        .section-dark .section-sub { color: #888; }
+        .section-dark .section-label { color: #4ade80; }
+        .testi-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 22px;
+        }
+        .testi-card {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 20px;
+          padding: 32px;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s;
+        }
+        .testi-card:hover {
+          transform: translateY(-6px);
+          background: rgba(255,255,255,0.08);
+          box-shadow: 0 28px 60px rgba(0,0,0,0.3);
+        }
+        .testi-revenue {
+          display: inline-block;
+          background: rgba(74,222,128,0.15);
+          color: #4ade80;
+          padding: 4px 12px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 700;
+          margin-bottom: 20px;
+        }
+        .testi-text {
+          font-family: var(--serif);
+          font-size: 17px;
+          color: rgba(255,255,255,0.82);
+          line-height: 1.65;
+          margin-bottom: 24px;
+          font-style: italic;
+        }
+        .testi-author { display: flex; align-items: center; gap: 13px; }
+        .testi-avatar {
+          width: 44px; height: 44px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 13px; font-weight: 700; color: white;
+          flex-shrink: 0;
+        }
+        .testi-name { font-weight: 600; font-size: 14px; color: white; }
+        .testi-role { font-size: 12px; color: #888; }
+
+        /* ── FEATURES ── */
+        .features-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 72px;
+          align-items: center;
+        }
+        .feature-list { display: flex; flex-direction: column; gap: 22px; margin-top: 36px; }
+        .feature-item { display: flex; gap: 16px; align-items: flex-start; }
+        .feature-icon-wrap {
+          width: 44px; height: 44px;
+          background: white;
+          border: 1.5px solid var(--border);
+          border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .feature-item-title { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 3px; }
+        .feature-item-body { font-size: 14px; color: #888; line-height: 1.6; }
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 18px;
+        }
+        .metric-card {
+          background: white;
+          border: 1.5px solid var(--border);
+          border-radius: 20px;
+          padding: 28px 26px;
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .metric-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.09); }
+        .metric-value {
+          font-family: var(--serif);
+          font-size: 46px;
+          font-weight: 400;
+          line-height: 1;
+          margin-bottom: 10px;
+          letter-spacing: -0.03em;
+        }
+        .metric-label { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+        /* ── PRICING ── */
+        .pricing-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 22px;
+          max-width: 760px;
+          margin: 0 auto;
+        }
+        .pricing-free {
+          background: var(--bg);
+          border: 1.5px solid var(--border);
+          border-radius: 24px;
+          padding: 40px 36px;
+        }
         .pricing-popular {
-          background: #111;
-          color: white;
+          background: var(--bg-dark);
+          border-radius: 24px;
+          padding: 40px 36px;
           position: relative;
         }
         .pricing-popular::before {
@@ -289,522 +757,383 @@ export default function HomePage() {
           border-radius: 26px;
           z-index: -1;
         }
-
-        .check-icon {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: rgba(5, 150, 105, 0.15);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          color: #059669;
+        .pricing-tier-label {
           font-size: 11px;
           font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          margin-bottom: 20px;
         }
-
-        .cross-icon {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: rgba(0,0,0,0.06);
+        .pricing-price {
+          font-family: var(--serif);
+          font-size: 58px;
+          font-weight: 400;
+          line-height: 1;
+          margin-bottom: 4px;
+          letter-spacing: -0.03em;
+        }
+        .pricing-desc { font-size: 14px; margin-bottom: 32px; }
+        .pricing-feature {
           display: flex;
           align-items: center;
-          justify-content: center;
+          gap: 12px;
+          margin-bottom: 12px;
+          font-size: 14px;
+        }
+        .check-icon {
+          width: 20px; height: 20px;
+          border-radius: 50%;
+          background: rgba(5,150,105,0.12);
+          display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
-          color: #9ca3af;
-          font-size: 11px;
+          color: #059669;
+          font-size: 10px;
+          font-weight: 700;
+        }
+        .cross-icon {
+          width: 20px; height: 20px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.06);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          color: #ccc;
+          font-size: 10px;
+        }
+        .pricing-btn {
+          display: block;
+          margin-top: 32px;
+          padding: 14px 0;
+          border-radius: 12px;
+          text-align: center;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 700;
+          font-family: var(--sans);
+          cursor: pointer;
+          transition: all 0.2s;
+          border: none;
+        }
+        .pricing-btn-outline {
+          background: transparent;
+          border: 1.5px solid #222;
+          color: var(--text);
+        }
+        .pricing-btn-outline:hover { background: rgba(0,0,0,0.04); }
+        .popular-chip {
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          padding: 2px 10px;
+          border-radius: 100px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          margin-left: 8px;
+        }
+
+        /* ── FAQ ── */
+        .faq-item { border-bottom: 1px solid var(--border); }
+        .faq-btn {
+          width: 100%;
+          background: none;
+          border: none;
+          padding: 24px 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          text-align: left;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text);
+          letter-spacing: -0.01em;
+          font-family: var(--sans);
+          gap: 16px;
+        }
+        .faq-icon {
+          font-size: 22px;
+          color: #888;
+          transition: transform 0.3s ease;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+        .faq-icon.open { transform: rotate(45deg); }
+        .faq-answer {
+          overflow: hidden;
+          transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
+          font-size: 15px;
+          color: var(--muted);
+          line-height: 1.75;
+          max-height: 0;
+          opacity: 0;
+          padding-bottom: 0;
+        }
+        .faq-answer.open { max-height: 240px; opacity: 1; padding-bottom: 24px; }
+
+        /* ── FINAL CTA ── */
+        .final-cta {
+          padding: 120px 24px;
+          background: var(--bg-dark);
+          position: relative;
+          overflow: hidden;
+        }
+        .final-cta-orb {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          width: 700px; height: 400px;
+          background: radial-gradient(ellipse, rgba(5,150,105,0.2) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .cta-input-wrap {
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 18px;
+          padding: 7px;
+          display: flex;
+          gap: 8px;
+          max-width: 520px;
+          margin: 0 auto 20px;
+        }
+        .cta-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          font-size: 15px;
+          color: white;
+          padding: 12px 14px;
+          font-family: var(--sans);
+          min-width: 0;
+        }
+        .cta-input::placeholder { color: #666; }
+
+        /* ── FOOTER ── */
+        .footer {
+          background: #0a0a0a;
+          border-top: 1px solid #1f1f1f;
+          padding: 40px 24px;
+        }
+        .footer-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+        .footer-logo { font-family: var(--serif); font-size: 20px; color: white; text-decoration: none; }
+        .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+        .footer-link {
+          font-size: 13px;
+          color: #555;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .footer-link:hover { color: white; }
+
+        /* ── MOBILE ── */
+        @media (max-width: 900px) {
+          .header-nav { display: none; }
+          .hamburger { display: flex; }
+
+          .hero { padding: 90px 20px 60px; min-height: unset; }
+          .hero-grid {
+            grid-template-columns: 1fr;
+            gap: 48px;
+          }
+          .hero-title { font-size: clamp(38px, 9vw, 56px); }
+          .hero-subtitle { font-size: 16px; max-width: 100%; }
+          .input-wrap { flex-wrap: wrap; }
+          .input-btn { width: 100%; }
+          .input-btn .btn-green { width: 100%; justify-content: center; }
+          .preview-float-label { font-size: 10px; padding: 5px 12px; }
+          .mockup-body { height: 300px; }
+
+          .section { padding: 80px 20px; }
+          .steps-grid { grid-template-columns: 1fr; gap: 18px; }
+          .step-card { padding: 32px 28px; }
+          .testi-grid { grid-template-columns: 1fr; gap: 18px; }
+          .features-grid { grid-template-columns: 1fr; gap: 48px; }
+          .metrics-grid { grid-template-columns: 1fr 1fr; }
+          .pricing-grid { grid-template-columns: 1fr; gap: 18px; }
+          .pricing-free, .pricing-popular { padding: 32px 28px; }
+          .section-heading { font-size: clamp(30px, 7vw, 48px); }
+
+          .final-cta { padding: 80px 20px; }
+          .cta-input-wrap { flex-wrap: wrap; }
+          .cta-input-wrap .btn-green { width: 100%; justify-content: center; }
+
+          .footer-inner { flex-direction: column; align-items: flex-start; }
+          .footer-links { gap: 20px; }
+        }
+
+        @media (max-width: 540px) {
+          .hero-badge { font-size: 10px; }
+          .hero-title { font-size: clamp(34px, 10vw, 50px); }
+          .trust-row { gap: 12px; }
+          .metrics-grid { grid-template-columns: 1fr; }
+          .testi-card { padding: 24px 22px; }
+          .pricing-popular::before { display: none; }
+          .pricing-popular { border: 2px solid #059669; }
         }
       `}</style>
 
       {/* ── HEADER ── */}
-      <header
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          transition: "all 0.3s ease",
-          backgroundColor: isScrolled ? "rgba(250,250,248,0.95)" : "transparent",
-          backdropFilter: isScrolled ? "blur(20px)" : "none",
-          borderBottom: isScrolled ? "1px solid rgba(0,0,0,0.08)" : "1px solid transparent",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "0 24px",
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            className="font-display"
-            style={{ fontSize: 22, fontWeight: 400, letterSpacing: "-0.02em", color: "#111" }}
-          >
-            AutopilotAI
-          </div>
-          <nav
-            className="font-sans"
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <a
-              href="/login"
-              style={{
-                padding: "8px 16px",
-                fontSize: 14,
-                color: "#555",
-                textDecoration: "none",
-                fontWeight: 500,
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#111")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
-            >
-              Sign in
-            </a>
-            <a
-              href="/upgrade"
-              className="cta-btn font-sans"
-              style={{
-                padding: "9px 20px",
-                fontSize: 14,
-                fontWeight: 600,
-                borderRadius: 10,
-                textDecoration: "none",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Get started free
-            </a>
+      <header className={`header ${isScrolled ? "scrolled" : ""}`}>
+        <div className="header-inner">
+          <a href="/" className="logo">AutopilotAI</a>
+          <nav className="header-nav">
+            <a href="/login" className="nav-link">Sign in</a>
+            <a href="/upgrade" className="btn-primary">Get started free</a>
           </nav>
+          <button
+            className={`hamburger ${mobileMenuOpen ? "open" : ""}`}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu"
+          >
+            <span /><span /><span />
+          </button>
         </div>
       </header>
 
-      {/* ── HERO ── */}
-      <section
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          paddingTop: 80,
-          paddingBottom: 80,
-          overflow: "hidden",
-        }}
-      >
-        {/* Subtle background decorations */}
-        <div
-          style={{
-            position: "absolute",
-            top: 120,
-            right: -100,
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(5,150,105,0.08) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: -120,
-            width: 400,
-            height: 400,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
+      {/* ── MOBILE MENU ── */}
+      <div className={`mobile-menu ${mobileMenuOpen ? "open" : ""}`}>
+        <a href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Sign in</a>
+        <a href="/upgrade" className="btn-primary" onClick={() => setMobileMenuOpen(false)}>Get started free →</a>
+      </div>
 
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "0 24px",
-            width: "100%",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 80,
-            alignItems: "center",
-          }}
-        >
+      {/* ── HERO ── */}
+      <section className="hero">
+        <div className="hero-bg-orb-1" />
+        <div className="hero-bg-orb-2" />
+
+        <div className="hero-grid">
           {/* Left: copy */}
           <div>
-            <div
-              className={`font-sans opacity-0-init ${heroVisible ? "animate-fadeUp anim-d1" : ""}`}
-              style={{ marginBottom: 24 }}
-            >
-              <span className="badge-new">AI Website Builder</span>
+            <div className={`hidden-init ${heroVisible ? "anim-fade-up d1" : ""}`}>
+              <div className="hero-badge">
+                <span>✦</span>
+                AI Website Builder
+              </div>
             </div>
 
-            <h1
-              className={`font-display opacity-0-init ${heroVisible ? "animate-fadeUp anim-d2" : ""}`}
-              style={{
-                fontSize: "clamp(44px, 5.5vw, 72px)",
-                lineHeight: 1.05,
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: "#111",
-                marginBottom: 24,
-              }}
-            >
+            <h1 className={`hero-title hidden-init ${heroVisible ? "anim-fade-up d2" : ""}`}>
               Your professional
               <br />
-              <em style={{ fontStyle: "italic", color: "#059669" }}>website</em>
-              ,{" "}
-              <br />
+              <em>website</em>,{" "}
+              <br style={{ display: "none" }} />
               built in 60 seconds.
             </h1>
 
-            <p
-              className={`font-sans opacity-0-init ${heroVisible ? "animate-fadeUp anim-d3" : ""}`}
-              style={{
-                fontSize: 18,
-                color: "#555",
-                lineHeight: 1.7,
-                marginBottom: 40,
-                maxWidth: 440,
-                fontWeight: 400,
-              }}
-            >
+            <p className={`hero-subtitle hidden-init ${heroVisible ? "anim-fade-up d3" : ""}`}>
               Describe your business. AI builds a conversion-optimized,
               professional website. Edit anything. Publish for{" "}
-              <strong style={{ color: "#111", fontWeight: 600 }}>$10/month</strong>{" "}
-              — or start free, forever.
+              <strong>$10/month</strong> — or start free, forever.
             </p>
 
-            {/* The try-it-now input — #1 conversion driver */}
-            <div
-              className={`opacity-0-init ${heroVisible ? "animate-fadeUp anim-d4" : ""}`}
-              style={{
-                background: "white",
-                border: "2px solid #e5e5e5",
-                borderRadius: 16,
-                padding: 8,
-                display: "flex",
-                gap: 8,
-                marginBottom: 20,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-                transition: "border-color 0.2s, box-shadow 0.2s",
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = "#059669";
-                e.currentTarget.style.boxShadow = "0 4px 20px rgba(5,150,105,0.15)";
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = "#e5e5e5";
-                e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)";
-              }}
-            >
-              <input
-                ref={inputRef}
-                className="hero-input font-sans"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleTry()}
-                placeholder={placeholderTexts[placeholderIndex]}
-                style={{
-                  flex: 1,
-                  border: "none",
-                  background: "transparent",
-                  fontSize: 15,
-                  color: "#111",
-                  padding: "10px 14px",
-                  outline: "none",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              />
-              <button
-                onClick={handleTry}
-                className="emerald-btn font-sans"
-                style={{
-                  padding: "12px 24px",
-                  borderRadius: 10,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                Build my site →
-              </button>
-            </div>
-
-            <p
-              className={`font-sans opacity-0-init ${heroVisible ? "animate-fadeIn anim-d4" : ""}`}
-              style={{ fontSize: 13, color: "#888", marginBottom: 48 }}
-            >
-              No credit card · No design skills · Takes 2 minutes
-            </p>
-
-            {/* Social proof strip */}
-            <div
-              className={`opacity-0-init ${heroVisible ? "animate-fadeUp anim-d4" : ""}`}
-              style={{ display: "flex", alignItems: "center", gap: 20 }}
-            >
-              <div style={{ display: "flex" }}>
-                {["SC", "MR", "LT", "JP", "AW"].map((initials, i) => (
-                  <div
-                    key={i}
-                    className="font-sans"
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: ["#059669", "#0ea5e9", "#8b5cf6", "#f59e0b", "#ef4444"][i],
-                      border: "2.5px solid #FAFAF8",
-                      marginLeft: i === 0 ? 0 : -10,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "white",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {initials}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div
-                  className="font-sans"
-                  style={{ fontWeight: 600, fontSize: 14, color: "#111" }}
-                >
-                  2,847 businesses launched
+            <div className={`hidden-init ${heroVisible ? "anim-fade-up d4" : ""}`}>
+              <div className="input-wrap">
+                <input
+                  ref={inputRef}
+                  className="hero-input"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleTry()}
+                  placeholder={placeholderTexts[placeholderIndex]}
+                />
+                <div className="input-btn">
+                  <button onClick={handleTry} className="btn-green">
+                    Build my site →
+                  </button>
                 </div>
-                <div className="font-sans" style={{ fontSize: 12, color: "#888" }}>
-                  ⭐⭐⭐⭐⭐ 4.9 avg rating
+              </div>
+              <p style={{ fontSize: 13, color: "#888", marginBottom: 44 }}>
+                No credit card · No design skills · Takes 2 minutes
+              </p>
+
+              <div className="trust-row">
+                <div className="avatars">
+                  {[
+                    ["SC", "#059669"], ["MR", "#f59e0b"], ["LT", "#8b5cf6"],
+                    ["JP", "#0ea5e9"], ["AW", "#ef4444"],
+                  ].map(([initials, color], i) => (
+                    <div key={i} className="avatar" style={{ background: color }}>
+                      {initials}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="trust-text-title">2,847 businesses launched</div>
+                  <div className="trust-text-sub">⭐⭐⭐⭐⭐ 4.9 avg rating</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right: Live preview mockup */}
-          <div style={{ position: "relative" }}>
-            {/* Floating label */}
-            <div
-              className="font-sans"
-              style={{
-                position: "absolute",
-                top: -16,
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "#111",
-                color: "white",
-                padding: "6px 16px",
-                borderRadius: 100,
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.04em",
-                zIndex: 10,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#22c55e",
-                  marginRight: 8,
-                  animation: "pulse-slow 2s ease infinite",
-                }}
-              />
+          {/* Right: preview mockup */}
+          <div className="preview-wrap">
+            <div className="preview-float-label">
+              <span className="live-dot" />
               LIVE PREVIEW — AI GENERATING
             </div>
 
-            <div className="live-preview">
-              {/* Browser chrome */}
+            <div className="mockup-card">
               <div className="browser-bar">
-                <div style={{ display: "flex", gap: 6 }}>
+                <div className="browser-dots">
                   {["#ff5f57", "#febc2e", "#28c840"].map((c, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: "50%",
-                        background: c,
-                      }}
-                    />
+                    <div key={i} className="browser-dot" style={{ background: c }} />
                   ))}
                 </div>
-                <div
-                  className="font-sans"
-                  style={{
-                    flex: 1,
-                    background: "white",
-                    borderRadius: 6,
-                    padding: "5px 12px",
-                    fontSize: 12,
-                    color: "#666",
-                    marginLeft: 12,
-                    border: "1px solid #e0e0e0",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
+                <div className="browser-url">
                   <span style={{ color: "#22c55e", fontSize: 10 }}>🔒</span>
-                  {SITE_EXAMPLES[activeExample].label
-                    .toLowerCase()
-                    .replace(/\s+/g, "")}.com
+                  {SITE_EXAMPLES[activeExample].label.toLowerCase().replace(/\s+/g, "")}.com
                 </div>
               </div>
 
-              {/* Fake website content — cycles through examples */}
-              <div
-                style={{
-                  position: "relative",
-                  height: 380,
-                  overflow: "hidden",
-                  background: "white",
-                }}
-              >
+              <div className="mockup-body">
                 {SITE_EXAMPLES.map((ex, i) => (
                   <div
                     key={i}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      opacity: activeExample === i ? 1 : 0,
-                      transition: "opacity 0.6s ease",
-                      padding: 28,
-                    }}
+                    className="mockup-slide"
+                    style={{ opacity: activeExample === i ? 1 : 0 }}
                   >
-                    {/* Fake hero section */}
-                    <div
-                      style={{
-                        background: `linear-gradient(135deg, ${ex.color}18, ${ex.color}08)`,
-                        borderRadius: 12,
-                        padding: "24px 28px",
-                        marginBottom: 16,
-                        borderLeft: `4px solid ${ex.color}`,
-                      }}
-                    >
-                      <div
-                        className="font-sans"
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          letterSpacing: "0.12em",
-                          color: ex.color,
-                          marginBottom: 8,
-                          textTransform: "uppercase",
-                        }}
-                      >
+                    <div style={{
+                      background: `linear-gradient(135deg, ${ex.color}18, ${ex.color}06)`,
+                      borderRadius: 12,
+                      padding: "20px 22px",
+                      marginBottom: 14,
+                      borderLeft: `4px solid ${ex.color}`,
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: ex.color, marginBottom: 7, textTransform: "uppercase" }}>
                         {ex.icon} Professional {ex.label.split(" ")[0]} Services
                       </div>
-                      <div
-                        className="font-display"
-                        style={{
-                          fontSize: 22,
-                          fontWeight: 400,
-                          color: "#111",
-                          lineHeight: 1.2,
-                          marginBottom: 10,
-                          letterSpacing: "-0.02em",
-                        }}
-                      >
-                        The #1 Trusted {ex.label} <br />
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 400, color: "#111", lineHeight: 1.2, marginBottom: 9, letterSpacing: "-0.02em" }}>
+                        The #1 Trusted {ex.label}{" "}
                         <em style={{ color: ex.color }}>You Can Rely On</em>
                       </div>
-                      <div
-                        className="font-sans"
-                        style={{ fontSize: 11, color: "#666", marginBottom: 14, lineHeight: 1.6 }}
-                      >
-                        Serving customers since 2019. Fully licensed, insured, and
-                        5-star rated. Get your free quote today.
+                      <div style={{ fontSize: 11, color: "#777", marginBottom: 13, lineHeight: 1.6 }}>
+                        Serving customers since 2019. Licensed, insured & 5-star rated.
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <div
-                          style={{
-                            background: ex.color,
-                            color: "white",
-                            padding: "8px 16px",
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            fontFamily: "'DM Sans', sans-serif",
-                          }}
-                        >
-                          Get Free Quote
-                        </div>
-                        <div
-                          style={{
-                            border: `1.5px solid ${ex.color}40`,
-                            color: ex.color,
-                            padding: "8px 16px",
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            fontFamily: "'DM Sans', sans-serif",
-                          }}
-                        >
-                          See Our Work
-                        </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ background: ex.color, color: "white", padding: "7px 14px", borderRadius: 7, fontSize: 11, fontWeight: 700 }}>Get Free Quote</div>
+                        <div style={{ border: `1.5px solid ${ex.color}40`, color: ex.color, padding: "7px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600 }}>See Our Work</div>
                       </div>
                     </div>
-
-                    {/* Fake feature rows */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                      {["Licensed & Insured", "5★ Reviews", "Same Day Service"].map((feat, fi) => (
-                        <div
-                          key={fi}
-                          style={{
-                            background: "#f9f9f9",
-                            borderRadius: 8,
-                            padding: "12px 10px",
-                            textAlign: "center",
-                          }}
-                        >
-                          <div style={{ fontSize: 16, marginBottom: 4 }}>
-                            {["✅", "⭐", "⚡"][fi]}
-                          </div>
-                          <div
-                            className="font-sans"
-                            style={{ fontSize: 9, color: "#444", fontWeight: 600 }}
-                          >
-                            {feat}
-                          </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 9 }}>
+                      {["Licensed & Insured", "5★ Reviews", "Same Day"].map((feat, fi) => (
+                        <div key={fi} style={{ background: "#f8f8f8", borderRadius: 8, padding: "11px 8px", textAlign: "center" }}>
+                          <div style={{ fontSize: 15, marginBottom: 4 }}>{["✅","⭐","⚡"][fi]}</div>
+                          <div style={{ fontSize: 9, color: "#555", fontWeight: 600 }}>{feat}</div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Progress bars to suggest "building" */}
-                    <div style={{ marginTop: 16 }}>
-                      {[80, 65, 92].map((w, pi) => (
-                        <div
-                          key={pi}
-                          style={{
-                            height: 4,
-                            background: "#f0f0f0",
-                            borderRadius: 4,
-                            marginBottom: 6,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${w}%`,
-                              height: "100%",
-                              background: ex.color,
-                              borderRadius: 4,
-                              opacity: 0.4,
-                            }}
-                          />
+                    <div style={{ marginTop: 14 }}>
+                      {[80, 65, 90].map((w, pi) => (
+                        <div key={pi} style={{ height: 4, background: "#f0f0f0", borderRadius: 4, marginBottom: 6, overflow: "hidden" }}>
+                          <div style={{ width: `${w}%`, height: "100%", background: ex.color, borderRadius: 4, opacity: 0.4 }} />
                         </div>
                       ))}
                     </div>
@@ -812,33 +1141,16 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Example selector tabs */}
-              <div
-                style={{
-                  background: "#f9f9f9",
-                  borderTop: "1px solid #eee",
-                  padding: "12px 16px",
-                  display: "flex",
-                  gap: 6,
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="mockup-tabs">
                 {SITE_EXAMPLES.map((ex, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveExample(i)}
-                    className="font-sans"
+                    className="mockup-tab"
                     style={{
-                      padding: "4px 12px",
-                      borderRadius: 100,
-                      border: "1px solid",
                       borderColor: activeExample === i ? ex.color : "#ddd",
-                      background: activeExample === i ? `${ex.color}15` : "transparent",
-                      color: activeExample === i ? ex.color : "#888",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.2s",
+                      background: activeExample === i ? `${ex.color}18` : "transparent",
+                      color: activeExample === i ? ex.color : "#999",
                     }}
                   >
                     {ex.label}
@@ -847,54 +1159,27 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Floating badge - time */}
-            <div
-              className="font-sans"
-              style={{
-                position: "absolute",
-                bottom: -16,
-                right: 20,
-                background: "white",
-                border: "1.5px solid #e5e5e5",
-                borderRadius: 12,
-                padding: "10px 16px",
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#111",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
+            <div className="preview-time-badge">
               <span style={{ fontSize: 16 }}>⚡</span> Built in 47 seconds
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── LOGO MARQUEE / TRUST ── */}
-      <div
-        style={{
-          borderTop: "1px solid #e5e5e5",
-          borderBottom: "1px solid #e5e5e5",
-          background: "white",
-          padding: "20px 0",
-          overflow: "hidden",
-        }}
-      >
+      {/* ── MARQUEE ── */}
+      <div className="marquee-outer">
         <div style={{ overflow: "hidden" }}>
           <div className="marquee-track">
             {[
               "2,847 websites built",
-              "$4.2M+ revenue generated for customers",
+              "$4.2M+ revenue generated",
               "4.9 ★ average rating",
               "No coding required",
               "Publish in under 5 minutes",
               "14-day free trial",
               "Cancel anytime",
               "2,847 websites built",
-              "$4.2M+ revenue generated for customers",
+              "$4.2M+ revenue generated",
               "4.9 ★ average rating",
               "No coding required",
               "Publish in under 5 minutes",
@@ -903,20 +1188,11 @@ export default function HomePage() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="font-sans"
-                style={{
-                  padding: "0 40px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: i % 3 === 0 ? "#059669" : "#888",
-                  whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0,
-                }}
+                className="marquee-item"
+                style={{ color: i % 3 === 0 ? "#059669" : "#888" }}
               >
                 {item}
-                <span style={{ marginLeft: 40, color: "#ddd" }}>◆</span>
+                <span className="marquee-sep">◆</span>
               </div>
             ))}
           </div>
@@ -924,94 +1200,27 @@ export default function HomePage() {
       </div>
 
       {/* ── HOW IT WORKS ── */}
-      <section style={{ padding: "120px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 80 }}>
-            <h2
-              className="font-display"
-              style={{
-                fontSize: "clamp(36px, 4vw, 56px)",
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: "#111",
-                marginBottom: 16,
-              }}
-            >
-              From zero to live in{" "}
-              <em style={{ color: "#059669" }}>three steps</em>
+      <section className="section">
+        <div className="section-inner">
+          <div className="section-center">
+            <div className="section-label">The process</div>
+            <h2 className="section-heading">
+              From zero to live in <em style={{ color: "#059669" }}>three steps</em>
             </h2>
-            <p
-              className="font-sans"
-              style={{ fontSize: 17, color: "#666", maxWidth: 480, margin: "0 auto" }}
-            >
-              No designers. No developers. No headaches.
-            </p>
+            <p className="section-sub">No designers. No developers. No headaches.</p>
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 32,
-            }}
-          >
+          <div className="steps-grid">
             {[
-              {
-                n: "01",
-                title: "Describe your business",
-                body: 'Spend 60 seconds telling us what you do. "I\'m a fitness trainer in NYC specializing in weight loss for busy professionals." That\'s all it takes.',
-                icon: "✍️",
-                accent: "#059669",
-              },
-              {
-                n: "02",
-                title: "AI builds your site",
-                body: "Our AI writes your copy, designs your layout, and structures your pages for conversions — all tailored to your industry.",
-                icon: "🤖",
-                accent: "#0ea5e9",
-              },
-              {
-                n: "03",
-                title: "Edit, then publish",
-                body: "Click any element to tweak it. Add your logo. Regenerate sections you don't love. When you're ready, hit publish.",
-                icon: "🚀",
-                accent: "#8b5cf6",
-              },
+              { n: "01", title: "Describe your business", body: 'Spend 60 seconds telling us what you do. "I\'m a fitness trainer in NYC specializing in weight loss for busy professionals." That\'s all it takes.', icon: "✍️", accent: "#059669" },
+              { n: "02", title: "AI builds your site", body: "Our AI writes your copy, designs your layout, and structures your pages for conversions — all tailored to your industry.", icon: "🤖", accent: "#0ea5e9" },
+              { n: "03", title: "Edit, then publish", body: "Click any element to tweak it. Add your logo. Regenerate sections you don't love. When you're ready, hit publish.", icon: "🚀", accent: "#8b5cf6" },
             ].map((step, i) => (
-              <div
-                key={i}
-                className="card-hover"
-                style={{
-                  background: "white",
-                  borderRadius: 20,
-                  padding: "40px 36px",
-                  border: "1.5px solid #e5e5e5",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                <div className="step-number">{step.n}</div>
-                <div style={{ fontSize: 36, marginBottom: 20 }}>{step.icon}</div>
-                <div className="divider-line" style={{ background: step.accent, marginBottom: 20 }} />
-                <h3
-                  className="font-display"
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 400,
-                    color: "#111",
-                    marginBottom: 12,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className="font-sans"
-                  style={{ fontSize: 14, color: "#666", lineHeight: 1.7 }}
-                >
-                  {step.body}
-                </p>
+              <div key={i} className="step-card">
+                <div className="step-ghost-num">{step.n}</div>
+                <div className="step-icon">{step.icon}</div>
+                <div className="step-divider" style={{ background: step.accent }} />
+                <h3 className="step-title">{step.title}</h3>
+                <p className="step-body">{step.body}</p>
               </div>
             ))}
           </div>
@@ -1019,118 +1228,29 @@ export default function HomePage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section
-        style={{
-          padding: "120px 24px",
-          background: "#111",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -100,
-            left: "30%",
-            width: 400,
-            height: 400,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ marginBottom: 64 }}>
-            <h2
-              className="font-display"
-              style={{
-                fontSize: "clamp(36px, 4vw, 56px)",
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: "white",
-                marginBottom: 16,
-              }}
-            >
+      <section className="section section-dark">
+        <div style={{ position: "absolute", top: -80, left: "30%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div className="section-inner" style={{ position: "relative" }}>
+          <div style={{ marginBottom: 60 }}>
+            <div className="section-label">Proof it works</div>
+            <h2 className="section-heading">
               Real businesses.{" "}
               <em style={{ color: "#4ade80" }}>Real results.</em>
             </h2>
-            <p className="font-sans" style={{ fontSize: 17, color: "#888" }}>
-              Not cherry-picked. These are our last three featured reviews.
-            </p>
+            <p className="section-sub">Not cherry-picked. These are our last three featured reviews.</p>
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 24,
-            }}
-          >
+          <div className="testi-grid">
             {TESTIMONIALS.map((t, i) => (
-              <div
-                key={i}
-                className="testimonial-card"
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 20,
-                  padding: 36,
-                }}
-              >
-                <div
-                  className="font-sans"
-                  style={{
-                    display: "inline-block",
-                    background: "rgba(74,222,128,0.15)",
-                    color: "#4ade80",
-                    padding: "4px 12px",
-                    borderRadius: 100,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    marginBottom: 24,
-                  }}
-                >
-                  {t.revenue}
-                </div>
-                <p
-                  className="font-display"
-                  style={{
-                    fontSize: 18,
-                    color: "rgba(255,255,255,0.85)",
-                    lineHeight: 1.6,
-                    marginBottom: 28,
-                    fontStyle: "italic",
-                  }}
-                >
-                  "{t.text}"
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div
-                    className={`font-sans bg-gradient-to-br ${t.bg}`}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "white",
-                    }}
-                  >
+              <div key={i} className="testi-card">
+                <div className="testi-revenue">{t.revenue}</div>
+                <p className="testi-text">"{t.text}"</p>
+                <div className="testi-author">
+                  <div className="testi-avatar" style={{ background: t.color }}>
                     {t.initials}
                   </div>
                   <div>
-                    <div
-                      className="font-sans"
-                      style={{ fontWeight: 600, fontSize: 14, color: "white" }}
-                    >
-                      {t.name}
-                    </div>
-                    <div className="font-sans" style={{ fontSize: 12, color: "#888" }}>
-                      {t.role} · {t.location}
-                    </div>
+                    <div className="testi-name">{t.name}</div>
+                    <div className="testi-role">{t.role} · {t.location}</div>
                   </div>
                 </div>
               </div>
@@ -1139,167 +1259,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURES / BENEFITS ── */}
-      <section style={{ padding: "120px 24px", background: "#FAFAF8" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 80,
-              alignItems: "center",
-            }}
-          >
+      {/* ── FEATURES ── */}
+      <section className="section" style={{ background: "#FAFAF8" }}>
+        <div className="section-inner">
+          <div className="features-grid">
             <div>
-              <h2
-                className="font-display"
-                style={{
-                  fontSize: "clamp(36px, 4vw, 56px)",
-                  fontWeight: 400,
-                  letterSpacing: "-0.03em",
-                  color: "#111",
-                  marginBottom: 24,
-                  lineHeight: 1.05,
-                }}
-              >
+              <div className="section-label">What's included</div>
+              <h2 className="section-heading">
                 Everything built in.
                 <br />
                 <em style={{ color: "#0ea5e9" }}>Nothing left out.</em>
               </h2>
-              <p
-                className="font-sans"
-                style={{
-                  fontSize: 16,
-                  color: "#666",
-                  lineHeight: 1.7,
-                  marginBottom: 40,
-                  maxWidth: 420,
-                }}
-              >
-                You shouldn't have to stitch together five tools to have a
-                working website. AutopilotAI includes everything you need to get
-                customers.
+              <p style={{ fontSize: 16, color: "#666", lineHeight: 1.7, maxWidth: 420 }}>
+                You shouldn't have to stitch together five tools to have a working website. AutopilotAI includes everything you need to get customers.
               </p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div className="feature-list">
                 {[
-                  {
-                    icon: "✏️",
-                    title: "Click-to-edit anything",
-                    body: "Change text, images, colors, or layout without touching code.",
-                  },
-                  {
-                    icon: "📊",
-                    title: "Built-in analytics",
-                    body: "See visitor numbers, top pages, and where people click.",
-                  },
-                  {
-                    icon: "📬",
-                    title: "Lead capture forms",
-                    body: "Automatically collect emails and enquiries. No plugin needed.",
-                  },
-                  {
-                    icon: "🌐",
-                    title: "Custom domain",
-                    body: "Publish to yourcompany.com, not a subdomain nobody trusts.",
-                  },
+                  { icon: "✏️", title: "Click-to-edit anything", body: "Change text, images, colors, or layout without touching code." },
+                  { icon: "📊", title: "Built-in analytics", body: "See visitor numbers, top pages, and where people click." },
+                  { icon: "📬", title: "Lead capture forms", body: "Automatically collect emails and enquiries. No plugin needed." },
+                  { icon: "🌐", title: "Custom domain", body: "Publish to yourcompany.com, not a subdomain nobody trusts." },
                 ].map((f, i) => (
-                  <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        background: "white",
-                        border: "1.5px solid #e5e5e5",
-                        borderRadius: 12,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 20,
-                        flexShrink: 0,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                      }}
-                    >
-                      {f.icon}
-                    </div>
+                  <div key={i} className="feature-item">
+                    <div className="feature-icon-wrap">{f.icon}</div>
                     <div>
-                      <div
-                        className="font-sans"
-                        style={{ fontWeight: 600, fontSize: 15, color: "#111", marginBottom: 4 }}
-                      >
-                        {f.title}
-                      </div>
-                      <div
-                        className="font-sans"
-                        style={{ fontSize: 14, color: "#888", lineHeight: 1.6 }}
-                      >
-                        {f.body}
-                      </div>
+                      <div className="feature-item-title">{f.title}</div>
+                      <div className="feature-item-body">{f.body}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Right: metrics */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 20,
-              }}
-            >
+            <div className="metrics-grid">
               {[
-                {
-                  metric: "60s",
-                  label: "Average time to first website",
-                  color: "#059669",
-                },
-                {
-                  metric: "$10",
-                  label: "Per month to publish with custom domain",
-                  color: "#0ea5e9",
-                },
-                {
-                  metric: "100%",
-                  label: "Mobile responsive, guaranteed",
-                  color: "#8b5cf6",
-                },
-                {
-                  metric: "4.9★",
-                  label: "Average customer rating",
-                  color: "#f59e0b",
-                },
+                { metric: "60s", label: "Average time to first website", color: "#059669" },
+                { metric: "$10", label: "Per month to publish with custom domain", color: "#0ea5e9" },
+                { metric: "100%", label: "Mobile responsive, guaranteed", color: "#8b5cf6" },
+                { metric: "4.9★", label: "Average customer rating", color: "#f59e0b" },
               ].map((m, i) => (
-                <div
-                  key={i}
-                  className="card-hover"
-                  style={{
-                    background: "white",
-                    border: "1.5px solid #e5e5e5",
-                    borderRadius: 20,
-                    padding: 28,
-                  }}
-                >
-                  <div
-                    className="font-display"
-                    style={{
-                      fontSize: 44,
-                      fontWeight: 400,
-                      color: m.color,
-                      lineHeight: 1,
-                      marginBottom: 10,
-                      letterSpacing: "-0.03em",
-                    }}
-                  >
-                    {m.metric}
-                  </div>
-                  <div
-                    className="font-sans"
-                    style={{ fontSize: 13, color: "#666", lineHeight: 1.5 }}
-                  >
-                    {m.label}
-                  </div>
+                <div key={i} className="metric-card">
+                  <div className="metric-value" style={{ color: m.color }}>{m.metric}</div>
+                  <div className="metric-label">{m.label}</div>
                 </div>
               ))}
             </div>
@@ -1308,196 +1308,52 @@ export default function HomePage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section
-        style={{
-          padding: "120px 24px",
-          background: "white",
-          borderTop: "1px solid #e5e5e5",
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2
-              className="font-display"
-              style={{
-                fontSize: "clamp(36px, 4vw, 56px)",
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: "#111",
-                marginBottom: 16,
-              }}
-            >
+      <section className="section" style={{ background: "white", borderTop: "1px solid var(--border)" }}>
+        <div className="section-inner-md">
+          <div className="section-center">
+            <div className="section-label">Pricing</div>
+            <h2 className="section-heading">
               Straightforward pricing.
               <br />
               <em style={{ color: "#059669" }}>No surprises.</em>
             </h2>
-            <p
-              className="font-sans"
-              style={{ fontSize: 17, color: "#666", maxWidth: 400, margin: "0 auto" }}
-            >
+            <p className="section-sub">
               Create and edit everything for free. Pay only when you're ready to publish.
             </p>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 24,
-              maxWidth: 760,
-              margin: "0 auto",
-            }}
-          >
+          <div className="pricing-grid">
             {/* Free */}
-            <div
-              style={{
-                background: "#FAFAF8",
-                border: "1.5px solid #e5e5e5",
-                borderRadius: 24,
-                padding: 40,
-              }}
-            >
-              <div
-                className="font-sans"
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  color: "#888",
-                  textTransform: "uppercase",
-                  marginBottom: 20,
-                }}
-              >
-                Free Forever
-              </div>
-              <div
-                className="font-display"
-                style={{
-                  fontSize: 56,
-                  fontWeight: 400,
-                  color: "#111",
-                  lineHeight: 1,
-                  marginBottom: 4,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                $0
-              </div>
-              <div
-                className="font-sans"
-                style={{ fontSize: 14, color: "#888", marginBottom: 32 }}
-              >
-                Create and explore, always free
-              </div>
-
-              {[
+            <div className="pricing-free">
+              <div className="pricing-tier-label" style={{ color: "#888" }}>Free Forever</div>
+              <div className="pricing-price">$0</div>
+              <div className="pricing-desc" style={{ color: "#888" }}>Create and explore, always free</div>
+              {([
                 [true, "Build 1 website"],
                 [true, "Unlimited edits"],
                 [true, "10 AI content generations"],
                 [true, "Mobile responsive"],
                 [false, "Custom domain"],
                 [false, "Publish publicly"],
-              ].map(([yes, label], i) => (
-                <div
-                  key={i}
-                  className="font-sans"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    marginBottom: 12,
-                    fontSize: 14,
-                    color: yes ? "#111" : "#bbb",
-                  }}
-                >
-                  <div className={yes ? "check-icon" : "cross-icon"}>
-                    {yes ? "✓" : "✕"}
-                  </div>
+              ] as [boolean, string][]).map(([yes, label], i) => (
+                <div key={i} className="pricing-feature" style={{ color: yes ? "#111" : "#bbb" }}>
+                  <div className={yes ? "check-icon" : "cross-icon"}>{yes ? "✓" : "✕"}</div>
                   {label}
                 </div>
               ))}
-
-              <a
-                href="/upgrade"
-                className="font-sans"
-                style={{
-                  display: "block",
-                  marginTop: 32,
-                  padding: "14px 0",
-                  background: "transparent",
-                  border: "1.5px solid #222",
-                  borderRadius: 12,
-                  textAlign: "center",
-                  textDecoration: "none",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "#111",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                Start building free
-              </a>
+              <a href="/upgrade" className="pricing-btn pricing-btn-outline">Start building free</a>
             </div>
 
-            {/* Starter (popular) */}
-            <div
-              className="pricing-popular"
-              style={{
-                borderRadius: 24,
-                padding: 40,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <div
-                  className="font-sans"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.1em",
-                    color: "#aaa",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Starter
-                </div>
-                <div
-                  className="font-sans"
-                  style={{
-                    background: "linear-gradient(135deg, #059669, #0ea5e9)",
-                    color: "white",
-                    padding: "2px 10px",
-                    borderRadius: 100,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  MOST POPULAR
-                </div>
+            {/* Starter */}
+            <div className="pricing-popular">
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
+                <div className="pricing-tier-label" style={{ color: "#aaa", marginBottom: 0 }}>Starter</div>
+                <span className="popular-chip">MOST POPULAR</span>
               </div>
-              <div
-                className="font-display"
-                style={{
-                  fontSize: 56,
-                  fontWeight: 400,
-                  color: "white",
-                  lineHeight: 1,
-                  marginBottom: 4,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                $10
-                <span style={{ fontSize: 20, color: "#888" }}>/mo</span>
+              <div className="pricing-price" style={{ color: "white" }}>
+                $10<span style={{ fontSize: 20, color: "#888" }}>/mo</span>
               </div>
-              <div
-                className="font-sans"
-                style={{ fontSize: 14, color: "#888", marginBottom: 32 }}
-              >
-                14-day free trial · cancel anytime
-              </div>
-
+              <div className="pricing-desc" style={{ color: "#888" }}>14-day free trial · cancel anytime</div>
               {[
                 "Publish your website",
                 "Custom domain (yourco.com)",
@@ -1506,141 +1362,28 @@ export default function HomePage() {
                 "Advanced analytics",
                 "Priority support",
               ].map((label, i) => (
-                <div
-                  key={i}
-                  className="font-sans"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    marginBottom: 12,
-                    fontSize: 14,
-                    color: "rgba(255,255,255,0.85)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      background: "rgba(5,150,105,0.3)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: "#4ade80",
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ✓
-                  </div>
+                <div key={i} className="pricing-feature" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(5,150,105,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#4ade80", fontSize: 10, fontWeight: 700 }}>✓</div>
                   {label}
                 </div>
               ))}
-
-              <a
-                href="/upgrade"
-                className="emerald-btn font-sans"
-                style={{
-                  display: "block",
-                  marginTop: 32,
-                  padding: "14px 0",
-                  borderRadius: 12,
-                  textAlign: "center",
-                  textDecoration: "none",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                Start free trial →
-              </a>
+              <a href="/upgrade" className="pricing-btn btn-green">Start free trial →</a>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── FAQ ── */}
-      <section
-        style={{
-          padding: "120px 24px",
-          borderTop: "1px solid #e5e5e5",
-          background: "#FAFAF8",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 720,
-            margin: "0 auto",
-          }}
-        >
-          <h2
-            className="font-display"
-            style={{
-              fontSize: "clamp(32px, 3.5vw, 48px)",
-              fontWeight: 400,
-              letterSpacing: "-0.03em",
-              color: "#111",
-              marginBottom: 56,
-              textAlign: "center",
-            }}
-          >
-            Common questions
-          </h2>
-
+      <section className="section" style={{ borderTop: "1px solid var(--border)", background: "#FAFAF8" }}>
+        <div className="section-inner-sm">
+          <h2 className="section-heading" style={{ textAlign: "center", marginBottom: 56 }}>Common questions</h2>
           {FAQS.map((faq, i) => (
-            <div
-              key={i}
-              style={{
-                borderBottom: "1px solid #e5e5e5",
-                paddingBottom: openFaq === i ? 24 : 0,
-              }}
-            >
-              <button
-                className="font-sans"
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  padding: "24px 0",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: "#111",
-                  letterSpacing: "-0.01em",
-                }}
-              >
+            <div key={i} className="faq-item">
+              <button className="faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                 {faq.q}
-                <span
-                  style={{
-                    fontSize: 20,
-                    color: "#888",
-                    transition: "transform 0.3s ease",
-                    transform: openFaq === i ? "rotate(45deg)" : "rotate(0deg)",
-                    flexShrink: 0,
-                    marginLeft: 16,
-                  }}
-                >
-                  +
-                </span>
+                <span className={`faq-icon ${openFaq === i ? "open" : ""}`}>+</span>
               </button>
-              <div
-                className="faq-answer font-sans"
-                style={{
-                  maxHeight: openFaq === i ? 200 : 0,
-                  opacity: openFaq === i ? 1 : 0,
-                  fontSize: 15,
-                  color: "#666",
-                  lineHeight: 1.7,
-                }}
-              >
+              <div className={`faq-answer ${openFaq === i ? "open" : ""}`}>
                 {faq.a}
               </div>
             </div>
@@ -1649,155 +1392,39 @@ export default function HomePage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section
-        style={{
-          padding: "120px 24px",
-          background: "#111",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 700,
-            height: 400,
-            background:
-              "radial-gradient(ellipse, rgba(5,150,105,0.2) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            maxWidth: 680,
-            margin: "0 auto",
-            textAlign: "center",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <h2
-            className="font-display"
-            style={{
-              fontSize: "clamp(40px, 5vw, 64px)",
-              fontWeight: 400,
-              letterSpacing: "-0.03em",
-              color: "white",
-              marginBottom: 20,
-              lineHeight: 1.05,
-            }}
-          >
+      <section className="final-cta">
+        <div className="final-cta-orb" />
+        <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <h2 style={{ fontFamily: "var(--serif)", fontSize: "clamp(38px, 5vw, 62px)", fontWeight: 400, letterSpacing: "-0.03em", color: "white", marginBottom: 20, lineHeight: 1.06 }}>
             Your customers are searching
             <br />
             <em style={{ color: "#4ade80" }}>right now.</em>
           </h2>
-          <p
-            className="font-sans"
-            style={{
-              fontSize: 17,
-              color: "#888",
-              marginBottom: 48,
-              lineHeight: 1.6,
-            }}
-          >
-            Don't let them land on a competitor's site. Get professional online in
-            the next 10 minutes — free to start.
+          <p style={{ fontSize: 17, color: "#888", marginBottom: 48, lineHeight: 1.65 }}>
+            Don't let them land on a competitor's site. Get professional online in the next 10 minutes — free to start.
           </p>
 
-          <div
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 20,
-              padding: 8,
-              display: "flex",
-              gap: 8,
-              maxWidth: 520,
-              margin: "0 auto 24px",
-            }}
-          >
+          <div className="cta-input-wrap">
             <input
-              className="font-sans"
+              className="cta-input"
               placeholder="Describe your business..."
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontSize: 15,
-                color: "white",
-                padding: "12px 16px",
-                fontFamily: "'DM Sans', sans-serif",
-              }}
             />
-            <a
-              href="/upgrade"
-              className="emerald-btn font-sans"
-              style={{
-                padding: "13px 24px",
-                borderRadius: 12,
-                textDecoration: "none",
-                fontSize: 14,
-                fontWeight: 700,
-                border: "none",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Build it free →
-            </a>
+            <a href="/upgrade" className="btn-green">Build it free →</a>
           </div>
 
-          <p className="font-sans" style={{ fontSize: 13, color: "#555" }}>
+          <p style={{ fontSize: 13, color: "#555" }}>
             ✓ No credit card &nbsp;&nbsp; ✓ 2 minutes &nbsp;&nbsp; ✓ Try before you pay
           </p>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer
-        style={{
-          borderTop: "1px solid #222",
-          background: "#0d0d0d",
-          padding: "40px 24px",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1100,
-            margin: "0 auto",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div
-            className="font-display"
-            style={{ fontSize: 20, color: "white", fontWeight: 400 }}
-          >
-            AutopilotAI
-          </div>
-          <div
-            className="font-sans"
-            style={{ display: "flex", gap: 32, fontSize: 13, color: "#666" }}
-          >
+      {/* ── FOOTER ── */}
+      <footer className="footer">
+        <div className="footer-inner">
+          <a href="/" className="footer-logo">AutopilotAI</a>
+          <div className="footer-links">
             {["Terms", "Privacy", "Contact", "Twitter"].map((link) => (
-              <a
-                key={link}
-                href="#"
-                style={{
-                  color: "#666",
-                  textDecoration: "none",
-                  transition: "color 0.2s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
-              >
-                {link}
-              </a>
+              <a key={link} href="#" className="footer-link">{link}</a>
             ))}
           </div>
         </div>
