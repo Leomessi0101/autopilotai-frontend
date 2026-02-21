@@ -1,28 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Check, X } from "lucide-react";
 
 export default function PublicUpgradePage() {
   const router = useRouter();
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const subscribe = async (plan: "starter" | "pro") => {
-    // Check if logged in
     const token = localStorage.getItem("autopilot_token");
     if (!token) {
-      // Not logged in - register first
       router.push(`/register?plan=${plan}`);
       return;
     }
-
-    // Logged in - go to Stripe
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "https://autopilotai-api.onrender.com"}/api/stripe/create-checkout-session?plan=${plan}`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://autopilotai-api.onrender.com"}/api/stripe/create-checkout-session?plan=${plan}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await res.json();
       window.location.href = data.checkout_url;
     } catch {
@@ -30,174 +28,788 @@ export default function PublicUpgradePage() {
     }
   };
 
+  const FAQS = [
+    {
+      q: "Can I try it free first?",
+      a: "Yes. Create your free account, build your website, edit everything — upgrade only when you're ready to publish. No credit card required.",
+    },
+    {
+      q: "Can I cancel anytime?",
+      a: "Absolutely. Cancel from your dashboard anytime, no questions asked. You keep access through the end of your billing period.",
+    },
+    {
+      q: "What happens if I downgrade?",
+      a: "Your website stays live for the current billing period, then returns to draft mode. All your content is saved — nothing is deleted.",
+    },
+    {
+      q: "Do I need to bring my own domain?",
+      a: "No. We help you connect any domain you own, or you can purchase one directly. The Starter plan includes full custom domain support.",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#FAFAF8",
+        fontFamily: "'Georgia', serif",
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
+        .font-sans { font-family: 'DM Sans', system-ui, sans-serif; }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeUp { animation: fadeUp 0.6s ease forwards; }
+        .anim-d1 { animation-delay: 0.05s; }
+        .anim-d2 { animation-delay: 0.15s; }
+        .anim-d3 { animation-delay: 0.25s; }
+
+        .card-free {
+          background: white;
+          border: 1.5px solid #e5e5e5;
+          border-radius: 24px;
+          padding: 40px;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .card-free:hover {
+          border-color: #ccc;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.07);
+        }
+
+        .card-pro {
+          background: white;
+          border: 1.5px solid #e5e5e5;
+          border-radius: 24px;
+          padding: 40px;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .card-pro:hover {
+          border-color: #ccc;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.07);
+        }
+
+        .card-starter {
+          background: #111;
+          border-radius: 24px;
+          padding: 40px;
+          position: relative;
+          box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-starter:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 32px 100px rgba(0,0,0,0.25);
+        }
+        .card-starter::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          background: linear-gradient(135deg, #059669, #0ea5e9, #8b5cf6);
+          border-radius: 26px;
+          z-index: -1;
+        }
+
+        .btn-ghost {
+          display: block;
+          width: 100%;
+          padding: 14px 0;
+          background: transparent;
+          border: 1.5px solid #222;
+          border-radius: 12px;
+          text-align: center;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 600;
+          color: #111;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          transition: background 0.2s;
+        }
+        .btn-ghost:hover { background: #f5f5f5; }
+
+        .btn-ghost-dark {
+          display: block;
+          width: 100%;
+          padding: 14px 0;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 12px;
+          text-align: center;
+          font-size: 14px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.7);
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          transition: background 0.2s;
+          text-decoration: none;
+        }
+        .btn-ghost-dark:hover { background: rgba(255,255,255,0.13); }
+
+        .btn-emerald {
+          display: block;
+          width: 100%;
+          padding: 15px 0;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          border: none;
+          border-radius: 12px;
+          text-align: center;
+          font-size: 15px;
+          font-weight: 700;
+          color: white;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          letter-spacing: -0.01em;
+          transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+          text-decoration: none;
+        }
+        .btn-emerald:hover {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+          box-shadow: 0 8px 30px rgba(5,150,105,0.35);
+        }
+
+        .check-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(5,150,105,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          color: #059669;
+          font-size: 10px;
+          font-weight: 800;
+        }
+        .check-icon-dark {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(74,222,128,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          color: #4ade80;
+          font-size: 10px;
+          font-weight: 800;
+        }
+        .cross-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.05);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          color: #ccc;
+          font-size: 10px;
+        }
+
+        .faq-answer {
+          overflow: hidden;
+          transition: max-height 0.35s ease, opacity 0.35s ease;
+        }
+
+        .nav-link {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          color: #555;
+          text-decoration: none;
+          padding: 8px 16px;
+          transition: color 0.2s;
+        }
+        .nav-link:hover { color: #111; }
+
+        .cta-nav {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          color: white;
+          text-decoration: none;
+          background: #111;
+          padding: 9px 20px;
+          border-radius: 10px;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-nav:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .badge-pill {
+          display: inline-block;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          padding: 4px 12px;
+          border-radius: 100px;
+        }
+
+        .popular-label {
+          position: absolute;
+          top: -14px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          padding: 5px 16px;
+          border-radius: 100px;
+          white-space: nowrap;
+        }
+
+        .divider { width: 40px; height: 2px; background: #111; margin-bottom: 20px; }
+        .divider-light { width: 40px; height: 2px; background: rgba(255,255,255,0.3); margin-bottom: 20px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .plans-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .card-starter {
+            order: -1;
+          }
+        }
+      `}</style>
+
       {/* HEADER */}
-      <header className="border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+      <header
+        style={{
+          borderBottom: "1px solid #e5e5e5",
+          background: "rgba(250,250,248,0.95)",
+          backdropFilter: "blur(20px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0 24px",
+            height: 64,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <a
+            href="/"
+            className="font-display"
+            style={{
+              fontSize: 22,
+              fontWeight: 400,
+              letterSpacing: "-0.02em",
+              color: "#111",
+              textDecoration: "none",
+            }}
+          >
             AutopilotAI
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="/login" className="px-4 py-2 text-gray-300 hover:text-white transition">
-              Login
-            </a>
+          </a>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <a href="/login" className="nav-link">Sign in</a>
+            <a href="/register" className="cta-nav">Get started free</a>
           </div>
         </div>
       </header>
 
-      {/* GRADIENT BACKGROUND */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-purple-500 rounded-full blur-3xl opacity-20 animate-pulse" style={{animationDelay: "1s"}}></div>
-      </div>
+      <main style={{ padding: "0 24px" }}>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        {/* HEADER */}
-        <div className="text-center mb-16">
-          <div className="inline-block mb-4 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-sm font-medium">
-            🚀 Choose Your Plan
+        {/* HERO */}
+        <div
+          style={{
+            maxWidth: 640,
+            margin: "0 auto",
+            textAlign: "center",
+            padding: "80px 0 64px",
+          }}
+        >
+          <div className="animate-fadeUp anim-d1" style={{ marginBottom: 20 }}>
+            <span className="badge-pill">Choose Your Plan</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
-            Start Free or Go Pro
+
+          <h1
+            className="font-display animate-fadeUp anim-d2"
+            style={{
+              fontSize: "clamp(40px, 5vw, 64px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "#111",
+              lineHeight: 1.05,
+              marginBottom: 20,
+            }}
+          >
+            Start free.
+            <br />
+            <em style={{ color: "#059669" }}>Publish when ready.</em>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Try everything free. Upgrade only when you're ready to publish.
+
+          <p
+            className="font-sans animate-fadeUp anim-d3"
+            style={{
+              fontSize: 17,
+              color: "#666",
+              lineHeight: 1.7,
+              maxWidth: 480,
+              margin: "0 auto",
+            }}
+          >
+            Build and edit your entire website for free. Pay only when you're
+            ready to go live with your own domain.
           </p>
         </div>
 
-        {/* PLANS GRID */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* PLANS */}
+        <div
+          className="plans-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1.08fr 1fr",
+            gap: 20,
+            maxWidth: 1000,
+            margin: "0 auto",
+            alignItems: "start",
+            paddingBottom: 120,
+          }}
+        >
           {/* FREE */}
-          <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-            <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Free</div>
-            <div className="text-5xl font-bold mb-2">$0</div>
-            <p className="text-gray-400 mb-8">Try everything</p>
-            
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Create 1 AI website</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Edit everything</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>10 AI generations</span>
-              </li>
-              <li className="flex items-center gap-3 opacity-50">
-                <X className="w-5 h-5 flex-shrink-0" />
-                <span>Can't publish</span>
-              </li>
-              <li className="flex items-center gap-3 opacity-50">
-                <X className="w-5 h-5 flex-shrink-0" />
-                <span>0 AI images</span>
-              </li>
-            </ul>
+          <div className="card-free">
+            <div className="divider" />
+            <div
+              className="font-sans"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "#888",
+                textTransform: "uppercase",
+                marginBottom: 16,
+              }}
+            >
+              Free Forever
+            </div>
+            <div
+              className="font-display"
+              style={{
+                fontSize: 52,
+                fontWeight: 400,
+                color: "#111",
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                marginBottom: 6,
+              }}
+            >
+              $0
+            </div>
+            <p
+              className="font-sans"
+              style={{ fontSize: 14, color: "#888", marginBottom: 32 }}
+            >
+              Create and explore, always free
+            </p>
 
-            <a href="/register" className="block w-full py-3.5 bg-indigo-500 hover:bg-indigo-600 rounded-xl font-semibold text-center transition-all">
-              Start Free
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+              {[
+                [true, "Build 1 website"],
+                [true, "Unlimited edits"],
+                [true, "10 AI content generations"],
+                [true, "Mobile responsive preview"],
+                [false, "Publish publicly"],
+                [false, "Custom domain"],
+                [false, "AI image generation"],
+              ].map(([yes, label], i) => (
+                <div
+                  key={i}
+                  className="font-sans"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13.5,
+                    color: yes ? "#333" : "#bbb",
+                  }}
+                >
+                  <div className={yes ? "check-icon" : "cross-icon"}>
+                    {yes ? "✓" : "✕"}
+                  </div>
+                  {label as string}
+                </div>
+              ))}
+            </div>
+
+            <a href="/register" className="btn-ghost">
+              Start building free
             </a>
           </div>
 
-          {/* STARTER - POPULAR */}
-          <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500 relative transform scale-105">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-indigo-500 rounded-full text-sm font-bold flex items-center gap-1">
-              <Sparkles className="w-4 h-4" />
-              MOST POPULAR
+          {/* STARTER — POPULAR */}
+          <div className="card-starter" style={{ marginTop: -8, marginBottom: -8 }}>
+            <div className="popular-label">★ MOST POPULAR</div>
+            <div className="divider-light" />
+            <div
+              className="font-sans"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+                marginBottom: 16,
+              }}
+            >
+              Starter
+            </div>
+            <div
+              className="font-display"
+              style={{
+                fontSize: 52,
+                fontWeight: 400,
+                color: "white",
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                marginBottom: 6,
+              }}
+            >
+              $10
+              <span
+                className="font-sans"
+                style={{ fontSize: 20, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}
+              >
+                /mo
+              </span>
+            </div>
+            <p
+              className="font-sans"
+              style={{
+                fontSize: 14,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: 8,
+              }}
+            >
+              14-day free trial · cancel anytime
+            </p>
+
+            <div
+              className="font-sans"
+              style={{
+                display: "inline-block",
+                background: "rgba(74,222,128,0.15)",
+                color: "#4ade80",
+                padding: "3px 12px",
+                borderRadius: 100,
+                fontSize: 11,
+                fontWeight: 700,
+                marginBottom: 28,
+              }}
+            >
+              Most businesses pick this
             </div>
 
-            <div className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Starter</div>
-            <div className="text-5xl font-bold mb-2">$10<span className="text-2xl text-gray-400">/mo</span></div>
-            <p className="text-gray-400 mb-8">Go live</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+              {[
+                "Everything in Free",
+                "Publish your website",
+                "Custom domain (yourco.com)",
+                "Unlimited AI content generations",
+                "100 AI images / month",
+                "Advanced analytics",
+                "Priority support",
+              ].map((label, i) => (
+                <div
+                  key={i}
+                  className="font-sans"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13.5,
+                    color: "rgba(255,255,255,0.85)",
+                    fontWeight: i === 0 ? 400 : 400,
+                  }}
+                >
+                  <div className="check-icon-dark">✓</div>
+                  {label}
+                </div>
+              ))}
+            </div>
 
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Everything in Free</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="font-semibold">Publish to web</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="font-semibold">Custom domain</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Unlimited AI generations</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>20 AI images/month</span>
-              </li>
-            </ul>
-
-            <button onClick={() => subscribe("starter")} className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 rounded-xl font-semibold text-center transition-all shadow-lg">
-              Get Started
+            <button onClick={() => subscribe("starter")} className="btn-emerald">
+              Start free trial →
             </button>
-            <p className="text-xs text-gray-500 text-center mt-3">Start free, upgrade anytime</p>
+            <p
+              className="font-sans"
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.3)",
+                textAlign: "center",
+                marginTop: 12,
+              }}
+            >
+              No credit card required
+            </p>
           </div>
 
           {/* PRO */}
-          <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-            <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Pro</div>
-            <div className="text-5xl font-bold mb-2">$20<span className="text-2xl text-gray-400">/mo</span></div>
-            <p className="text-gray-400 mb-8">Power user</p>
+          <div className="card-pro">
+            <div className="divider" />
+            <div
+              className="font-sans"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "#888",
+                textTransform: "uppercase",
+                marginBottom: 16,
+              }}
+            >
+              Pro
+            </div>
+            <div
+              className="font-display"
+              style={{
+                fontSize: 52,
+                fontWeight: 400,
+                color: "#111",
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                marginBottom: 6,
+              }}
+            >
+              $20
+              <span
+                className="font-sans"
+                style={{ fontSize: 20, color: "#aaa", fontWeight: 400 }}
+              >
+                /mo
+              </span>
+            </div>
+            <p
+              className="font-sans"
+              style={{ fontSize: 14, color: "#888", marginBottom: 32 }}
+            >
+              For power users & agencies
+            </p>
 
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Everything in Starter</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="font-semibold">50 AI images/month</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="font-semibold">3 websites</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span>Priority support</span>
-              </li>
-            </ul>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+              {[
+                [true, "Everything in Starter"],
+                [true, "3 websites"],
+                [true, "500 AI images / month"],
+                [true, "White-label option"],
+                [true, "Dedicated support"],
+                [true, "Early access to new features"],
+              ].map(([yes, label], i) => (
+                <div
+                  key={i}
+                  className="font-sans"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13.5,
+                    color: "#333",
+                  }}
+                >
+                  <div className="check-icon">✓</div>
+                  {label as string}
+                </div>
+              ))}
+            </div>
 
-            <button onClick={() => subscribe("pro")} className="w-full py-3.5 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-center transition-all">
-              Get Started
+            <button
+              onClick={() => subscribe("pro")}
+              className="btn-ghost"
+            >
+              Get Pro
             </button>
-            <p className="text-xs text-gray-500 text-center mt-3">Start free, upgrade anytime</p>
+            <p
+              className="font-sans"
+              style={{
+                fontSize: 12,
+                color: "#bbb",
+                textAlign: "center",
+                marginTop: 12,
+              }}
+            >
+              14-day free trial included
+            </p>
           </div>
-        </section>
+        </div>
+
+        {/* TRUST STRIP */}
+        <div
+          style={{
+            maxWidth: 800,
+            margin: "0 auto 80px",
+            display: "flex",
+            justifyContent: "center",
+            gap: 40,
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            { icon: "🔒", text: "Secure checkout via Stripe" },
+            { icon: "↩️", text: "Cancel anytime" },
+            { icon: "✉️", text: "Support within 24 hours" },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="font-sans"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 13,
+                color: "#888",
+              }}
+            >
+              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              {item.text}
+            </div>
+          ))}
+        </div>
 
         {/* FAQ */}
-        <div className="mt-24 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Questions?</h2>
-          <div className="space-y-4">
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <h3 className="font-semibold mb-2">Can I try it free first?</h3>
-              <p className="text-gray-400 text-sm">Yes! Create your free account, build your website, and upgrade only when you're ready to publish.</p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <h3 className="font-semibold mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-400 text-sm">Absolutely. Cancel from your dashboard anytime. No questions asked.</p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <h3 className="font-semibold mb-2">What happens if I downgrade?</h3>
-              <p className="text-gray-400 text-sm">Your website stays live for the current billing period, then returns to draft mode.</p>
-            </div>
-          </div>
-        </div>
+        <div
+          style={{
+            maxWidth: 640,
+            margin: "0 auto",
+            paddingBottom: 120,
+          }}
+        >
+          <h2
+            className="font-display"
+            style={{
+              fontSize: "clamp(28px, 3vw, 40px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "#111",
+              marginBottom: 48,
+              textAlign: "center",
+            }}
+          >
+            Common questions
+          </h2>
 
-        {/* FOOTER CTA */}
-        <div className="mt-24 text-center">
-          <p className="text-gray-500 text-sm">All plans include unlimited edits • Secure checkout powered by Stripe</p>
+          {FAQS.map((faq, i) => (
+            <div
+              key={i}
+              style={{
+                borderBottom: "1px solid #e5e5e5",
+                paddingBottom: openFaq === i ? 20 : 0,
+              }}
+            >
+              <button
+                className="font-sans"
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  padding: "22px 0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#111",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {faq.q}
+                <span
+                  style={{
+                    fontSize: 20,
+                    color: "#888",
+                    transition: "transform 0.3s ease",
+                    transform: openFaq === i ? "rotate(45deg)" : "rotate(0deg)",
+                    flexShrink: 0,
+                    marginLeft: 16,
+                  }}
+                >
+                  +
+                </span>
+              </button>
+              <div
+                className="faq-answer font-sans"
+                style={{
+                  maxHeight: openFaq === i ? 200 : 0,
+                  opacity: openFaq === i ? 1 : 0,
+                  fontSize: 14,
+                  color: "#666",
+                  lineHeight: 1.7,
+                }}
+              >
+                {faq.a}
+              </div>
+            </div>
+          ))}
         </div>
       </main>
+
+      {/* FOOTER */}
+      <footer
+        style={{
+          borderTop: "1px solid #e5e5e5",
+          background: "#111",
+          padding: "40px 24px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <div
+            className="font-display"
+            style={{ fontSize: 20, color: "white", fontWeight: 400 }}
+          >
+            AutopilotAI
+          </div>
+          <div
+            className="font-sans"
+            style={{ display: "flex", gap: 32, fontSize: 13, color: "#666" }}
+          >
+            {["Terms", "Privacy", "Contact", "Twitter"].map((link) => (
+              <a
+                key={link}
+                href="#"
+                style={{ color: "#666", textDecoration: "none", transition: "color 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
