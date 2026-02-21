@@ -503,7 +503,6 @@ export default function PublicUpgradePage() {
                 marginBottom: 8,
               }}
             >
-              14-day free trial · cancel anytime
             </p>
 
             <div
