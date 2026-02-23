@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Globe, Link, Search, Plus, Trash2, ExternalLink, CheckCircle, Clock, AlertCircle, ChevronRight, ArrowLeft } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -38,16 +40,20 @@ interface SearchResult {
 }
 
 // ─────────────────────────────────────────────
-// API HELPERS
+// API
 // ─────────────────────────────────────────────
 
-const API = process.env.NEXT_PUBLIC_API_URL || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 async function apiFetch(path: string, opts?: RequestInit) {
-  const res = await fetch(`${API}${path}`, {
+  const token = localStorage.getItem("autopilot_token");
+  const res = await fetch(`${API_BASE}/api${path}`, {
     ...opts,
-    headers: { "Content-Type": "application/json", ...opts?.headers },
-    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts?.headers,
+    },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
@@ -61,6 +67,7 @@ async function apiFetch(path: string, opts?: RequestInit) {
 // ─────────────────────────────────────────────
 
 export default function DomainsPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<"connected" | "purchase">("connected");
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,59 +86,88 @@ export default function DomainsPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("autopilot_token");
+    if (!token) { router.push("/login"); return; }
     fetchDomains();
-  }, [fetchDomains]);
+  }, [fetchDomains, router]);
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.h1}>Custom Domains</h1>
-          <p style={styles.subtitle}>
-            Connect your domain or buy a new one — your site goes live automatically.
-          </p>
+    <div style={s.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        .fade-up { animation: fadeUp 0.4s ease forwards; }
+        .domain-card:hover { border-color: #2a2a2a !important; background: #141414 !important; }
+        .tab-btn:hover { color: #ccc !important; }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-ghost:hover { border-color: #444 !important; color: #ccc !important; }
+        .result-row:hover { background: #141414 !important; border-color: #2a2a2a !important; }
+        .copy-btn:hover { background: #2a2a2a !important; color: #fff !important; }
+        input:focus { border-color: #059669 !important; box-shadow: 0 0 0 3px rgba(5,150,105,0.12) !important; outline: none; }
+      `}</style>
+
+      {/* SIDEBAR */}
+      <aside style={s.sidebar}>
+        <button onClick={() => router.push("/dashboard")} style={s.backBtn}>
+          <ArrowLeft size={15} />
+          Dashboard
+        </button>
+
+        <div style={s.sidebarLogo}>
+          <div style={s.logoIcon}><Globe size={18} color="#059669" /></div>
+          <span style={s.logoText}>Domains</span>
         </div>
-        <button style={styles.btnPrimary} onClick={() => setConnectOpen(true)}>
-          + Connect Domain
-        </button>
-      </div>
 
-      {/* Tabs */}
-      <div style={styles.tabs}>
-        <button
-          style={{ ...styles.tab, ...(tab === "connected" ? styles.tabActive : {}) }}
-          onClick={() => setTab("connected")}
-        >
-          Connected Domains
-          {domains.length > 0 && (
-            <span style={styles.badge}>{domains.length}</span>
-          )}
-        </button>
-        <button
-          style={{ ...styles.tab, ...(tab === "purchase" ? styles.tabActive : {}) }}
-          onClick={() => setTab("purchase")}
-        >
-          Buy a Domain
-        </button>
-      </div>
+        <nav style={s.nav}>
+          <button
+            style={{ ...s.navItem, ...(tab === "connected" ? s.navItemActive : {}) }}
+            onClick={() => setTab("connected")}
+          >
+            <Link size={15} />
+            My Domains
+            {domains.length > 0 && (
+              <span style={s.navBadge}>{domains.length}</span>
+            )}
+          </button>
+          <button
+            style={{ ...s.navItem, ...(tab === "purchase" ? s.navItemActive : {}) }}
+            onClick={() => setTab("purchase")}
+          >
+            <Search size={15} />
+            Buy a Domain
+          </button>
+        </nav>
 
-      {/* Tab content */}
-      {tab === "connected" ? (
-        <ConnectedDomainsTab
-          domains={domains}
-          loading={loading}
-          onRefresh={fetchDomains}
-          onSelectDomain={setSelectedDomain}
-          onConnectClick={() => setConnectOpen(true)}
-        />
-      ) : (
-        <PurchaseTab onDomainPurchased={fetchDomains} />
-      )}
+        <div style={s.sidebarFooter}>
+          <div style={s.sidebarFooterText}>
+            <p style={{ color: "#555", fontSize: 12, lineHeight: 1.6 }}>
+              Connect your domain or buy a new one. DNS configures automatically.
+            </p>
+          </div>
+        </div>
+      </aside>
 
-      {/* Connect domain modal */}
+      {/* MAIN CONTENT */}
+      <main style={s.main}>
+        {tab === "connected" ? (
+          <ConnectedTab
+            domains={domains}
+            loading={loading}
+            onRefresh={fetchDomains}
+            onSelectDomain={setSelectedDomain}
+            onConnectClick={() => setConnectOpen(true)}
+          />
+        ) : (
+          <PurchaseTab />
+        )}
+      </main>
+
+      {/* MODALS */}
       {connectOpen && (
-        <ConnectDomainModal
+        <ConnectModal
           onClose={() => setConnectOpen(false)}
           onSuccess={(domain) => {
             setConnectOpen(false);
@@ -141,12 +177,11 @@ export default function DomainsPage() {
         />
       )}
 
-      {/* DNS instructions panel */}
       {selectedDomain && (
-        <DNSInstructionsPanel
+        <DNSModal
           domain={selectedDomain}
           onClose={() => setSelectedDomain(null)}
-          onVerified={fetchDomains}
+          onVerified={() => { fetchDomains(); setSelectedDomain(null); }}
         />
       )}
     </div>
@@ -154,12 +189,10 @@ export default function DomainsPage() {
 }
 
 // ─────────────────────────────────────────────
-// CONNECTED DOMAINS TAB
+// CONNECTED TAB
 // ─────────────────────────────────────────────
 
-function ConnectedDomainsTab({
-  domains, loading, onRefresh, onSelectDomain, onConnectClick
-}: {
+function ConnectedTab({ domains, loading, onRefresh, onSelectDomain, onConnectClick }: {
   domains: Domain[];
   loading: boolean;
   onRefresh: () => void;
@@ -169,52 +202,57 @@ function ConnectedDomainsTab({
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const handleDelete = async (domain: Domain) => {
-    if (!confirm(`Remove ${domain.domain}? This will stop routing traffic to your site.`)) return;
+    if (!confirm(`Remove ${domain.domain}?`)) return;
     setDeleting(domain.id);
     try {
       await apiFetch(`/domains/${domain.id}`, { method: "DELETE" });
       onRefresh();
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setDeleting(null);
-    }
+    } catch (e: any) { alert(e.message); }
+    finally { setDeleting(null); }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.empty}>
-        <div style={styles.spinner} />
-      </div>
-    );
-  }
-
-  if (domains.length === 0) {
-    return (
-      <div style={styles.emptyState}>
-        <div style={styles.emptyIcon}>🌐</div>
-        <h3 style={styles.emptyTitle}>No custom domains yet</h3>
-        <p style={styles.emptyDesc}>
-          Connect your existing domain or buy a new one to give your site a professional address.
-        </p>
-        <button style={styles.btnPrimary} onClick={onConnectClick}>
-          Connect your first domain
+  return (
+    <div style={s.tabContent} className="fade-up">
+      {/* Header */}
+      <div style={s.tabHeader}>
+        <div>
+          <h1 style={s.tabTitle}>My Domains</h1>
+          <p style={s.tabSubtitle}>Manage domains connected to your AutopilotAI site.</p>
+        </div>
+        <button style={s.btnPrimary} className="btn-primary" onClick={onConnectClick}>
+          <Plus size={15} />
+          Connect Domain
         </button>
       </div>
-    );
-  }
 
-  return (
-    <div style={styles.domainList}>
-      {domains.map((domain) => (
-        <DomainCard
-          key={domain.id}
-          domain={domain}
-          deleting={deleting === domain.id}
-          onInspect={() => onSelectDomain(domain)}
-          onDelete={() => handleDelete(domain)}
-        />
-      ))}
+      {loading ? (
+        <div style={s.centered}>
+          <div style={s.spinner} />
+        </div>
+      ) : domains.length === 0 ? (
+        <div style={s.emptyState}>
+          <div style={s.emptyIcon}><Globe size={32} color="#333" /></div>
+          <h3 style={s.emptyTitle}>No domains connected yet</h3>
+          <p style={s.emptyDesc}>Connect your own domain or buy a new one and we'll configure everything automatically.</p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button style={s.btnPrimary} className="btn-primary" onClick={onConnectClick}>
+              <Link size={15} /> Connect a Domain
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={s.domainList}>
+          {domains.map((d) => (
+            <DomainCard
+              key={d.id}
+              domain={d}
+              deleting={deleting === d.id}
+              onInspect={() => onSelectDomain(d)}
+              onDelete={() => handleDelete(d)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -223,33 +261,30 @@ function ConnectedDomainsTab({
 // DOMAIN CARD
 // ─────────────────────────────────────────────
 
-function DomainCard({
-  domain, deleting, onInspect, onDelete
-}: {
+function DomainCard({ domain, deleting, onInspect, onDelete }: {
   domain: Domain;
   deleting: boolean;
   onInspect: () => void;
   onDelete: () => void;
 }) {
-  const statusConfig: Record<DomainStatus, { label: string; color: string; bg: string }> = {
-    active:    { label: "Active",    color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
-    pending:   { label: "Pending",   color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
-    verifying: { label: "Checking",  color: "#6366f1", bg: "rgba(99,102,241,0.1)" },
-    failed:    { label: "DNS Error", color: "#ef4444", bg: "rgba(239,68,68,0.1)" },
-    suspended: { label: "Suspended", color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
+  const statusMap: Record<DomainStatus, { label: string; color: string; bg: string; dot: string }> = {
+    active:    { label: "Active",    color: "#4ade80", bg: "rgba(74,222,128,0.08)",  dot: "#4ade80" },
+    pending:   { label: "Pending DNS", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", dot: "#fbbf24" },
+    verifying: { label: "Verifying", color: "#60a5fa", bg: "rgba(96,165,250,0.08)",  dot: "#60a5fa" },
+    failed:    { label: "DNS Error", color: "#f87171", bg: "rgba(248,113,113,0.08)", dot: "#f87171" },
+    suspended: { label: "Suspended", color: "#6b7280", bg: "rgba(107,114,128,0.08)", dot: "#6b7280" },
   };
-
-  const s = statusConfig[domain.status];
+  const st = statusMap[domain.status];
 
   return (
-    <div style={styles.domainCard}>
-      <div style={styles.domainCardLeft}>
-        <div style={styles.domainCardIcon}>
+    <div className="domain-card" style={s.domainCard}>
+      <div style={s.domainCardLeft}>
+        <div style={s.domainCardIcon}>
           {domain.source === "purchased" ? "🏷️" : "🔗"}
         </div>
         <div>
-          <div style={styles.domainName}>{domain.domain}</div>
-          <div style={styles.domainMeta}>
+          <div style={s.domainName}>{domain.domain}</div>
+          <div style={s.domainMeta}>
             {domain.source === "purchased" ? "Purchased" : "Connected"} ·{" "}
             {domain.expires_at
               ? `Expires ${new Date(domain.expires_at).toLocaleDateString()}`
@@ -258,36 +293,28 @@ function DomainCard({
         </div>
       </div>
 
-      <div style={styles.domainCardRight}>
-        <span style={{ ...styles.statusBadge, color: s.color, background: s.bg }}>
-          {s.label}
-        </span>
+      <div style={s.domainCardRight}>
+        <div style={{ ...s.statusPill, color: st.color, background: st.bg }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: st.dot, display: "inline-block", animation: domain.status === "active" ? "pulse 2s infinite" : "none" }} />
+          {st.label}
+        </div>
 
         {domain.status !== "active" && (
-          <button style={styles.btnGhost} onClick={onInspect}>
-            {domain.status === "pending" || domain.status === "failed"
-              ? "View Setup"
-              : "Details"}
+          <button className="btn-ghost" style={s.btnGhost} onClick={onInspect}>
+            View Setup
           </button>
         )}
-
         {domain.status === "active" && (
-          <a
-            href={`https://${domain.domain}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.btnGhost}
-          >
+          <a href={`https://${domain.domain}`} target="_blank" rel="noopener noreferrer" style={s.btnGhost} className="btn-ghost">
             Visit ↗
           </a>
         )}
-
         <button
-          style={{ ...styles.btnDanger, opacity: deleting ? 0.5 : 1 }}
+          style={{ ...s.btnDelete, opacity: deleting ? 0.5 : 1 }}
           onClick={onDelete}
           disabled={deleting}
         >
-          {deleting ? "…" : "Remove"}
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
@@ -295,15 +322,10 @@ function DomainCard({
 }
 
 // ─────────────────────────────────────────────
-// CONNECT DOMAIN MODAL
+// CONNECT MODAL
 // ─────────────────────────────────────────────
 
-function ConnectDomainModal({
-  onClose, onSuccess
-}: {
-  onClose: () => void;
-  onSuccess: (domain: Domain) => void;
-}) {
+function ConnectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (d: Domain) => void }) {
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -311,80 +333,53 @@ function ConnectDomainModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!domain.trim()) return;
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const data = await apiFetch("/domains/connect", {
         method: "POST",
         body: JSON.stringify({ domain: domain.trim() }),
       });
       onSuccess(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div style={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={styles.modal}>
-        <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>Connect a Domain</h2>
-          <button style={styles.modalClose} onClick={onClose}>✕</button>
+    <Overlay onClose={onClose}>
+      <div style={s.modalTitle}>Connect a Domain</div>
+      <p style={s.modalDesc}>Enter the domain you want to connect to your site. We'll give you DNS instructions.</p>
+      <form onSubmit={handleSubmit}>
+        <label style={s.label}>Your Domain</label>
+        <input
+          style={s.input}
+          type="text"
+          placeholder="myplumbingco.com"
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          autoFocus
+          spellCheck={false}
+        />
+        {error && <div style={s.errorBox}>{error}</div>}
+        <div style={s.modalActions}>
+          <button type="button" style={s.btnSecondary} onClick={onClose}>Cancel</button>
+          <button type="submit" style={s.btnPrimary} className="btn-primary" disabled={loading || !domain.trim()}>
+            {loading ? "Checking…" : "Get DNS Instructions →"}
+          </button>
         </div>
-
-        <p style={styles.modalDesc}>
-          Enter the domain you want to connect. We'll give you DNS instructions to point it at your site.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Your Domain</label>
-            <input
-              style={styles.input}
-              type="text"
-              placeholder="myplumbingco.com"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              autoFocus
-              spellCheck={false}
-            />
-          </div>
-
-          {error && <div style={styles.errorBox}>{error}</div>}
-
-          <div style={styles.modalActions}>
-            <button type="button" style={styles.btnSecondary} onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" style={styles.btnPrimary} disabled={loading || !domain.trim()}>
-              {loading ? "Checking…" : "Get DNS Instructions →"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Overlay>
   );
 }
 
 // ─────────────────────────────────────────────
-// DNS INSTRUCTIONS PANEL
+// DNS INSTRUCTIONS MODAL
 // ─────────────────────────────────────────────
 
-function DNSInstructionsPanel({
-  domain: initialDomain, onClose, onVerified
-}: {
-  domain: Domain;
-  onClose: () => void;
-  onVerified: () => void;
-}) {
-  const [domain, setDomain] = useState(initialDomain);
+function DNSModal({ domain, onClose, onVerified }: { domain: Domain; onClose: () => void; onVerified: () => void }) {
   const [verifying, setVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState<string | null>(null);
-
-  const instructions = domain.dns_instructions;
+  const ins = domain.dns_instructions;
 
   const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -393,149 +388,93 @@ function DNSInstructionsPanel({
   };
 
   const verify = async () => {
-    setVerifying(true);
-    setVerifyResult(null);
+    setVerifying(true); setResult(null);
     try {
-      const result = await apiFetch(`/domains/connect/${domain.id}/verify`, { method: "POST" });
-      setVerifyResult(result);
-      if (result.verified) {
-        setDomain({ ...domain, status: "active" });
-        onVerified();
-      }
-    } catch (e: any) {
-      setVerifyResult({ verified: false, error: e.message });
-    } finally {
-      setVerifying(false);
-    }
+      const r = await apiFetch(`/domains/connect/${domain.id}/verify`, { method: "POST" });
+      setResult(r);
+      if (r.verified) onVerified();
+    } catch (e: any) { setResult({ verified: false, error: e.message }); }
+    finally { setVerifying(false); }
   };
 
   return (
-    <div style={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={{ ...styles.modal, maxWidth: 620 }}>
-        <div style={styles.modalHeader}>
+    <Overlay onClose={onClose} wide>
+      <div style={s.modalTitle}>DNS Setup — {domain.domain}</div>
+
+      {domain.status === "active" ? (
+        <div style={s.successBox}>
+          <CheckCircle size={18} color="#4ade80" />
           <div>
-            <h2 style={styles.modalTitle}>DNS Setup</h2>
-            <p style={{ ...styles.modalDesc, marginBottom: 0, marginTop: 4 }}>{domain.domain}</p>
+            <div style={{ fontWeight: 600, color: "#4ade80" }}>Domain is active!</div>
+            <div style={{ fontSize: 13, color: "#86efac", marginTop: 3 }}>
+              Your site is live at <a href={`https://${domain.domain}`} target="_blank" style={{ color: "#86efac" }}>{domain.domain}</a>
+            </div>
           </div>
-          <button style={styles.modalClose} onClick={onClose}>✕</button>
         </div>
+      ) : (
+        <>
+          <p style={s.modalDesc}>Add this DNS record at your registrar (GoDaddy, Namecheap, Cloudflare, etc.):</p>
 
-        {domain.status === "active" ? (
-          <div style={styles.successBanner}>
-            <span>✅</span>
-            <div>
-              <strong>Domain is active!</strong>
-              <p style={{ margin: "4px 0 0", color: "#86efac", fontSize: 14 }}>
-                Your site is now live at{" "}
-                <a href={`https://${domain.domain}`} target="_blank" style={{ color: "#86efac" }}>
-                  {domain.domain}
-                </a>
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <p style={styles.modalDesc}>
-              Add one of these DNS records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
-            </p>
-
-            {/* Recommended: CNAME */}
-            {instructions && (
-              <>
-                <div style={styles.dnsSection}>
-                  <div style={styles.dnsSectionLabel}>
-                    <span style={styles.recommended}>Recommended</span> CNAME Record
-                  </div>
-                  <div style={styles.dnsTable}>
-                    {[
-                      { field: "Type", value: instructions.recommended.type },
-                      { field: "Name", value: instructions.recommended.name },
-                      { field: "Value / Points to", value: instructions.recommended.value },
-                      { field: "TTL", value: instructions.recommended.ttl },
-                    ].map(({ field, value }) => (
-                      <div key={field} style={styles.dnsRow}>
-                        <span style={styles.dnsField}>{field}</span>
-                        <span style={styles.dnsValue}>{value}</span>
-                        {field !== "Type" && field !== "TTL" && (
-                          <button style={styles.copyBtn} onClick={() => copy(value, field)}>
-                            {copied === field ? "✓" : "Copy"}
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+          {ins && (
+            <>
+              <div style={s.dnsBlock}>
+                <div style={s.dnsBlockLabel}>
+                  <span style={s.recommendedBadge}>Recommended</span> CNAME Record
                 </div>
-
-                {/* Also add www */}
-                <div style={styles.dnsSection}>
-                  <div style={styles.dnsSectionLabel}>Also Add — www Subdomain</div>
-                  <div style={styles.dnsTable}>
-                    {[
-                      { field: "Type", value: instructions.www_record.type },
-                      { field: "Name", value: instructions.www_record.name },
-                      { field: "Value / Points to", value: instructions.www_record.value },
-                      { field: "TTL", value: instructions.www_record.ttl },
-                    ].map(({ field, value }) => (
-                      <div key={field} style={styles.dnsRow}>
-                        <span style={styles.dnsField}>{field}</span>
-                        <span style={styles.dnsValue}>{value}</span>
-                      </div>
-                    ))}
+                {[
+                  { field: "Type", value: ins.recommended.type },
+                  { field: "Name / Host", value: ins.recommended.name },
+                  { field: "Value / Points to", value: ins.recommended.value },
+                  { field: "TTL", value: ins.recommended.ttl },
+                ].map(({ field, value }) => (
+                  <div key={field} style={s.dnsRow}>
+                    <span style={s.dnsField}>{field}</span>
+                    <span style={s.dnsValue}>{value}</span>
+                    {(field === "Name / Host" || field === "Value / Points to") && (
+                      <button className="copy-btn" style={s.copyBtn} onClick={() => copy(value, field)}>
+                        {copied === field ? "✓ Copied" : "Copy"}
+                      </button>
+                    )}
                   </div>
-                </div>
+                ))}
+              </div>
 
-                {/* Alternative: A record */}
-                <details style={styles.details}>
-                  <summary style={styles.detailsSummary}>
-                    Can't use CNAME? Use an A record instead
-                  </summary>
-                  <div style={{ ...styles.dnsSection, marginTop: 12 }}>
-                    <div style={styles.dnsTable}>
-                      {[
-                        { field: "Type", value: instructions.alternative.type },
-                        { field: "Name", value: instructions.alternative.name },
-                        { field: "Value / IP Address", value: instructions.alternative.value },
-                        { field: "TTL", value: instructions.alternative.ttl },
-                      ].map(({ field, value }) => (
-                        <div key={field} style={styles.dnsRow}>
-                          <span style={styles.dnsField}>{field}</span>
-                          <span style={styles.dnsValue}>{value}</span>
-                          {field === "Value / IP Address" && (
-                            <button style={styles.copyBtn} onClick={() => copy(value, "ip")}>
-                              {copied === "ip" ? "✓" : "Copy"}
-                            </button>
-                          )}
-                        </div>
-                      ))}
+              <details style={{ marginBottom: 16 }}>
+                <summary style={{ cursor: "pointer", color: "#6366f1", fontSize: 13, padding: "6px 0", userSelect: "none" }}>
+                  Can't use CNAME? Use an A record instead
+                </summary>
+                <div style={{ ...s.dnsBlock, marginTop: 10 }}>
+                  {[
+                    { field: "Type", value: ins.alternative.type },
+                    { field: "Name / Host", value: ins.alternative.name },
+                    { field: "IP Address", value: ins.alternative.value },
+                    { field: "TTL", value: ins.alternative.ttl },
+                  ].map(({ field, value }) => (
+                    <div key={field} style={s.dnsRow}>
+                      <span style={s.dnsField}>{field}</span>
+                      <span style={s.dnsValue}>{value}</span>
                     </div>
-                  </div>
-                </details>
+                  ))}
+                </div>
+              </details>
 
-                <p style={styles.propagationNote}>
-                  ⏱ {instructions.propagation_note}
-                </p>
-              </>
-            )}
+              <p style={{ fontSize: 12, color: "#444", marginBottom: 20 }}>⏱ {ins.propagation_note}</p>
+            </>
+          )}
 
-            {/* Verify button */}
-            {verifyResult && !verifyResult.verified && (
-              <div style={styles.errorBox}>{verifyResult.error || "DNS not verified yet."}</div>
-            )}
+          {result && !result.verified && (
+            <div style={s.errorBox}>{result.error || "DNS not verified yet — check your settings and try again."}</div>
+          )}
 
-            <div style={styles.modalActions}>
-              <button style={styles.btnSecondary} onClick={onClose}>Close</button>
-              <button style={styles.btnPrimary} onClick={verify} disabled={verifying}>
-                {verifying ? (
-                  <><span style={styles.spinnerSm} /> Checking DNS…</>
-                ) : (
-                  "✓ Verify DNS"
-                )}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+          <div style={s.modalActions}>
+            <button style={s.btnSecondary} onClick={onClose}>Close</button>
+            <button style={s.btnPrimary} className="btn-primary" onClick={verify} disabled={verifying}>
+              {verifying ? <><span style={s.spinnerSm} /> Checking…</> : "✓ Verify DNS"}
+            </button>
+          </div>
+        </>
+      )}
+    </Overlay>
   );
 }
 
@@ -543,101 +482,81 @@ function DNSInstructionsPanel({
 // PURCHASE TAB
 // ─────────────────────────────────────────────
 
-function PurchaseTab({ onDomainPurchased }: { onDomainPurchased: () => void }) {
+function PurchaseTab() {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [error, setError] = useState("");
-  const [purchasingDomain, setPurchasingDomain] = useState<SearchResult | null>(null);
+  const [purchasing, setPurchasing] = useState<SearchResult | null>(null);
 
   const search = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearching(true);
-    setError("");
-    setResults(null);
+    setSearching(true); setError(""); setResults(null);
     try {
       const data = await apiFetch(`/domains/search?q=${encodeURIComponent(query.trim())}`);
       setResults(data.results);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSearching(false);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setSearching(false); }
   };
 
   return (
-    <div>
-      {/* Search box */}
-      <form onSubmit={search} style={styles.searchForm}>
-        <div style={styles.searchInputWrap}>
-          <span style={styles.searchIcon}>🔍</span>
+    <div style={s.tabContent} className="fade-up">
+      <div style={s.tabHeader}>
+        <div>
+          <h1 style={s.tabTitle}>Buy a Domain</h1>
+          <p style={s.tabSubtitle}>Search availability and purchase — DNS configures automatically.</p>
+        </div>
+      </div>
+
+      <form onSubmit={search} style={s.searchForm}>
+        <div style={s.searchWrap}>
+          <Search size={16} style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }} />
           <input
-            style={styles.searchInput}
+            style={s.searchInput}
             type="text"
-            placeholder="Search for a domain name… (e.g. myplumbingco)"
+            placeholder="Search for a domain… e.g. myplumbingco"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <button type="submit" style={styles.btnPrimary} disabled={searching || !query.trim()}>
+        <button type="submit" style={s.btnPrimary} className="btn-primary" disabled={searching || !query.trim()}>
           {searching ? "Searching…" : "Search"}
         </button>
       </form>
 
-      {error && <div style={styles.errorBox}>{error}</div>}
+      {error && <div style={s.errorBox}>{error}</div>}
 
-      {/* Results */}
       {results && (
-        <div style={styles.searchResults}>
-          {results.length === 0 ? (
-            <p style={styles.emptyDesc}>No results found.</p>
-          ) : (
-            results.map((r) => (
-              <div key={r.domain} style={{
-                ...styles.searchResultRow,
-                opacity: r.available ? 1 : 0.5,
-              }}>
-                <div style={styles.searchResultLeft}>
-                  <span style={styles.searchDomain}>{r.domain}</span>
-                  {r.popular && r.available && (
-                    <span style={styles.popularBadge}>Popular</span>
-                  )}
-                </div>
-                <div style={styles.searchResultRight}>
-                  {r.available ? (
-                    <>
-                      <div style={styles.priceBlock}>
-                        <span style={styles.price}>{r.display_price}</span>
-                        <span style={styles.priceLabel}>/yr</span>
-                      </div>
-                      <button
-                        style={styles.btnPrimary}
-                        onClick={() => setPurchasingDomain(r)}
-                      >
-                        Buy
-                      </button>
-                    </>
-                  ) : (
-                    <span style={styles.unavailable}>Taken</span>
-                  )}
-                </div>
+        <div style={s.resultsList}>
+          {results.map((r) => (
+            <div key={r.domain} className="result-row" style={{ ...s.resultRow, opacity: r.available ? 1 : 0.45 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={s.resultDomain}>{r.domain}</span>
+                {r.popular && r.available && <span style={s.popularBadge}>Popular</span>}
               </div>
-            ))
-          )}
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {r.available ? (
+                  <>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={s.price}>{r.display_price}</span>
+                      <span style={s.priceLabel}>/yr</span>
+                    </div>
+                    <button style={s.btnPrimary} className="btn-primary" onClick={() => setPurchasing(r)}>
+                      Buy
+                    </button>
+                  </>
+                ) : (
+                  <span style={s.takenBadge}>Taken</span>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Purchase modal */}
-      {purchasingDomain && (
-        <PurchaseModal
-          domain={purchasingDomain}
-          onClose={() => setPurchasingDomain(null)}
-          onSuccess={() => {
-            setPurchasingDomain(null);
-            onDomainPurchased();
-          }}
-        />
+      {purchasing && (
+        <PurchaseModal domain={purchasing} onClose={() => setPurchasing(null)} onSuccess={() => setPurchasing(null)} />
       )}
     </div>
   );
@@ -647,168 +566,112 @@ function PurchaseTab({ onDomainPurchased }: { onDomainPurchased: () => void }) {
 // PURCHASE MODAL
 // ─────────────────────────────────────────────
 
-function PurchaseModal({
-  domain, onClose, onSuccess
-}: {
-  domain: SearchResult;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const [step, setStep] = useState<"contact" | "payment" | "processing" | "done">("contact");
+function PurchaseModal({ domain, onClose, onSuccess }: { domain: SearchResult; onClose: () => void; onSuccess: () => void }) {
+  const [step, setStep] = useState<"contact" | "payment" | "done">("contact");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", address1: "", city: "", state: "", postal_code: "", country: "US" });
 
-  // Contact form state
-  const [form, setForm] = useState({
-    first_name: "", last_name: "", email: "", phone: "",
-    address1: "", city: "", state: "", postal_code: "", country: "US",
-  });
-
-  // Payment (in a real app this would use Stripe Elements)
-  // For now we show a placeholder that accepts a test payment method
-  const [paymentMethodId, setPaymentMethodId] = useState("pm_card_visa");
-
-  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const submitContact = (e: React.FormEvent) => {
     e.preventDefault();
     const required = ["first_name", "last_name", "email", "phone", "address1", "city", "state", "postal_code"];
     for (const f of required) {
-      if (!form[f as keyof typeof form]) {
-        setError(`${f.replace("_", " ")} is required`);
-        return;
-      }
+      if (!form[f as keyof typeof form]) { setError(`${f.replace("_", " ")} is required`); return; }
     }
-    setError("");
-    setStep("payment");
+    setError(""); setStep("payment");
   };
 
   const purchase = async () => {
-    setLoading(true);
-    setError("");
-    setStep("processing");
+    setLoading(true); setError("");
     try {
       await apiFetch("/domains/purchase", {
         method: "POST",
-        body: JSON.stringify({
-          domain: domain.domain,
-          registrant: form,
-          years: 1,
-          stripe_payment_method_id: paymentMethodId,
-        }),
+        body: JSON.stringify({ domain: domain.domain, registrant: form, years: 1, stripe_payment_method_id: "pm_card_visa" }),
       });
       setStep("done");
-      setTimeout(() => { onSuccess(); }, 2500);
-    } catch (err: any) {
-      setError(err.message);
-      setStep("payment");
-    } finally {
-      setLoading(false);
-    }
+      setTimeout(onSuccess, 2500);
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div style={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && step !== "processing" && onClose()}>
-      <div style={{ ...styles.modal, maxWidth: 560 }}>
-        <div style={styles.modalHeader}>
-          <div>
-            <h2 style={styles.modalTitle}>
-              {step === "done" ? "🎉 Domain Registered!" : `Register ${domain.domain}`}
-            </h2>
-            {step !== "done" && step !== "processing" && (
-              <p style={{ ...styles.modalDesc, marginBottom: 0, marginTop: 4 }}>
-                {domain.display_price}/yr · renews at ${(domain.renewal_price_cents / 100).toFixed(2)}/yr
-              </p>
-            )}
-          </div>
-          {step !== "processing" && step !== "done" && (
-            <button style={styles.modalClose} onClick={onClose}>✕</button>
-          )}
+    <Overlay onClose={step !== "done" ? onClose : undefined} wide>
+      {step === "done" ? (
+        <div style={{ textAlign: "center", padding: "32px 0" }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🚀</div>
+          <div style={s.modalTitle}>Domain Registered!</div>
+          <p style={s.modalDesc}><strong style={{ color: "#fff" }}>{domain.domain}</strong> is being set up. Your site will be live automatically within a few minutes.</p>
         </div>
-
-        {step === "done" && (
-          <div style={{ textAlign: "center", padding: "32px 0" }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>🚀</div>
-            <p style={{ color: "#a1a1aa" }}>
-              <strong style={{ color: "#fff" }}>{domain.domain}</strong> is being registered.
-              DNS will be configured automatically — your site will be live within a few minutes.
-            </p>
-          </div>
-        )}
-
-        {step === "processing" && (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ ...styles.spinner, margin: "0 auto 16px" }} />
-            <p style={{ color: "#a1a1aa" }}>Processing payment and registering domain…</p>
-          </div>
-        )}
-
-        {step === "contact" && (
+      ) : step === "contact" ? (
+        <>
+          <div style={s.modalTitle}>Register {domain.domain}</div>
+          <p style={s.modalDesc}>ICANN requires contact info. WHOIS privacy is enabled by default — your details stay private.</p>
           <form onSubmit={submitContact}>
-            <p style={styles.modalDesc}>
-              ICANN requires contact information for domain registration. Your details are kept private with WHOIS privacy enabled by default.
-            </p>
-            <div style={styles.formGrid}>
+            <div style={s.formGrid}>
               {[
-                { key: "first_name", label: "First Name", ph: "Jane" },
-                { key: "last_name", label: "Last Name", ph: "Smith" },
-                { key: "email", label: "Email", ph: "jane@example.com", type: "email" },
-                { key: "phone", label: "Phone", ph: "+12125551234" },
-                { key: "address1", label: "Address", ph: "123 Main St", full: true },
-                { key: "city", label: "City", ph: "New York" },
-                { key: "state", label: "State", ph: "NY" },
-                { key: "postal_code", label: "ZIP Code", ph: "10001" },
-              ].map(({ key, label, ph, type, full }) => (
-                <div key={key} style={{ gridColumn: full ? "1 / -1" : "auto" }}>
-                  <label style={styles.label}>{label}</label>
-                  <input
-                    style={styles.input}
-                    type={type || "text"}
-                    placeholder={ph}
-                    value={form[key as keyof typeof form]}
-                    onChange={update(key)}
-                  />
+                { k: "first_name", label: "First Name", ph: "Jane" },
+                { k: "last_name", label: "Last Name", ph: "Smith" },
+                { k: "email", label: "Email", ph: "jane@example.com" },
+                { k: "phone", label: "Phone", ph: "+12125551234" },
+                { k: "address1", label: "Address", ph: "123 Main St", full: true },
+                { k: "city", label: "City", ph: "New York" },
+                { k: "state", label: "State", ph: "NY" },
+                { k: "postal_code", label: "ZIP Code", ph: "10001" },
+              ].map(({ k, label, ph, full }) => (
+                <div key={k} style={{ gridColumn: full ? "1 / -1" : "auto" }}>
+                  <label style={s.label}>{label}</label>
+                  <input style={s.input} placeholder={ph} value={form[k as keyof typeof form]} onChange={update(k)} />
                 </div>
               ))}
             </div>
-            {error && <div style={styles.errorBox}>{error}</div>}
-            <div style={styles.modalActions}>
-              <button type="button" style={styles.btnSecondary} onClick={onClose}>Cancel</button>
-              <button type="submit" style={styles.btnPrimary}>Continue to Payment →</button>
+            {error && <div style={s.errorBox}>{error}</div>}
+            <div style={s.modalActions}>
+              <button type="button" style={s.btnSecondary} onClick={onClose}>Cancel</button>
+              <button type="submit" style={s.btnPrimary} className="btn-primary">Continue →</button>
             </div>
           </form>
-        )}
-
-        {step === "payment" && (
-          <div>
-            <div style={styles.orderSummary}>
-              <div style={styles.orderRow}>
-                <span>{domain.domain} registration (1 year)</span>
-                <span>{domain.display_price}</span>
-              </div>
-              <div style={{ ...styles.orderRow, ...styles.orderTotal }}>
-                <span>Total today</span>
-                <span>{domain.display_price}</span>
-              </div>
+        </>
+      ) : (
+        <>
+          <div style={s.modalTitle}>Payment</div>
+          <div style={s.orderBox}>
+            <div style={s.orderRow}>
+              <span>{domain.domain} (1 year)</span>
+              <span>{domain.display_price}</span>
             </div>
-
-            {/* In production: replace with <StripeElements> component */}
-            <div style={styles.paymentPlaceholder}>
-              <span style={{ color: "#6b7280", fontSize: 14 }}>
-                💳 Stripe payment form — integrate with @stripe/react-stripe-js
-              </span>
-            </div>
-
-            {error && <div style={styles.errorBox}>{error}</div>}
-            <div style={styles.modalActions}>
-              <button style={styles.btnSecondary} onClick={() => setStep("contact")}>← Back</button>
-              <button style={styles.btnPrimary} onClick={purchase} disabled={loading}>
-                {loading ? "Processing…" : `Pay ${domain.display_price}`}
-              </button>
+            <div style={{ ...s.orderRow, borderBottom: "none", fontWeight: 600, color: "#fff" }}>
+              <span>Total today</span>
+              <span>{domain.display_price}</span>
             </div>
           </div>
-        )}
+          <div style={s.paymentPlaceholder}>
+            💳 Integrate <strong>@stripe/react-stripe-js</strong> here for the card form
+          </div>
+          {error && <div style={s.errorBox}>{error}</div>}
+          <div style={s.modalActions}>
+            <button style={s.btnSecondary} onClick={() => setStep("contact")}>← Back</button>
+            <button style={s.btnPrimary} className="btn-primary" onClick={purchase} disabled={loading}>
+              {loading ? "Processing…" : `Pay ${domain.display_price}`}
+            </button>
+          </div>
+        </>
+      )}
+    </Overlay>
+  );
+}
+
+// ─────────────────────────────────────────────
+// OVERLAY WRAPPER
+// ─────────────────────────────────────────────
+
+function Overlay({ children, onClose, wide }: { children: React.ReactNode; onClose?: () => void; wide?: boolean }) {
+  return (
+    <div style={s.overlay} onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}>
+      <div style={{ ...s.modal, maxWidth: wide ? 580 : 440 }}>
+        {onClose && <button style={s.closeBtn} onClick={onClose}>✕</button>}
+        {children}
       </div>
     </div>
   );
@@ -818,82 +681,204 @@ function PurchaseModal({
 // STYLES
 // ─────────────────────────────────────────────
 
-const styles: Record<string, React.CSSProperties> = {
+const s: Record<string, React.CSSProperties> = {
   page: {
+    display: "flex",
     minHeight: "100vh",
     background: "#0a0a0a",
     color: "#f4f4f5",
     fontFamily: "'DM Sans', system-ui, sans-serif",
-    padding: "40px 32px",
-    maxWidth: 900,
-    margin: "0 auto",
   },
-  header: {
+  sidebar: {
+    width: 240,
+    background: "#0d0d0d",
+    borderRight: "1px solid #1a1a1a",
+    display: "flex",
+    flexDirection: "column",
+    padding: "24px 16px",
+    flexShrink: 0,
+    minHeight: "100vh",
+  },
+  backBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    background: "none",
+    border: "none",
+    color: "#555",
+    cursor: "pointer",
+    fontSize: 13,
+    fontFamily: "inherit",
+    padding: "6px 8px",
+    borderRadius: 8,
+    marginBottom: 28,
+    transition: "color 0.15s",
+  },
+  sidebarLogo: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "0 8px",
+    marginBottom: 28,
+  },
+  logoIcon: {
+    width: 34,
+    height: 34,
+    background: "rgba(5,150,105,0.12)",
+    border: "1px solid rgba(5,150,105,0.2)",
+    borderRadius: 8,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoText: {
+    fontFamily: "'Instrument Serif', Georgia, serif",
+    fontSize: 20,
+    fontWeight: 400,
+    color: "#f4f4f5",
+  },
+  nav: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+    flex: 1,
+  },
+  navItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "none",
+    background: "none",
+    color: "#555",
+    fontSize: 14,
+    fontFamily: "inherit",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 0.15s, color 0.15s",
+    width: "100%",
+  },
+  navItemActive: {
+    background: "#1a1a1a",
+    color: "#f4f4f5",
+  },
+  navBadge: {
+    marginLeft: "auto",
+    background: "#2a2a2a",
+    color: "#888",
+    borderRadius: 999,
+    padding: "2px 8px",
+    fontSize: 11,
+    fontWeight: 600,
+  },
+  sidebarFooter: {
+    borderTop: "1px solid #1a1a1a",
+    paddingTop: 20,
+    marginTop: 20,
+  },
+  sidebarFooterText: {},
+  main: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100vh",
+    overflowY: "auto",
+  },
+  tabContent: {
+    flex: 1,
+    padding: "40px 48px",
+    maxWidth: 900,
+    width: "100%",
+  },
+  tabHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 36,
     gap: 16,
   },
-  h1: {
+  tabTitle: {
     fontFamily: "'Instrument Serif', Georgia, serif",
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: 400,
-    margin: "0 0 8px",
     letterSpacing: "-0.5px",
+    marginBottom: 6,
+    color: "#f4f4f5",
   },
-  subtitle: {
-    color: "#71717a",
-    fontSize: 15,
-    margin: 0,
-  },
-  tabs: {
-    display: "flex",
-    gap: 4,
-    borderBottom: "1px solid #1f1f23",
-    marginBottom: 32,
-  },
-  tab: {
-    background: "none",
-    border: "none",
-    color: "#71717a",
-    padding: "10px 16px",
-    cursor: "pointer",
+  tabSubtitle: {
+    color: "#555",
     fontSize: 14,
-    fontFamily: "inherit",
-    borderBottom: "2px solid transparent",
-    marginBottom: -1,
+  },
+  centered: {
+    display: "flex",
+    justifyContent: "center",
+    padding: 80,
+  },
+  spinner: {
+    width: 28,
+    height: 28,
+    border: "2px solid #1e1e1e",
+    borderTopColor: "#059669",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+  },
+  spinnerSm: {
+    display: "inline-block",
+    width: 13,
+    height: 13,
+    border: "2px solid rgba(255,255,255,0.2)",
+    borderTopColor: "#fff",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+    verticalAlign: "middle",
+    marginRight: 6,
+  },
+  emptyState: {
+    textAlign: "center",
+    padding: "80px 32px",
+    color: "#555",
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 16,
     display: "flex",
     alignItems: "center",
-    gap: 8,
-    transition: "color 0.15s",
+    justifyContent: "center",
+    margin: "0 auto 20px",
   },
-  tabActive: {
+  emptyTitle: {
     color: "#f4f4f5",
-    borderBottomColor: "#6366f1",
+    fontSize: 20,
+    fontWeight: 500,
+    fontFamily: "'Instrument Serif', Georgia, serif",
+    marginBottom: 8,
   },
-  badge: {
-    background: "#1f1f23",
-    color: "#a1a1aa",
-    borderRadius: 999,
-    padding: "2px 8px",
-    fontSize: 12,
+  emptyDesc: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    maxWidth: 400,
+    margin: "0 auto 28px",
   },
   domainList: {
     display: "flex",
     flexDirection: "column",
-    gap: 12,
+    gap: 10,
   },
   domainCard: {
-    background: "#111113",
-    border: "1px solid #1f1f23",
-    borderRadius: 12,
-    padding: "16px 20px",
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 14,
+    padding: "18px 22px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 16,
-    transition: "border-color 0.15s",
+    transition: "border-color 0.15s, background 0.15s",
+    cursor: "default",
   },
   domainCardLeft: {
     display: "flex",
@@ -901,24 +886,25 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 14,
   },
   domainCardIcon: {
-    fontSize: 20,
-    width: 40,
-    height: 40,
-    background: "#1a1a1e",
-    borderRadius: 8,
+    width: 42,
+    height: 42,
+    background: "#1a1a1a",
+    borderRadius: 10,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontSize: 20,
     flexShrink: 0,
   },
   domainName: {
     fontSize: 15,
     fontWeight: 500,
     marginBottom: 3,
+    color: "#f4f4f5",
   },
   domainMeta: {
-    fontSize: 13,
-    color: "#71717a",
+    fontSize: 12,
+    color: "#555",
   },
   domainCardRight: {
     display: "flex",
@@ -926,61 +912,37 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     flexShrink: 0,
   },
-  statusBadge: {
-    fontSize: 12,
-    fontWeight: 500,
-    padding: "4px 10px",
-    borderRadius: 999,
-  },
-  emptyState: {
-    textAlign: "center",
-    padding: "80px 32px",
-    color: "#71717a",
-  },
-  empty: {
+  statusPill: {
     display: "flex",
-    justifyContent: "center",
-    padding: 60,
-  },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    color: "#f4f4f5",
-    fontSize: 18,
-    fontWeight: 500,
-    margin: "0 0 8px",
-    fontFamily: "'Instrument Serif', Georgia, serif",
-  },
-  emptyDesc: {
-    fontSize: 14,
-    lineHeight: 1.6,
-    margin: "0 auto 24px",
-    maxWidth: 380,
-  },
-  // Buttons
-  btnPrimary: {
-    background: "#6366f1",
-    color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    padding: "10px 18px",
-    fontSize: 14,
-    fontWeight: 500,
-    cursor: "pointer",
-    fontFamily: "inherit",
-    transition: "background 0.15s",
-    display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    whiteSpace: "nowrap" as const,
+    fontSize: 12,
+    fontWeight: 500,
+    padding: "4px 12px",
+    borderRadius: 999,
+  },
+  btnPrimary: {
+    background: "#059669",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    padding: "10px 18px",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 7,
+    whiteSpace: "nowrap",
+    transition: "filter 0.15s, transform 0.15s",
+    textDecoration: "none",
   },
   btnSecondary: {
-    background: "#1f1f23",
-    color: "#a1a1aa",
-    border: "1px solid #2f2f33",
-    borderRadius: 8,
+    background: "#1a1a1a",
+    color: "#888",
+    border: "1px solid #2a2a2a",
+    borderRadius: 10,
     padding: "10px 18px",
     fontSize: 14,
     fontWeight: 500,
@@ -989,74 +951,139 @@ const styles: Record<string, React.CSSProperties> = {
   },
   btnGhost: {
     background: "none",
-    color: "#a1a1aa",
-    border: "1px solid #2f2f33",
-    borderRadius: 6,
-    padding: "6px 12px",
+    color: "#888",
+    border: "1px solid #2a2a2a",
+    borderRadius: 8,
+    padding: "6px 14px",
     fontSize: 13,
     cursor: "pointer",
     fontFamily: "inherit",
     textDecoration: "none",
     display: "inline-block",
+    transition: "border-color 0.15s, color 0.15s",
   },
-  btnDanger: {
+  btnDelete: {
     background: "none",
+    border: "1px solid rgba(239,68,68,0.15)",
     color: "#ef4444",
-    border: "1px solid rgba(239,68,68,0.2)",
-    borderRadius: 6,
-    padding: "6px 12px",
-    fontSize: 13,
+    borderRadius: 8,
+    padding: "6px 10px",
     cursor: "pointer",
-    fontFamily: "inherit",
+    display: "flex",
+    alignItems: "center",
+    transition: "background 0.15s",
   },
-  // Modal
-  modalOverlay: {
+  searchForm: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 28,
+  },
+  searchWrap: {
+    flex: 1,
+    position: "relative",
+  },
+  searchInput: {
+    width: "100%",
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 10,
+    color: "#f4f4f5",
+    padding: "12px 16px 12px 44px",
+    fontSize: 14,
+    fontFamily: "inherit",
+    outline: "none",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+  },
+  resultsList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  resultRow: {
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 12,
+    padding: "16px 20px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    transition: "background 0.15s, border-color 0.15s",
+  },
+  resultDomain: {
+    fontSize: 15,
+    fontWeight: 500,
+    color: "#f4f4f5",
+  },
+  popularBadge: {
+    background: "rgba(245,158,11,0.12)",
+    color: "#fbbf24",
+    padding: "2px 10px",
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 600,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: "#f4f4f5",
+  },
+  priceLabel: {
+    fontSize: 13,
+    color: "#555",
+    marginLeft: 2,
+  },
+  takenBadge: {
+    fontSize: 13,
+    color: "#555",
+    background: "#1a1a1a",
+    padding: "6px 14px",
+    borderRadius: 8,
+  },
+  overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.7)",
+    background: "rgba(0,0,0,0.75)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 50,
-    padding: 16,
+    padding: 20,
     backdropFilter: "blur(4px)",
   },
   modal: {
-    background: "#111113",
-    border: "1px solid #1f1f23",
-    borderRadius: 16,
-    padding: 28,
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 18,
+    padding: 32,
     width: "100%",
-    maxWidth: 480,
     maxHeight: "90vh",
-    overflowY: "auto" as const,
+    overflowY: "auto",
+    position: "relative",
   },
-  modalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 20,
+  closeBtn: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    background: "none",
+    border: "none",
+    color: "#555",
+    cursor: "pointer",
+    fontSize: 18,
+    lineHeight: 1,
+    padding: 4,
   },
   modalTitle: {
     fontFamily: "'Instrument Serif', Georgia, serif",
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 400,
-    margin: 0,
+    color: "#f4f4f5",
+    marginBottom: 10,
   },
   modalDesc: {
-    color: "#71717a",
+    color: "#666",
     fontSize: 14,
-    lineHeight: 1.6,
-    marginBottom: 20,
-  },
-  modalClose: {
-    background: "none",
-    border: "none",
-    color: "#71717a",
-    cursor: "pointer",
-    fontSize: 18,
-    padding: 4,
-    lineHeight: 1,
+    lineHeight: 1.65,
+    marginBottom: 24,
   },
   modalActions: {
     display: "flex",
@@ -1064,91 +1091,87 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "flex-end",
     marginTop: 24,
   },
-  inputGroup: {
-    marginBottom: 16,
-  },
   label: {
     display: "block",
-    fontSize: 13,
-    color: "#a1a1aa",
-    marginBottom: 6,
-    fontWeight: 500,
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#666",
+    marginBottom: 7,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   },
   input: {
     width: "100%",
-    background: "#0a0a0a",
-    border: "1px solid #2f2f33",
-    borderRadius: 8,
+    background: "#0d0d0d",
+    border: "1px solid #2a2a2a",
+    borderRadius: 10,
     color: "#f4f4f5",
-    padding: "10px 14px",
+    padding: "11px 14px",
     fontSize: 14,
     fontFamily: "inherit",
     outline: "none",
-    boxSizing: "border-box" as const,
+    marginBottom: 4,
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    boxSizing: "border-box",
   },
   errorBox: {
-    background: "rgba(239,68,68,0.1)",
+    background: "rgba(239,68,68,0.08)",
     border: "1px solid rgba(239,68,68,0.2)",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: "12px 16px",
     color: "#fca5a5",
     fontSize: 13,
     marginTop: 12,
+    lineHeight: 1.5,
   },
-  successBanner: {
-    background: "rgba(34,197,94,0.1)",
-    border: "1px solid rgba(34,197,94,0.2)",
-    borderRadius: 10,
-    padding: "16px 20px",
+  successBox: {
+    background: "rgba(74,222,128,0.08)",
+    border: "1px solid rgba(74,222,128,0.2)",
+    borderRadius: 12,
+    padding: "18px 20px",
     display: "flex",
-    gap: 12,
+    gap: 14,
     alignItems: "flex-start",
-    color: "#86efac",
-    fontSize: 15,
+    color: "#4ade80",
   },
-  // DNS table
-  dnsSection: {
-    background: "#0a0a0a",
-    border: "1px solid #1f1f23",
-    borderRadius: 10,
+  dnsBlock: {
+    background: "#0d0d0d",
+    border: "1px solid #1e1e1e",
+    borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  dnsSectionLabel: {
+  dnsBlockLabel: {
     padding: "10px 16px",
-    borderBottom: "1px solid #1f1f23",
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#71717a",
-    textTransform: "uppercase" as const,
+    borderBottom: "1px solid #1a1a1a",
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#555",
+    textTransform: "uppercase",
     letterSpacing: "0.06em",
     display: "flex",
     alignItems: "center",
     gap: 8,
   },
-  recommended: {
+  recommendedBadge: {
     background: "rgba(99,102,241,0.15)",
     color: "#818cf8",
     padding: "2px 8px",
     borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 600,
-  },
-  dnsTable: {
-    display: "flex",
-    flexDirection: "column" as const,
+    fontSize: 10,
+    fontWeight: 700,
   },
   dnsRow: {
     display: "flex",
     alignItems: "center",
-    padding: "10px 16px",
-    borderBottom: "1px solid #1a1a1e",
+    padding: "11px 16px",
+    borderBottom: "1px solid #111",
     gap: 12,
   },
   dnsField: {
-    width: 140,
+    width: 150,
     fontSize: 13,
-    color: "#71717a",
+    color: "#555",
     flexShrink: 0,
   },
   dnsValue: {
@@ -1158,166 +1181,44 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#f4f4f5",
   },
   copyBtn: {
-    background: "#1f1f23",
+    background: "#1e1e1e",
     border: "none",
-    color: "#a1a1aa",
-    borderRadius: 4,
-    padding: "4px 10px",
-    fontSize: 12,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-  details: {
-    marginBottom: 12,
-  },
-  detailsSummary: {
-    cursor: "pointer",
-    color: "#6366f1",
-    fontSize: 13,
-    padding: "8px 0",
-    userSelect: "none" as const,
-  },
-  propagationNote: {
-    color: "#52525b",
-    fontSize: 12,
-    margin: "8px 0 0",
-  },
-  // Search
-  searchForm: {
-    display: "flex",
-    gap: 12,
-    marginBottom: 24,
-  },
-  searchInputWrap: {
-    flex: 1,
-    position: "relative" as const,
-    display: "flex",
-    alignItems: "center",
-  },
-  searchIcon: {
-    position: "absolute" as const,
-    left: 14,
-    fontSize: 16,
-    pointerEvents: "none" as const,
-  },
-  searchInput: {
-    width: "100%",
-    background: "#111113",
-    border: "1px solid #2f2f33",
-    borderRadius: 8,
-    color: "#f4f4f5",
-    padding: "11px 14px 11px 42px",
-    fontSize: 14,
-    fontFamily: "inherit",
-    outline: "none",
-    boxSizing: "border-box" as const,
-  },
-  searchResults: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: 8,
-  },
-  searchResultRow: {
-    background: "#111113",
-    border: "1px solid #1f1f23",
-    borderRadius: 10,
-    padding: "14px 18px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  searchResultLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
-  searchDomain: {
-    fontSize: 15,
-    fontWeight: 500,
-  },
-  popularBadge: {
-    background: "rgba(99,102,241,0.15)",
-    color: "#818cf8",
-    padding: "2px 8px",
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 600,
-  },
-  searchResultRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-  },
-  priceBlock: {
-    textAlign: "right" as const,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: 600,
-    color: "#f4f4f5",
-  },
-  priceLabel: {
-    fontSize: 13,
-    color: "#71717a",
-    marginLeft: 2,
-  },
-  unavailable: {
-    fontSize: 13,
-    color: "#52525b",
-    background: "#1a1a1e",
-    padding: "6px 12px",
+    color: "#888",
     borderRadius: 6,
+    padding: "4px 12px",
+    fontSize: 12,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    transition: "background 0.15s, color 0.15s",
   },
-  // Purchase modal
   formGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+    gap: 14,
     marginBottom: 4,
   },
-  orderSummary: {
-    background: "#0a0a0a",
-    border: "1px solid #1f1f23",
-    borderRadius: 10,
+  orderBox: {
+    background: "#0d0d0d",
+    border: "1px solid #1e1e1e",
+    borderRadius: 12,
     marginBottom: 20,
     overflow: "hidden",
   },
   orderRow: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "12px 16px",
+    padding: "13px 18px",
     fontSize: 14,
-    borderBottom: "1px solid #1a1a1e",
-    color: "#a1a1aa",
-  },
-  orderTotal: {
-    borderBottom: "none",
-    color: "#f4f4f5",
-    fontWeight: 600,
+    borderBottom: "1px solid #1a1a1a",
+    color: "#888",
   },
   paymentPlaceholder: {
-    border: "2px dashed #2f2f33",
-    borderRadius: 10,
-    padding: 24,
-    textAlign: "center" as const,
+    border: "2px dashed #2a2a2a",
+    borderRadius: 12,
+    padding: "28px 24px",
+    textAlign: "center",
+    fontSize: 13,
+    color: "#555",
     marginBottom: 4,
-  },
-  // Spinner
-  spinner: {
-    width: 24,
-    height: 24,
-    border: "2px solid #2f2f33",
-    borderTopColor: "#6366f1",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  },
-  spinnerSm: {
-    display: "inline-block",
-    width: 14,
-    height: 14,
-    border: "2px solid rgba(255,255,255,0.2)",
-    borderTopColor: "#fff",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
   },
 };
