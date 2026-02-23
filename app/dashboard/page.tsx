@@ -17,6 +17,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Link,
 } from "lucide-react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
@@ -507,7 +508,8 @@ export default function DashboardPage() {
         {/* TOOLS */}
         <div className="anim-3" style={{ marginBottom: 36 }}>
           <div className="section-label">Tools</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          {/* ── 5 cards: 3 on top row, 2 on bottom row ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             <ShortcutCard
               icon={<FileText size={16} />}
               title="Content"
@@ -536,6 +538,14 @@ export default function DashboardPage() {
               iconColor="#059669"
               badge={workCount > 0 ? workCount : undefined}
               onClick={() => router.push("/dashboard/work")}
+            />
+            {/* ── NEW: Domains card ── */}
+            <ShortcutCard
+              icon={<Link size={16} />}
+              title="Domains"
+              sub="Connect or buy"
+              iconColor="#f59e0b"
+              onClick={() => router.push("/dashboard/domains")}
             />
           </div>
         </div>
@@ -796,6 +806,14 @@ function ExistingSiteCard({ site, router }: {
               </svg>
               View Live
             </a>
+            {/* ── NEW: Custom Domain button ── */}
+            <button
+              className="btn-secondary font-sans"
+              onClick={() => router.push("/dashboard/domains")}
+            >
+              <Link size={14} />
+              Custom Domain
+            </button>
           </div>
         </div>
       </div>
