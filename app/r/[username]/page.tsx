@@ -20,13 +20,25 @@ type WebsiteData = {
   updated_at?: string;
 };
 
+type PageState =
+  | { status: "loading" }
+  | { status: "editor"; data: WebsiteData; plan: string }
+  | { status: "viewer"; data: WebsiteData; canEdit: boolean }
+  | { status: "error"; message: string };
+
 function getApiBase() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "https://autopilotai-api.onrender.com";
+  return (
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+    "https://autopilotai-api.onrender.com"
+  );
 }
 
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("autopilot_token") || sessionStorage.getItem("autopilot_token");
+  return (
+    localStorage.getItem("autopilot_token") ||
+    sessionStorage.getItem("autopilot_token")
+  );
 }
 
 export default function WebsitePage() {
@@ -35,201 +47,289 @@ export default function WebsitePage() {
   const username = params?.username as string;
   const editRequested = searchParams.get("edit") === "1";
 
-  const [websiteData, setWebsiteData] = useState<WebsiteData | null>(null);
-  const [canEdit, setCanEdit] = useState(false);
-  const [userPlan, setUserPlan] = useState("free");
-  const [editMode, setEditMode] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState<PageState>({ status: "loading" });
 
-  // Fetch website data
   useEffect(() => {
     if (!username) {
-      setLoading(false);
+      setPage({ status: "error", message: "No username provided" });
       return;
     }
 
     let cancelled = false;
+    const API = getApiBase();
+    const token = getAuthToken();
 
-    const fetchWebsite = async () => {
-      try {
-        setLoading(true);
-        const token = getAuthToken();
+    async function load() {
+      setPage({ status: "loading" });
 
-        // For draft websites (?edit=1), use preview endpoint with auth
-        // For published websites, use public endpoint (no auth needed)
-        let url: string;
-        const headers: HeadersInit = {};
-
-        if (editRequested) {
-          url = `${getApiBase()}/api/public/websites/${username}/preview`;
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-        } else {
-          url = `${getApiBase()}/api/public/websites/${username}`;
+      // ── EDIT MODE ────────────────────────────────────────────────────────
+      if (editRequested) {
+        if (!token) {
+          setPage({
+            status: "error",
+            message: "You must be logged in to edit this website",
+          });
+          return;
         }
 
-        const res = await fetch(url, { headers });
+        // 1. Fetch website via authenticated dashboard endpoint
+        //    (works for both draft and published)
+        let websiteData: WebsiteData | null = null;
 
-        if (!res.ok) {
-          if (res.status === 404) {
-            throw new Error("Website not found");
-          } else if (res.status === 403) {
-            if (editRequested) {
-              throw new Error("You must be logged in as the owner to edit this website");
-            } else {
-              throw new Error("This website is private");
+        try {
+          const res = await fetch(
+            `${API}/api/dashboard/websites/${username}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (res.ok) {
+            const json = await res.json();
+            if (json.ok && json.data) {
+              websiteData = json.data as WebsiteData;
             }
-          } else {
-            throw new Error(`Server error: ${res.statusText}`);
           }
+
+          // Fallback: try preview endpoint if dashboard endpoint failed
+          if (!websiteData) {
+            const previewRes = await fetch(
+              `${API}/api/public/websites/${username}/preview`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (previewRes.ok) {
+              const json = await previewRes.json();
+              if (json.ok && json.data) websiteData = json.data as WebsiteData;
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch website for editing:", err);
         }
-
-        const response = await res.json();
-
-        if (!response.ok || !response.data) {
-          throw new Error("Invalid response format");
-        }
-
-        const website = response.data as WebsiteData;
 
         if (cancelled) return;
 
-        console.log("✅ Website loaded:", {
-          username: website.username,
-          theme: website.metadata?.theme,
-          status: website.publish_status,
-        });
+        if (!websiteData) {
+          setPage({
+            status: "error",
+            message:
+              "Could not load website for editing. Make sure you are the owner and logged in.",
+          });
+          return;
+        }
 
-        setWebsiteData(website);
+        // 2. Fetch user plan
+        let plan = "free";
+        try {
+          const meRes = await fetch(`${API}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (meRes.ok) {
+            const me = await meRes.json();
+            plan =
+              me?.data?.subscription_plan ||
+              me?.subscription_plan ||
+              "free";
+          }
+        } catch {
+          // non-fatal — default to free
+        }
 
-        // Check if user can edit (only if ?edit=1 and authenticated)
-        if (editRequested && token) {
+        if (cancelled) return;
+
+        console.log("✏️ Editor ready for", username, "plan:", plan);
+        setPage({ status: "editor", data: websiteData, plan });
+        return;
+      }
+
+      // ── VIEW MODE ────────────────────────────────────────────────────────
+      try {
+        const res = await fetch(`${API}/api/public/websites/${username}`);
+
+        if (!res.ok) {
+          if (res.status === 404) throw new Error("Website not found");
+          if (res.status === 403) throw new Error("This website is private");
+          throw new Error(`Server error (${res.status})`);
+        }
+
+        const json = await res.json();
+        if (!json.ok || !json.data) throw new Error("Invalid response");
+
+        if (cancelled) return;
+
+        const data = json.data as WebsiteData;
+
+        // Check if the viewer is the owner (to show edit button)
+        let canEdit = false;
+        if (token) {
           try {
-            const userRes = await fetch(`${getApiBase()}/api/auth/me`, {
+            const meRes = await fetch(`${API}/api/auth/me`, {
               headers: { Authorization: `Bearer ${token}` },
             });
-
-            if (userRes.ok) {
-              const userData = await userRes.json();
-              if (userData.ok || userData.data?.id) {
-                setCanEdit(true);
-                setEditMode(true);
-                setUserPlan(userData.data?.subscription_plan || userData.subscription_plan || "free");
-                console.log("✏️ Edit mode enabled for", username);
-              }
+            if (meRes.ok) {
+              const me = await meRes.json();
+              const userId = me?.data?.id || me?.id;
+              // We can't directly compare without user_id on website,
+              // so just check they're logged in — the edit button redirects
+              // to ?edit=1 which does a real auth check server-side
+              if (userId) canEdit = true;
             }
-          } catch (e) {
-            console.warn("Could not verify ownership:", e);
+          } catch {
+            // non-fatal
           }
         }
 
-        setError(null);
+        if (cancelled) return;
+        setPage({ status: "viewer", data, canEdit });
       } catch (err: any) {
         if (!cancelled) {
-          const errorMsg = err.message || "Failed to load website";
-          console.error("❌ Error loading website:", errorMsg);
-          setError(errorMsg);
-          setWebsiteData(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
+          console.error("❌ Error loading website:", err.message);
+          setPage({ status: "error", message: err.message || "Failed to load website" });
         }
       }
-    };
+    }
 
-    fetchWebsite();
-
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => { cancelled = true; };
   }, [username, editRequested]);
 
-  // Loading state
-  if (loading) {
+  // ── LOADING ──────────────────────────────────────────────────────────────
+  if (page.status === "loading") {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="inline-block">
-            <div className="w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-          </div>
-          <div>
-            <p className="text-xl font-semibold">Loading website...</p>
-            <p className="text-gray-400 text-sm mt-2">Just a moment</p>
-          </div>
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#09090b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              border: "3px solid #27272a",
+              borderTopColor: "#059669",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 16px",
+            }}
+          />
+          <p style={{ color: "#71717a", fontSize: 14, margin: 0 }}>
+            {editRequested ? "Loading editor…" : "Loading website…"}
+          </p>
         </div>
       </main>
     );
   }
 
-  // Error state
-  if (error || !websiteData) {
+  // ── ERROR ────────────────────────────────────────────────────────────────
+  if (page.status === "error") {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center p-4">
-        <div className="max-w-md text-center space-y-6">
-          <div className="inline-block p-4 bg-red-500/10 rounded-full">
-            <svg
-              className="w-12 h-12 text-red-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#09090b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div style={{ maxWidth: 400, textAlign: "center" }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.2)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              fontSize: 28,
+            }}
+          >
+            ⚠️
           </div>
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Website Not Found</h1>
-            <p className="text-gray-400 mb-2">{error || "This website doesn't exist"}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-            <a
-              href="/"
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
-            >
-              ← Go Home
-            </a>
+          <h1
+            style={{
+              color: "#fff",
+              fontSize: 22,
+              fontWeight: 600,
+              marginBottom: 8,
+            }}
+          >
+            {page.message.includes("not found")
+              ? "Website Not Found"
+              : "Something went wrong"}
+          </h1>
+          <p style={{ color: "#71717a", fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>
+            {page.message}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <a
               href="/dashboard"
-              className="px-6 py-3 bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-600 transition"
+              style={{
+                padding: "10px 22px",
+                background: "#059669",
+                color: "#fff",
+                borderRadius: 8,
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
             >
               Dashboard
             </a>
+            <a
+              href="/"
+              style={{
+                padding: "10px 22px",
+                background: "#27272a",
+                color: "#a1a1aa",
+                borderRadius: 8,
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Go Home
+            </a>
           </div>
         </div>
       </main>
     );
   }
 
-  // Edit mode
-  if (editMode && canEdit) {
+  // ── EDITOR ───────────────────────────────────────────────────────────────
+  if (page.status === "editor") {
     return (
       <WebsiteEditor
-        username={websiteData.username}
-        initialData={websiteData}
-        userPlan={userPlan}
+        username={page.data.username}
+        initialData={page.data}
+        userPlan={page.plan}
       />
     );
   }
 
-  // View mode
+  // ── VIEWER ───────────────────────────────────────────────────────────────
   return (
     <AIHTMLWebsiteRenderer
-      username={websiteData.username}
-      html={websiteData.html}
-      metadata={websiteData.metadata}
-      businessName={websiteData.business_name}
-      theme={websiteData.metadata?.theme}
-      industry={websiteData.metadata?.industry}
-      canEdit={canEdit}
-      isPublished={websiteData.publish_status === "published"}
-      editUrl={canEdit ? `${username}?edit=1` : undefined}
+      username={page.data.username}
+      html={page.data.html}
+      metadata={page.data.metadata}
+      businessName={page.data.business_name}
+      theme={page.data.metadata?.theme}
+      industry={page.data.metadata?.industry}
+      canEdit={page.canEdit}
+      isPublished={page.data.publish_status === "published"}
+      editUrl={
+        page.canEdit ? `/r/${page.data.username}?edit=1` : undefined
+      }
     />
   );
 }
