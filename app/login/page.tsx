@@ -1,268 +1,230 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
-import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
   const [checking, setChecking] = useState(true);
 
-  // ✅ Check if already logged in
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
-    if (token) {
-      // Already logged in, redirect to dashboard
-      router.push("/dashboard");
-    } else {
-      setChecking(false);
-    }
+    if (token) router.push("/dashboard");
+    else setChecking(false);
   }, [router]);
 
   const handleLogin = async () => {
     setError("");
-
+    if (!email || !password) { setError("Please enter your email and password."); return; }
     try {
-      const res = await api.post("/api/auth/login", {
-        email,
-        password,
-      });
-
-      const token = res.data.token;
-      const subscription = res.data.subscription_plan;
-
-      localStorage.setItem("autopilot_token", token);
-      localStorage.setItem("autopilot_subscription", subscription);
-
+      setLoading(true);
+      const res = await api.post("/api/auth/login", { email, password });
+      localStorage.setItem("autopilot_token", res.data.token);
+      if (res.data.subscription_plan) localStorage.setItem("autopilot_subscription", res.data.subscription_plan);
       router.push("/dashboard");
     } catch (err: any) {
-      const backendError = err.response?.data?.detail;
-      setError(
-        typeof backendError === "string"
-          ? backendError
-          : "Login failed. Please check your credentials."
-      );
+      const detail = err.response?.data?.detail;
+      setError(typeof detail === "string" ? detail : "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Show loading while checking login status
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-          <p className="text-gray-400">Checking login status...</p>
-        </div>
-      </div>
-    );
-  }
+  const onKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleLogin(); };
+
+  if (checking) return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ width: 32, height: 32, border: "2px solid #222", borderTop: "2px solid #059669", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen text-white bg-[#0a0a0f] relative flex items-center justify-center px-6 overflow-hidden">
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
-      {/* Premium Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0d0d14] via-[#0a0a0f] to-black" />
-        
-        {/* Grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px)`,
-            backgroundSize: '64px 64px',
-          }}
-        />
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
+        .font-sans    { font-family: 'DM Sans', system-ui, sans-serif; }
 
-        {/* Animated gradient orbs */}
-        <motion.div
-          className="absolute top-1/4 -left-1/4 h-[600px] w-[600px] rounded-full blur-[120px] opacity-20"
-          animate={{ 
-            opacity: [0.15, 0.25, 0.18],
-            scale: [1, 1.1, 1],
-            x: [0, 50, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          style={{
-            background: "radial-gradient(circle, rgba(99,102,241,0.8) 0%, transparent 70%)",
-          }}
-        />
-        
-        <motion.div
-          className="absolute bottom-1/4 -right-1/4 h-[700px] w-[700px] rounded-full blur-[120px] opacity-15"
-          animate={{ 
-            opacity: [0.12, 0.22, 0.15],
-            scale: [1, 1.15, 1.05],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          style={{
-            background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp .45s ease both; }
 
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative z-20 w-full max-w-md"
-      >
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <button
-            onClick={() => router.push("/")}
-            className="group inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity duration-300"
-          >
-            {/* Logo icon */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg blur-md opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
-              <div className="relative w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+        /* Grid bg */
+        .auth-grid {
+          position: fixed; inset: 0; z-index: 0;
+          background-image:
+            linear-gradient(#1a1a1a 1px, transparent 1px),
+            linear-gradient(90deg, #1a1a1a 1px, transparent 1px);
+          background-size: 52px 52px;
+          opacity: .35;
+          pointer-events: none;
+        }
+
+        /* Card */
+        .auth-card {
+          background: #111; border: 1px solid #1e1e1e; border-radius: 22px;
+          overflow: hidden; width: 100%; max-width: 420px;
+          position: relative; z-index: 1;
+          box-shadow: 0 32px 80px rgba(0,0,0,.6);
+        }
+
+        .field {
+          width: 100%; background: #0a0a0a; border: 1px solid #2a2a2a;
+          border-radius: 12px; padding: 13px 16px 13px 44px;
+          font-family: 'DM Sans', sans-serif; font-size: 14px; color: #e5e5e5;
+          outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        .field::placeholder { color: #444; }
+        .field:hover  { border-color: #333; }
+        .field:focus  { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,.1); }
+
+        .field-icon {
+          position: absolute; left: 14px; top: 50%;
+          transform: translateY(-50%); color: #444; pointer-events: none;
+          display: flex;
+        }
+
+        .label {
+          font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;
+          letter-spacing: .08em; text-transform: uppercase; color: #555;
+          display: block; margin-bottom: 8px;
+        }
+
+        .btn-submit {
+          width: 100%; padding: 14px; border-radius: 12px; border: none;
+          font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+          cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+          background: linear-gradient(135deg, #059669, #0ea5e9); color: white;
+          transition: filter .2s, transform .18s, box-shadow .2s;
+          letter-spacing: -.01em;
+        }
+        .btn-submit:hover:not(:disabled) {
+          filter: brightness(1.08); transform: translateY(-1px);
+          box-shadow: 0 10px 32px rgba(5,150,105,.3);
+        }
+        .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+        .link-btn {
+          background: none; border: none; cursor: pointer;
+          font-family: 'DM Sans', sans-serif; font-size: 13px;
+          font-weight: 600; color: #059669; padding: 0;
+          transition: color .18s;
+        }
+        .link-btn:hover { color: #4ade80; }
+
+        .divider {
+          display: flex; align-items: center; gap: 12; margin: 20px 0;
+        }
+        .divider-line { flex: 1; height: 1px; background: #1a1a1a; }
+        .divider-text {
+          font-family: 'DM Sans', sans-serif; font-size: 11px;
+          font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #333;
+          white-space: nowrap; padding: 0 8px;
+        }
+      `}</style>
+
+      <div className="auth-grid" />
+
+      <div className="auth-card fade-up">
+        {/* Top bar */}
+        <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
+
+        <div style={{ padding: "36px 36px 32px" }}>
+
+          {/* Logo */}
+          <div style={{ marginBottom: 32, textAlign: "center" }}>
+            <button
+              className="font-display"
+              onClick={() => router.push("/")}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: "white", letterSpacing: "-0.03em" }}
+            >
+              Autopilot<span style={{ color: "#059669" }}>AI</span>
+            </button>
+            <div className="font-sans" style={{ marginTop: 6, fontSize: 13, color: "#555" }}>
+              Welcome back — sign in to continue
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="font-sans" style={{
+              display: "flex", alignItems: "flex-start", gap: 9, padding: "12px 14px",
+              borderRadius: 12, background: "rgba(220,38,38,.06)", border: "1px solid rgba(220,38,38,.2)",
+              fontSize: 13, color: "#f87171", marginBottom: 20, lineHeight: 1.5,
+            }}>
+              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+              {error}
+            </div>
+          )}
+
+          {/* Fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label className="label">Email address</label>
+              <div style={{ position: "relative" }}>
+                <span className="field-icon"><Mail size={15} /></span>
+                <input
+                  className="field" type="email" value={email}
+                  onChange={(e) => setEmail(e.target.value)} onKeyDown={onKey}
+                  placeholder="you@example.com" autoComplete="email"
+                />
               </div>
             </div>
-            
-            <span className="text-2xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              AutopilotAI
-            </span>
-          </button>
-        </div>
 
-        {/* Card */}
-        <div className="relative group">
-          {/* Glow effect */}
-          <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent blur-3xl opacity-60" />
-          
-          <div className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-2xl p-8 md:p-10 shadow-2xl">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-sm mb-6">
-                <Sparkles className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
-                  Sign In
-                </span>
-              </div>
-
-              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-br from-white via-white to-gray-400 bg-clip-text text-transparent mb-2">
-                Welcome Back
-              </h2>
-              <p className="text-gray-400">
-                Log in to access your dashboard
-              </p>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-300 rounded-2xl text-sm backdrop-blur-sm"
-              >
-                {error}
-              </motion.div>
-            )}
-
-            {/* Form */}
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Email address
-                </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl border border-white/10 bg-black/40 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 focus:bg-black/60 transition-all duration-300 shadow-inner"
-                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl border border-white/10 bg-black/40 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 focus:bg-black/60 transition-all duration-300 shadow-inner"
-                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="w-4 h-4 rounded bg-black/40 border border-white/10 text-indigo-500 focus:ring-indigo-500/50"
-                  />
-                  <label htmlFor="remember" className="text-sm text-gray-400 cursor-pointer">
-                    Remember me
-                  </label>
-                </div>
-                <button
-                  onClick={() => router.push("/forgot-password")}
-                  className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors duration-300"
-                >
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <label className="label" style={{ marginBottom: 0 }}>Password</label>
+                <button className="link-btn" style={{ fontSize: 12 }} onClick={() => router.push("/forgot-password")}>
                   Forgot password?
                 </button>
               </div>
-
-              <button
-                onClick={handleLogin}
-                className="group relative w-full py-4 rounded-2xl font-semibold text-lg bg-gradient-to-r from-indigo-600 to-indigo-500 text-white overflow-hidden shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-              >
-                <span className="relative z-10">Log In</span>
-                <ArrowRight className="relative z-10 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
-            </div>
-
-            {/* Register link */}
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <p className="text-center text-gray-400 text-sm">
-                Don't have an account?{" "}
-                <button
-                  onClick={() => router.push("/register")}
-                  className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-300"
-                >
-                  Create account
-                </button>
-              </p>
+              <div style={{ position: "relative" }}>
+                <span className="field-icon"><Lock size={15} /></span>
+                <input
+                  className="field" type="password" value={password}
+                  onChange={(e) => setPassword(e.target.value)} onKeyDown={onKey}
+                  placeholder="••••••••" autoComplete="current-password"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Back to home */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => router.push("/")}
-            className="text-sm text-gray-500 hover:text-gray-400 transition-colors duration-300"
-          >
-            ← Back to home
+          {/* Submit */}
+          <button className="btn-submit" style={{ marginTop: 24 }} onClick={handleLogin} disabled={loading}>
+            {loading
+              ? <><div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTop: "2px solid white", borderRadius: "50%", animation: "spin .7s linear infinite" }} /> Signing in…</>
+              : <>Sign In <ArrowRight size={15} /></>
+            }
           </button>
+
+          {/* Register link */}
+          <div className="font-sans" style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #1a1a1a", textAlign: "center", fontSize: 13, color: "#555" }}>
+            Don't have an account?{" "}
+            <button className="link-btn" onClick={() => router.push("/register")}>
+              Create account
+            </button>
+          </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Back to home */}
+      <button
+        className="font-sans link-btn"
+        onClick={() => router.push("/")}
+        style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", fontSize: 12, color: "#444", zIndex: 2 }}
+      >
+        ← Back to home
+      </button>
     </div>
   );
 }
