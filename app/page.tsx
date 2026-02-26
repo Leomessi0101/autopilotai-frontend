@@ -1210,7 +1210,7 @@ export default function HomePage() {
         <div className="footer-inner">
           <a href="/" className="footer-logo">Autopilot<span>AI</span></a>
           <div className="footer-links">
-            {["Terms","Privacy","Contact","Twitter"].map(link=>(
+            {["Yes, AutopilotAI built this site too"].map(link=>(
               <a key={link} href="#" className="footer-link">{link}</a>
             ))}
           </div>
