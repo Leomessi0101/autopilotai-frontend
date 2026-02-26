@@ -5,115 +5,97 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import {
+  Sparkles, Copy, Download, Save, RotateCcw, ChevronRight,
+  ImageIcon, FileText, Linkedin, Twitter, Youtube, ShoppingBag,
+  CheckCircle, AlertCircle, Wand2, ArrowRight,
+} from "lucide-react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 const IMAGE_STYLES = [
-  {
-    value: "clean",
-    title: "Clean Corporate",
-    desc: "Modern SaaS visuals, crisp lighting, premium look.",
-  },
-  {
-    value: "cinematic",
-    title: "Cinematic",
-    desc: "Moody, dramatic lighting, high contrast, film feel.",
-  },
-  {
-    value: "minimal",
-    title: "Minimal Illustration",
-    desc: "Simple shapes, clean composition, subtle detail.",
-  },
-  {
-    value: "social",
-    title: "Social Thumbnail",
-    desc: "Bold framing, attention-grabbing, feed-friendly.",
-  },
-  {
-    value: "product",
-    title: "Product Showcase",
-    desc: "Hero product lighting, clean scene, premium vibe.",
-  },
+  { value: "clean",     label: "Clean Corporate",       desc: "Modern SaaS — crisp, premium." },
+  { value: "cinematic", label: "Cinematic",             desc: "Moody, dramatic, high-contrast." },
+  { value: "minimal",   label: "Minimal Illustration",  desc: "Simple shapes, soft composition." },
+  { value: "social",    label: "Social Thumbnail",      desc: "Bold framing, attention-grabbing." },
+  { value: "product",   label: "Product Showcase",      desc: "Hero lighting, premium scene." },
 ] as const;
+
+type StyleValue = typeof IMAGE_STYLES[number]["value"];
+
+const TEMPLATES = [
+  { icon: <Twitter size={14} />,     label: "Twitter / X Thread",     prompt: "Write an engaging Twitter/X thread. Hook first line, clear value per tweet, strong close. Audience:",     color: "#1DA1F2" },
+  { icon: <Linkedin size={14} />,    label: "LinkedIn Post",          prompt: "Write a professional LinkedIn post. Thought leadership tone, value-driven, end with question. Audience:",   color: "#0A66C2" },
+  { icon: <FileText size={14} />,    label: "Instagram Caption",      prompt: "Write a short, confident Instagram caption with a benefit and CTA. Tone: bold. Audience:",                 color: "#E1306C" },
+  { icon: <ShoppingBag size={14} />, label: "Product Description",    prompt: "Write a persuasive product description. Benefit-oriented, premium feel, clear CTA. Product:",             color: "#f59e0b" },
+  { icon: <Youtube size={14} />,     label: "YouTube Script Intro",   prompt: "Write a high-energy YouTube intro hook for the first 10 seconds. Topic:",                                  color: "#ef4444" },
+] as const;
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function ContentPage() {
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
-  const [details, setDetails] = useState("");
-
-  const [result, setResult] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const [name, setName] = useState("U");
+  // Auth / user
+  const [name, setName]                     = useState("U");
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [generateImage, setGenerateImage] = useState(false);
+  // Form
+  const [title, setTitle]                   = useState("");
+  const [details, setDetails]               = useState("");
+  const [generateImage, setGenerateImage]   = useState(false);
+  const [imageStyle, setImageStyle]         = useState<StyleValue>("clean");
+
+  // Output
+  const [result, setResult]                 = useState("");
+  const [imageUrl, setImageUrl]             = useState<string | null>(null);
+
+  // UI state
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState("");
   const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
+  const [toast, setToast]                   = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  const [copied, setCopied]                 = useState(false);
 
-  const [imageStyle, setImageStyle] = useState<(typeof IMAGE_STYLES)[number]["value"]>("clean");
-  const [saveToast, setSaveToast] = useState(false);
+  const isPaid = useMemo(() => !!subscriptionPlan && subscriptionPlan !== "free", [subscriptionPlan]);
 
-  const isPaid = useMemo(() => {
-    return !!subscriptionPlan && subscriptionPlan !== "free";
-  }, [subscriptionPlan]);
-
+  // ── Auth check ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    api
-      .get("/api/auth/me")
+    if (!token) { router.push("/login"); return; }
+    api.get("/api/auth/me")
       .then((res) => {
         if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
         if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
       })
-      .catch(() => {
-        localStorage.removeItem("autopilot_token");
-        router.push("/login");
-      });
+      .catch(() => { localStorage.removeItem("autopilot_token"); router.push("/login"); });
   }, [router]);
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function showToast(type: "ok" | "err", msg: string, ms = 2500) {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), ms);
+  }
+
   const handleToggle = () => {
-    if (!subscriptionPlan || subscriptionPlan === "free") {
-      setShowUpgradeNotice(true);
-      setGenerateImage(false);
-      return;
-    }
-    setGenerateImage(!generateImage);
+    if (!isPaid) { setShowUpgradeNotice(true); setGenerateImage(false); return; }
+    setGenerateImage((p) => !p);
   };
 
   const handleGenerate = async () => {
-    setError("");
-    setResult("");
-    setImageUrl(null);
-
-    if (!details.trim()) {
-      setError("Please describe the content you’d like to create.");
-      return;
-    }
-
+    setError(""); setResult(""); setImageUrl(null);
+    if (!details.trim()) { setError("Please describe what you want to create."); return; }
     try {
       setLoading(true);
-
       const res = await api.post("/api/content/generate", {
         title: title || undefined,
         prompt: details,
         generate_image: generateImage,
         image_style: imageStyle,
       });
-
-      let output = res.data.output || "";
+      const output: string = res.data.output || "";
       const posts = output.split(/\n\s*\n/);
-
-      const imageBlocked =
-        res.data?.error?.toLowerCase()?.includes("paid") ||
-        res.data?.error?.toLowerCase()?.includes("upgrade");
-
+      const imageBlocked = res.data?.error?.toLowerCase()?.includes("paid") || res.data?.error?.toLowerCase()?.includes("upgrade");
       if (generateImage && !imageBlocked) {
         setResult(posts.slice(0, 1).join("\n\n"));
         setImageUrl(res.data.image || null);
@@ -122,407 +104,598 @@ export default function ContentPage() {
         setImageUrl(null);
       }
     } catch (e: any) {
-      setError(
-        e?.response?.data?.detail || "Something went wrong. Please try again."
-      );
+      setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const saveImage = async () => {
-    if (!imageUrl) return;
-
-    await api.post("/api/images/save", {
-      image_url: imageUrl,
-      text_content: result,
-      image_style: imageStyle,
-    });
-
-    setSaveToast(true);
-    setTimeout(() => setSaveToast(false), 2500);
+  const copyCaption = async () => {
+    if (!result) return;
+    await navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+    showToast("ok", "Copied to clipboard");
   };
 
   const downloadImage = () => {
     if (!imageUrl) return;
-    const a = document.createElement("a");
-    a.href = imageUrl;
-    a.download = "autopilotai-image.png";
-    a.click();
+    const a = document.createElement("a"); a.href = imageUrl; a.download = "autopilotai-image.png"; a.click();
   };
 
-  const copyCaption = async () => {
-    if (!result) return;
-    await navigator.clipboard.writeText(result);
+  const saveImage = async () => {
+    if (!imageUrl) return;
+    await api.post("/api/images/save", { image_url: imageUrl, text_content: result, image_style: imageStyle });
+    showToast("ok", "Saved to My Work");
   };
 
   const clearAll = () => {
-    setTitle("");
-    setDetails("");
-    setResult("");
-    setImageUrl(null);
-    setError("");
-    setShowUpgradeNotice(false);
-    setGenerateImage(false);
-    setImageStyle("clean");
+    setTitle(""); setDetails(""); setResult(""); setImageUrl(null);
+    setError(""); setShowUpgradeNotice(false); setGenerateImage(false); setImageStyle("clean");
   };
 
-  const quickTemplates = [
-    "Instagram caption — short, confident, benefit-focused with CTA",
-    "LinkedIn post — professional, value-driven, thought leadership tone",
-    "Twitter/X thread — engaging hook, clear value, strong close",
-    "Product description — persuasive, benefit-oriented, premium feel",
-    "YouTube script intro — high-energy hook for the first 10 seconds",
-  ];
+  const canGenerate = details.trim().length > 0;
 
-  const selectedStyle = IMAGE_STYLES.find((s) => s.value === imageStyle);
-
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#050810] text-white relative">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(99,102,241,0.08),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b06_1px,transparent_1px),linear-gradient(to_bottom,#1e293b06_1px,transparent_1px)] bg-[size:28px_28px]" />
-      <div className="relative">
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "white" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
+        .font-sans    { font-family: 'DM Sans', system-ui, sans-serif; }
+
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        .a1 { animation: fadeUp .5s ease .05s both; }
+        .a2 { animation: fadeUp .5s ease .14s both; }
+        .a3 { animation: fadeUp .5s ease .22s both; }
+
+        /* ── Cards ── */
+        .card {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 20px;
+          overflow: hidden;
+        }
+        .card-inset {
+          background: #0d0d0d;
+          border: 1px solid #1e1e1e;
+          border-radius: 14px;
+        }
+
+        /* ── Inputs ── */
+        .field {
+          width: 100%;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 12px;
+          padding: 13px 16px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: #e5e5e5;
+          outline: none;
+          transition: border-color .2s, box-shadow .2s;
+        }
+        .field::placeholder { color: #444; }
+        .field:hover  { border-color: #333; }
+        .field:focus  { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,.1); }
+
+        textarea.field { resize: none; line-height: 1.6; }
+
+        /* ── Buttons ── */
+        .btn-generate {
+          width: 100%; padding: 15px;
+          border-radius: 14px; border: none;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px; font-weight: 700;
+          cursor: pointer; letter-spacing: -.01em;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          color: white;
+          display: flex; align-items: center; justify-content: center; gap: 9px;
+          transition: filter .2s, transform .2s, box-shadow .2s;
+        }
+        .btn-generate:hover:not(:disabled) {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+          box-shadow: 0 12px 40px rgba(5,150,105,.28);
+        }
+        .btn-generate:disabled { background: #1e1e1e; color: #444; cursor: not-allowed; }
+
+        .btn-ghost {
+          background: transparent;
+          border: 1px solid #2a2a2a;
+          border-radius: 10px;
+          padding: 9px 16px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px; font-weight: 600; color: #888;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: border-color .2s, color .2s, background .2s;
+        }
+        .btn-ghost:hover { border-color: #444; color: #ccc; background: #111; }
+        .btn-ghost:disabled { opacity: .4; cursor: not-allowed; }
+
+        .btn-solid {
+          background: white; color: #111;
+          border: none; border-radius: 10px;
+          padding: 9px 18px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px; font-weight: 700;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: background .2s, transform .15s;
+        }
+        .btn-solid:hover { background: #eee; transform: translateY(-1px); }
+
+        /* ── Label ── */
+        .label {
+          display: block;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: .08em; text-transform: uppercase;
+          color: #555; margin-bottom: 9px;
+        }
+        .section-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: .1em; text-transform: uppercase;
+          color: #444; margin-bottom: 16px;
+        }
+
+        /* ── Toggle ── */
+        .toggle-track {
+          width: 44px; height: 24px;
+          background: #2a2a2a;
+          border-radius: 100px;
+          position: relative; cursor: pointer;
+          transition: background .25s;
+          flex-shrink: 0;
+        }
+        .toggle-track.on { background: #059669; }
+        .toggle-thumb {
+          position: absolute;
+          width: 18px; height: 18px;
+          border-radius: 50%;
+          background: white;
+          top: 3px; left: 3px;
+          transition: transform .25s;
+          box-shadow: 0 1px 4px rgba(0,0,0,.4);
+        }
+        .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+
+        /* ── Style pill ── */
+        .style-pill {
+          border-radius: 10px;
+          border: 1px solid #222;
+          padding: 11px 14px;
+          cursor: pointer;
+          background: transparent;
+          text-align: left;
+          transition: border-color .2s, background .2s;
+          font-family: 'DM Sans', sans-serif;
+          width: 100%;
+        }
+        .style-pill:hover  { border-color: #333; background: #111; }
+        .style-pill.active { border-color: rgba(5,150,105,.5); background: rgba(5,150,105,.07); }
+
+        /* ── Template chip ── */
+        .template-chip {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 8px 14px;
+          border-radius: 100px;
+          border: 1px solid #222;
+          background: #0d0d0d;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px; font-weight: 600;
+          cursor: pointer; color: #888;
+          transition: border-color .2s, color .2s, background .2s;
+          white-space: nowrap;
+        }
+        .template-chip:hover { border-color: #333; color: #ccc; background: #141414; }
+
+        /* ── Output preview ── */
+        .preview-post {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 20px;
+          overflow: hidden;
+        }
+        .preview-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid #1a1a1a;
+          display: flex; align-items: center; gap: 12px;
+        }
+        .preview-avatar {
+          width: 38px; height: 38px; border-radius: 50%;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          flex-shrink: 0;
+        }
+        .preview-body { padding: 20px; }
+        .preview-actions {
+          padding: 14px 20px;
+          border-top: 1px solid #1a1a1a;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+      `}</style>
+
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-      {saveToast && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-emerald-500/95 text-white border border-emerald-400/30 shadow-lg backdrop-blur-xl">
-          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-          <span className="font-medium">Saved to My Work</span>
+      {/* ── TOAST ── */}
+      {toast && (
+        <div
+          className="font-sans"
+          style={{
+            position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+            zIndex: 200, padding: "11px 18px", borderRadius: 12,
+            fontSize: 13, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 8,
+            boxShadow: "0 8px 32px rgba(0,0,0,.5)",
+            background: toast.type === "ok" ? "#052e16" : "#1c0a0a",
+            border: `1px solid ${toast.type === "ok" ? "#166534" : "#7f1d1d"}`,
+            color: toast.type === "ok" ? "#4ade80" : "#f87171",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {toast.type === "ok" ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+          {toast.msg}
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-16"
-        >
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-                Content Generator
-              </h1>
-              <p className="mt-5 text-lg md:text-xl text-slate-400 max-w-3xl leading-relaxed">
-                Craft compelling posts — and optionally pair them with AI images.
-              </p>
-            </div>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => router.push("/dashboard/work")}
-                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 font-medium transition-all duration-300"
-              >
-                My Work →
-              </button>
-              <button
-                onClick={clearAll}
-                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-200 font-medium transition-all duration-300"
-              >
-                Clear
-              </button>
+        {/* ── PAGE HEADER ── */}
+        <div className="a1" style={{ marginBottom: 36, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+          <div>
+            <div className="section-label" style={{ marginBottom: 10 }}>
+              <Sparkles size={11} style={{ display: "inline", marginRight: 5, color: "#f59e0b" }} />
+              Content Generator
             </div>
+            <h1 className="font-display" style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 400, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+              Create content that <em style={{ color: "#059669" }}>converts.</em>
+            </h1>
+            <p className="font-sans" style={{ fontSize: 15, color: "#555", marginTop: 8, lineHeight: 1.6, maxWidth: 480 }}>
+              AI-written captions, posts, and scripts — paired with generated images when you need them.
+            </p>
           </div>
-        </motion.section>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn-ghost" onClick={() => router.push("/dashboard/work")}>
+              My Work <ChevronRight size={13} />
+            </button>
+            <button className="btn-ghost" onClick={clearAll}>
+              <RotateCcw size={13} /> Reset
+            </button>
+          </div>
+        </div>
 
-        <section className="grid gap-10 lg:grid-cols-[1fr,380px] mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-8 md:p-10 shadow-2xl shadow-black/40"
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px]" />
+        {/* ── MAIN GRID ── */}
+        <div className="a2" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20, alignItems: "start" }}>
 
-            <div className="relative space-y-8">
-              <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">
-                  Title / Topic (optional)
-                </label>
+          {/* ════ LEFT: INPUT CARD ════ */}
+          <div className="card">
+            <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
+            <div style={{ padding: "32px 36px" }}>
+
+              {/* Title */}
+              <div style={{ marginBottom: 22 }}>
+                <label className="label">Title / Topic <span style={{ color: "#333", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
                 <input
+                  className="field"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Product announcement, mindset post, launch news"
-                  className="w-full px-5 py-4 rounded-2xl bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 text-white placeholder:text-slate-500 focus:outline-none transition-all duration-300"
+                  placeholder="e.g. Product launch, mindset shift, new service"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-400 mb-2">
-                  Details
-                </label>
+              {/* Details */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 9 }}>
+                  <label className="label" style={{ marginBottom: 0 }}>What to write <span style={{ color: "#dc2626" }}>*</span></label>
+                  <span className="font-sans" style={{ fontSize: 11, color: "#333" }}>{details.length} / 500</span>
+                </div>
                 <textarea
+                  className="field"
+                  rows={7}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  rows={8}
-                  placeholder="Platform, tone, audience, instructions…"
-                  className="w-full px-5 py-4 rounded-2xl bg-black/50 border border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 text-white placeholder:text-slate-500 resize-none focus:outline-none transition-all duration-300"
+                  maxLength={500}
+                  placeholder="Describe platform, tone, audience, goal, and any key details…&#10;&#10;Tip: the more specific you are, the better the output."
                 />
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                  <span>Tip: Include audience + goal + CTA for best results.</span>
-                  <span className="tabular-nums font-medium">{details.length} chars</span>
-                </div>
               </div>
 
-              <div>
-                <p className="text-sm font-semibold text-slate-400 mb-3">
-                  Quick templates
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {quickTemplates.map((t, i) => (
+              {/* Quick templates */}
+              <div style={{ marginBottom: 28 }}>
+                <div className="label" style={{ marginBottom: 10 }}>Quick templates</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {TEMPLATES.map((t, i) => (
                     <button
                       key={i}
-                      onClick={() => setDetails(t)}
-                      className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/40 text-sm text-slate-200 font-medium transition-all duration-300"
+                      className="template-chip"
+                      onClick={() => setDetails(t.prompt)}
+                      style={{ "--chip-color": t.color } as React.CSSProperties}
                     >
-                      {t.split(" — ")[0]}
+                      <span style={{ color: t.color }}>{t.icon}</span>
+                      {t.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-6 py-4">
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    Generate AI Image
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Paid feature • Shows only 1 caption when enabled
-                  </p>
-                </div>
-                <label className="relative inline-flex cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={generateImage}
-                    onChange={handleToggle}
-                    className="sr-only peer"
-                  />
-                  <div className="w-12 h-6 bg-slate-600 rounded-full peer peer-checked:bg-indigo-500 after:absolute after:top-[3px] after:left-[4px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-6 after:shadow-md" />
-                </label>
-              </div>
+              <div style={{ height: 1, background: "#1a1a1a", margin: "0 0 28px" }} />
 
-              {showUpgradeNotice && (
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-6 py-5">
-                  <p className="text-sm font-semibold text-amber-200 mb-1">
-                    AI Image generation is a paid feature.
-                  </p>
-                  <p className="text-xs text-slate-400 mb-4">
-                    Upgrade to unlock premium image generation for your content.
-                  </p>
-                  <button
-                    onClick={() => router.push("/upgrade")}
-                    className="px-5 py-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-200 rounded-xl font-medium hover:bg-amber-500/30 transition-colors"
+              {/* Image toggle */}
+              <div style={{ marginBottom: generateImage ? 22 : 32 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="font-sans" style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 3 }}>
+                      Generate AI Image
+                    </div>
+                    <div className="font-sans" style={{ fontSize: 12, color: "#555" }}>
+                      {isPaid ? "Paired with your caption" : "Paid feature — upgrade to unlock"}
+                    </div>
+                  </div>
+                  <div
+                    className={`toggle-track ${generateImage ? "on" : ""}`}
+                    onClick={handleToggle}
                   >
-                    Upgrade Plan
+                    <div className="toggle-thumb" />
+                  </div>
+                </div>
+
+                {showUpgradeNotice && !isPaid && (
+                  <div
+                    className="font-sans"
+                    style={{
+                      marginTop: 14,
+                      padding: "14px 16px",
+                      background: "rgba(217,119,6,.06)",
+                      border: "1px solid rgba(217,119,6,.2)",
+                      borderRadius: 12,
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#d97706", marginBottom: 2 }}>Upgrade to unlock images</div>
+                      <div style={{ fontSize: 12, color: "#555" }}>$10/mo gets you 20 images/month</div>
+                    </div>
+                    <button
+                      onClick={() => router.push("/upgrade")}
+                      style={{
+                        background: "#d97706", color: "white", border: "none",
+                        borderRadius: 9, padding: "8px 14px",
+                        fontSize: 12, fontWeight: 700, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+                      }}
+                    >
+                      Upgrade <ArrowRight size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Image styles */}
+              {generateImage && isPaid && (
+                <div style={{ marginBottom: 28 }}>
+                  <label className="label">Image Style</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {IMAGE_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        className={`style-pill ${imageStyle === s.value ? "active" : ""}`}
+                        onClick={() => setImageStyle(s.value)}
+                      >
+                        <div className="font-sans" style={{ fontSize: 13, fontWeight: 600, color: imageStyle === s.value ? "white" : "#aaa", marginBottom: 3 }}>
+                          {s.label}
+                        </div>
+                        <div className="font-sans" style={{ fontSize: 11, color: "#555" }}>{s.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Error */}
+              {error && (
+                <div className="font-sans" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#f87171", marginBottom: 16 }}>
+                  <AlertCircle size={14} /> {error}
+                </div>
+              )}
+
+              {/* Generate button */}
+              <button className="btn-generate" onClick={handleGenerate} disabled={loading || !canGenerate}>
+                {loading ? (
+                  <>
+                    <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTop: "2px solid white", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <Wand2 size={16} />
+                    Generate Content
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ════ RIGHT: SIDEBAR ════ */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+            {/* Tips */}
+            <div className="card" style={{ padding: "22px 24px" }}>
+              <div className="section-label">Writing tips</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  ["🎯", "Audience", "Who exactly is this for?"],
+                  ["💡", "Outcome",  "What should they do or feel?"],
+                  ["🎨", "Tone",     "Calm, bold, luxury, casual…"],
+                  ["🔥", "Hook",     "What makes it scroll-stopping?"],
+                ].map(([emoji, key, val]) => (
+                  <div key={key} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{ fontSize: 14, lineHeight: 1.4 }}>{emoji}</span>
+                    <div>
+                      <span className="font-sans" style={{ fontSize: 12, fontWeight: 700, color: "#888" }}>{key}: </span>
+                      <span className="font-sans" style={{ fontSize: 12, color: "#555" }}>{val}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick actions */}
+            <div className="card" style={{ padding: "22px 24px" }}>
+              <div className="section-label">Quick actions</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {[
+                  { label: "Copy caption", sub: "Copy generated text", icon: <Copy size={13} />, action: copyCaption, disabled: !result },
+                  { label: "My Work",      sub: "View saved content",  icon: <FileText size={13} />, action: () => router.push("/dashboard/work"), disabled: false },
+                  { label: "Reset form",   sub: "Clear and start fresh", icon: <RotateCcw size={13} />, action: clearAll, disabled: false },
+                ].map((a) => (
+                  <button
+                    key={a.label}
+                    className="btn-ghost"
+                    onClick={a.action}
+                    disabled={a.disabled}
+                    style={{ justifyContent: "flex-start", padding: "11px 14px", borderRadius: 12, width: "100%", gap: 10 }}
+                  >
+                    <span style={{ color: "#555" }}>{a.icon}</span>
+                    <div style={{ textAlign: "left" }}>
+                      <div className="font-sans" style={{ fontSize: 13, fontWeight: 600, color: a.disabled ? "#444" : "#ccc" }}>{a.label}</div>
+                      <div className="font-sans" style={{ fontSize: 11, color: "#444" }}>{a.sub}</div>
+                    </div>
                   </button>
-                </div>
-              )}
-
-              {generateImage && (
-                <div>
-                  <div className="flex items-end justify-between mb-3">
-                    <label className="block text-sm font-semibold text-slate-400">
-                      Image Style
-                    </label>
-                    {selectedStyle && (
-                      <span className="text-xs text-slate-500">
-                        {selectedStyle.desc}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid gap-2">
-                    {IMAGE_STYLES.map((s) => {
-                      const active = imageStyle === s.value;
-                      return (
-                        <button
-                          key={s.value}
-                          onClick={() => setImageStyle(s.value)}
-                          className={`text-left rounded-2xl border px-5 py-4 transition-all duration-300 ${
-                            active
-                              ? "border-indigo-500/60 bg-indigo-500/15 shadow-[0_0_30px_rgba(99,102,241,.2)]"
-                              : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className={`text-sm font-medium ${active ? "text-white" : "text-slate-200"}`}>
-                              {s.title}
-                            </p>
-                            <span className={`text-xs ${active ? "text-indigo-400" : "text-slate-500"}`}>
-                              {active ? "Selected" : "Select"}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-400 mt-2">{s.desc}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!isPaid && (
-                    <p className="mt-3 text-xs text-slate-500">
-                      Image styles apply when you upgrade (paid plans).
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between gap-6 pt-2">
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading}
-                  className="relative overflow-hidden px-10 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl font-semibold disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.99]"
-                >
-                  <span className="relative z-10">
-                    {loading ? "Generating…" : "Generate"}
-                  </span>
-                  {!loading && <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />}
-                </button>
-                {error && <p className="text-sm text-red-400 font-medium">{error}</p>}
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.aside
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-6"
-          >
-            <div className="rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-6 shadow-xl shadow-black/30">
-              <p className="text-sm font-semibold text-slate-200 mb-3">
-                Quality inputs = premium outputs.
-              </p>
-              <ul className="space-y-2 text-xs text-slate-400">
-                <li>• Audience: who is this for?</li>
-                <li>• Outcome: what do you want them to do?</li>
-                <li>• Tone: calm, bold, luxury, casual…</li>
-                <li>• Offer: what’s the value / benefit?</li>
-              </ul>
-            </div>
-
-            <div className="rounded-3xl border border-white/[0.08] bg-slate-900/40 backdrop-blur-2xl p-6 shadow-xl shadow-black/30">
-              <p className="text-sm font-semibold text-slate-200 mb-4">
-                Quick actions
-              </p>
-              <div className="grid gap-2">
-                <button
-                  onClick={copyCaption}
-                  disabled={!result}
-                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed text-left"
-                >
-                  <p className="text-sm font-medium text-slate-200">Copy caption</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Copy your generated text instantly</p>
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/work")}
-                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition text-left"
-                >
-                  <p className="text-sm font-medium text-slate-200">Open My Work</p>
-                  <p className="text-xs text-slate-500 mt-0.5">See saved content + images</p>
-                </button>
-                <button
-                  onClick={clearAll}
-                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition text-left"
-                >
-                  <p className="text-sm font-medium text-slate-200">Reset form</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Clear inputs and start fresh</p>
-                </button>
+                ))}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-slate-900/80 to-indigo-950/40 p-6 shadow-xl shadow-black/30">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Current Plan
-              </p>
-              <p className="text-xl font-bold text-white mt-2">
+            {/* Plan card */}
+            <div
+              className="card"
+              style={{
+                padding: "22px 24px",
+                background: isPaid ? "rgba(5,150,105,.05)" : "#111",
+                borderColor: isPaid ? "rgba(5,150,105,.2)" : "#1e1e1e",
+              }}
+            >
+              <div className="section-label">Current plan</div>
+              <div className="font-display" style={{ fontSize: 26, color: "white", marginBottom: 6, letterSpacing: "-0.02em" }}>
                 {subscriptionPlan ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1) : "Free"}
-              </p>
-              <p className="text-sm text-slate-300 mt-2">
+              </div>
+              <div className="font-sans" style={{ fontSize: 13, color: "#555", lineHeight: 1.55, marginBottom: isPaid ? 0 : 16 }}>
                 {isPaid
-                  ? "You have access to premium image generation."
-                  : "Upgrade to unlock premium images and faster workflows."}
-              </p>
+                  ? "You have premium image generation and unlimited content."
+                  : "Upgrade to unlock images and faster generation."}
+              </div>
               {!isPaid && (
                 <button
                   onClick={() => router.push("/upgrade")}
-                  className="mt-5 w-full py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-slate-100 transition-colors"
+                  style={{
+                    width: "100%", padding: "11px", borderRadius: 10,
+                    background: "white", color: "#111",
+                    border: "none", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    transition: "background .2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#eee")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
                 >
-                  Upgrade
+                  Upgrade — $10/mo <ArrowRight size={13} />
                 </button>
               )}
             </div>
-          </motion.aside>
-        </section>
+          </div>
+        </div>
 
+        {/* ── OUTPUT ── */}
         {(result || imageUrl) && (
-          <motion.section
-            initial={{ opacity: 0, y: 32 }}
+          <motion.div
+            className="a3"
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-24"
+            transition={{ duration: 0.45 }}
+            style={{ marginTop: 28 }}
           >
-            <div className="max-w-xl mx-auto rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden">
-              <div className="flex items-center gap-3 p-5 border-b border-white/10">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white">
-                    autopilot.creator <span className="text-indigo-400">✔</span>
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Sponsored • Generated with AutopilotAI
-                  </p>
+            <div className="section-label" style={{ marginBottom: 16 }}>
+              <CheckCircle size={11} style={{ display: "inline", marginRight: 5, color: "#059669" }} />
+              Generated output
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: imageUrl ? "1fr 1fr" : "1fr", gap: 20 }}>
+
+              {/* Caption preview */}
+              <div className="preview-post">
+                {/* Browser-style top bar */}
+                <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
+                <div className="preview-header">
+                  <div className="preview-avatar" />
+                  <div style={{ flex: 1 }}>
+                    <div className="font-sans" style={{ fontSize: 13, fontWeight: 700, color: "white" }}>
+                      autopilot.creator <span style={{ color: "#059669" }}>✔</span>
+                    </div>
+                    <div className="font-sans" style={{ fontSize: 11, color: "#444" }}>Generated with AutopilotAI</div>
+                  </div>
+                  <button
+                    className="btn-ghost"
+                    onClick={copyCaption}
+                    style={{ padding: "7px 12px" }}
+                  >
+                    {copied ? <><CheckCircle size={12} style={{ color: "#4ade80" }} /> Copied</> : <><Copy size={12} /> Copy</>}
+                  </button>
                 </div>
-                <button
-                  onClick={copyCaption}
-                  disabled={!result}
-                  className="text-xs px-4 py-2 rounded-xl bg-white/10 border border-white/10 hover:bg-white/15 text-slate-200 font-medium transition disabled:opacity-50"
-                >
-                  Copy
-                </button>
+
+                <div className="preview-body">
+                  <p className="font-sans" style={{ fontSize: 14, color: "#ccc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</p>
+                </div>
+
+                <div className="preview-actions">
+                  <div style={{ display: "flex", gap: 16, fontSize: 18 }}>❤️ 💬 🔁</div>
+                  <div className="font-sans" style={{ fontSize: 11, color: "#333" }}>Posted just now · AutopilotAI</div>
+                </div>
               </div>
 
+              {/* Image preview */}
               {imageUrl && (
-                <img
-                  src={imageUrl}
-                  className="w-full object-cover max-h-[560px]"
-                  alt="AI Generated"
-                />
-              )}
+                <div className="preview-post">
+                  <div style={{ height: 3, background: "linear-gradient(90deg, #8b5cf6, #ec4899)" }} />
+                  <div className="preview-header">
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(139,92,246,.15)", border: "1px solid rgba(139,92,246,.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ImageIcon size={15} style={{ color: "#8b5cf6" }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div className="font-sans" style={{ fontSize: 13, fontWeight: 700, color: "white" }}>AI Image</div>
+                      <div className="font-sans" style={{ fontSize: 11, color: "#444" }}>Style: {IMAGE_STYLES.find(s => s.value === imageStyle)?.label}</div>
+                    </div>
+                  </div>
 
-              <div className="flex items-center justify-between px-5 py-4 text-slate-400">
-                <div className="flex gap-5 text-xl">❤️ 💬 🔁</div>
-                <span className="text-lg">⭐</span>
-              </div>
+                  <img
+                    src={imageUrl}
+                    alt="AI Generated"
+                    style={{ width: "100%", display: "block", maxHeight: 400, objectFit: "cover" }}
+                  />
 
-              <div className="px-6 pb-6">
-                <p className="text-sm">
-                  <span className="font-semibold mr-2 text-white">autopilot.creator</span>
-                  <span className="whitespace-pre-wrap leading-relaxed text-slate-300">{result}</span>
-                </p>
-                <p className="text-xs text-slate-500 mt-4">View all 239 comments</p>
-                <p className="text-xs text-slate-600 mt-1">Posted just now • Powered by AutopilotAI</p>
-              </div>
-
-              {imageUrl && (
-                <div className="flex justify-end gap-3 p-5 border-t border-white/10 bg-black/20">
-                  <button
-                    onClick={downloadImage}
-                    className="px-5 py-2.5 rounded-xl border border-white/20 text-slate-200 font-medium hover:bg-white/10 transition"
-                  >
-                    Download
-                  </button>
-                  <button
-                    onClick={saveImage}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-500 transition"
-                  >
-                    Save to My Work
-                  </button>
+                  <div className="preview-actions">
+                    <button className="btn-ghost" onClick={downloadImage} style={{ padding: "8px 14px" }}>
+                      <Download size={13} /> Download
+                    </button>
+                    <button className="btn-solid" onClick={saveImage} style={{ padding: "8px 16px" }}>
+                      <Save size={13} /> Save to My Work
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-          </motion.section>
+          </motion.div>
         )}
       </main>
-      </div>
     </div>
   );
 }

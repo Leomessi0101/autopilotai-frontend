@@ -1,9 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, User, CreditCard, Zap, LayoutDashboard, FileText, Mail, Megaphone, Briefcase } from "lucide-react";
+import {
+  LogOut, User, CreditCard, Zap, LayoutDashboard,
+  FileText, Mail, Megaphone, Briefcase, ChevronDown,
+} from "lucide-react";
+
+const NAV_LINKS = [
+  { label: "Dashboard", icon: <LayoutDashboard size={14} />, href: "/dashboard" },
+  { label: "Content",   icon: <FileText size={14} />,        href: "/dashboard/content" },
+  { label: "Emails",    icon: <Mail size={14} />,            href: "/dashboard/email" },
+  { label: "Ads",       icon: <Megaphone size={14} />,       href: "/dashboard/ads" },
+  { label: "My Work",   icon: <Briefcase size={14} />,       href: "/dashboard/work" },
+];
 
 export default function DashboardNavbar({
   name = "U",
@@ -12,284 +23,275 @@ export default function DashboardNavbar({
   name?: string;
   subscriptionPlan?: string | null;
 }) {
-  const router = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef  = useRef<HTMLDivElement>(null);
 
-  const plan = subscriptionPlan ?? "Free";
+  const plan = subscriptionPlan ?? "free";
+  const isPaid = plan !== "free";
+
+  // Close menu on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-2xl supports-[backdrop-filter]:bg-black/20">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
-        {/* Brand */}
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="group flex items-center gap-2.5 hover:opacity-80 transition-opacity duration-300"
-        >
-          {/* Logo icon */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg blur-md opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
-            <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </div>
-          
-          <span className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-            AutopilotAI
-          </span>
-        </button>
+        .nav-root {
+          position: sticky; top: 0; z-index: 100;
+          background: rgba(10,10,10,0.92);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid #1a1a1a;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .nav-inner {
+          max-width: 1100px; margin: 0 auto;
+          padding: 0 24px; height: 60px;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 24px;
+        }
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
-          <NavButton 
-            label="Dashboard" 
-            icon={<LayoutDashboard className="w-4 h-4" />}
-            onClick={() => router.push("/dashboard")} 
-          />
-          <NavButton 
-            label="Content" 
-            icon={<FileText className="w-4 h-4" />}
-            onClick={() => router.push("/dashboard/content")} 
-          />
-          <NavButton 
-            label="Emails" 
-            icon={<Mail className="w-4 h-4" />}
-            onClick={() => router.push("/dashboard/email")} 
-          />
-          <NavButton 
-            label="Ads" 
-            icon={<Megaphone className="w-4 h-4" />}
-            onClick={() => router.push("/dashboard/ads")} 
-          />
-          <NavButton 
-            label="My Work" 
-            icon={<Briefcase className="w-4 h-4" />}
-            onClick={() => router.push("/dashboard/work")} 
-          />
-        </nav>
+        /* Logo */
+        .nav-logo {
+          font-family: 'Instrument Serif', Georgia, serif;
+          font-size: 20px; color: white;
+          background: none; border: none;
+          cursor: pointer; padding: 0; letter-spacing: -0.02em;
+          flex-shrink: 0; text-decoration: none;
+          transition: opacity .2s;
+        }
+        .nav-logo:hover { opacity: .75; }
+        .nav-logo span { color: #059669; }
 
-        {/* Avatar */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setMenuOpen(true)}
-          className="relative group"
-        >
-          {/* Glow effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-50 blur-lg transition-opacity duration-300" />
-          
-          {/* Avatar circle */}
-          <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-sm font-semibold flex items-center justify-center border border-white/20 shadow-lg">
-            {name}
-          </div>
-          
-          {/* Plan badge */}
-          <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-[10px] font-bold text-white border border-white/20 shadow-lg">
-            {plan.charAt(0)}
-          </div>
-        </motion.button>
+        /* Nav links */
+        .nav-links {
+          display: flex; align-items: center; gap: 2px; flex: 1;
+          justify-content: center;
+        }
+        .nav-link {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 7px 13px; border-radius: 9px;
+          font-size: 13px; font-weight: 600; color: #555;
+          background: none; border: none; cursor: pointer;
+          transition: color .18s, background .18s;
+          text-decoration: none; white-space: nowrap;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          position: relative;
+        }
+        .nav-link:hover { color: #ccc; background: #161616; }
+        .nav-link.active { color: white; background: #161616; }
+        .nav-link.active::after {
+          content: '';
+          position: absolute; bottom: -1px; left: 12px; right: 12px;
+          height: 2px; border-radius: 2px;
+          background: linear-gradient(90deg, #059669, #0ea5e9);
+        }
+        .nav-link-icon { opacity: .5; display: flex; }
+        .nav-link.active .nav-link-icon { opacity: 1; color: #059669; }
 
-        <AvatarMenu
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          name={name}
-          subscriptionPlan={plan}
-          router={router}
-        />
-      </div>
-    </header>
-  );
-}
+        /* Avatar button */
+        .nav-avatar-btn {
+          display: flex; align-items: center; gap: 9px;
+          background: #111; border: 1px solid #222;
+          border-radius: 100px; padding: 5px 12px 5px 5px;
+          cursor: pointer; transition: border-color .18s, background .18s;
+          flex-shrink: 0;
+        }
+        .nav-avatar-btn:hover { border-color: #333; background: #161616; }
+        .nav-avatar-circle {
+          width: 30px; height: 30px; border-radius: 50%;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 800; color: white;
+          flex-shrink: 0;
+        }
+        .nav-avatar-name {
+          font-size: 13px; font-weight: 600; color: #ccc;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .nav-avatar-chevron { color: #444; }
 
-/* ---------------- NAV BUTTON ---------------- */
-function NavButton({ 
-  label, 
-  icon,
-  onClick 
-}: { 
-  label: string; 
-  icon?: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className="group relative px-4 py-2.5 rounded-xl text-sm font-medium 
-      text-gray-400 hover:text-white 
-      bg-transparent hover:bg-white/5 
-      border border-transparent hover:border-white/10
-      transition-all duration-300 flex items-center gap-2"
-    >
-      {icon && <span className="opacity-60 group-hover:opacity-100 transition-opacity duration-300">{icon}</span>}
-      <span>{label}</span>
-      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-px bg-gradient-to-r from-indigo-500 to-purple-500 group-hover:w-3/4 transition-all duration-300" />
-    </motion.button>
-  );
-}
+        /* Plan badge */
+        .nav-plan-badge {
+          font-size: 10px; font-weight: 800; letter-spacing: .06em;
+          text-transform: uppercase; padding: 2px 7px; border-radius: 100px;
+        }
+        .nav-plan-badge.paid {
+          background: rgba(5,150,105,.15);
+          border: 1px solid rgba(5,150,105,.3);
+          color: #4ade80;
+        }
+        .nav-plan-badge.free {
+          background: #1a1a1a; border: 1px solid #2a2a2a; color: #555;
+        }
 
-/* ---------------- AVATAR MENU ---------------- */
-function AvatarMenu({
-  open,
-  onClose,
-  name,
-  subscriptionPlan,
-  router,
-}: {
-  open: boolean;
-  onClose: () => void;
-  name: string;
-  subscriptionPlan?: string;
-  router: any;
-}) {
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Background dim */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            onClick={onClose}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          />
+        /* Dropdown */
+        .nav-dropdown {
+          position: fixed; top: 68px; right: 24px;
+          width: 260px;
+          background: #111; border: 1px solid #222;
+          border-radius: 18px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+          z-index: 200;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .nav-dropdown-header {
+          padding: 18px 20px 14px;
+          border-bottom: 1px solid #1a1a1a;
+          display: flex; align-items: center; gap: 12px;
+        }
+        .nav-dd-avatar {
+          width: 38px; height: 38px; border-radius: 50%;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 800; color: white; flex-shrink: 0;
+        }
+        .nav-dd-plan-name {
+          font-size: 14px; font-weight: 700; color: white;
+          text-transform: capitalize;
+        }
+        .nav-dd-plan-sub {
+          font-size: 11px; color: #555; margin-top: 1px;
+        }
+        .nav-dropdown-items { padding: 6px; }
+        .nav-dd-item {
+          width: 100%; display: flex; align-items: center; gap: 11px;
+          padding: 10px 12px; border-radius: 10px;
+          background: none; border: none; cursor: pointer;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 13px; font-weight: 600; color: #888;
+          text-align: left; transition: background .15s, color .15s;
+        }
+        .nav-dd-item:hover { background: #1a1a1a; color: #ccc; }
+        .nav-dd-item.danger { color: #7f1d1d; }
+        .nav-dd-item.danger:hover { background: rgba(127,29,29,.15); color: #f87171; }
+        .nav-dd-item-icon { color: #444; display: flex; flex-shrink: 0; }
+        .nav-dd-item:hover .nav-dd-item-icon { color: #059669; }
+        .nav-dd-item.danger .nav-dd-item-icon { color: #7f1d1d; }
+        .nav-dd-item.danger:hover .nav-dd-item-icon { color: #f87171; }
+        .nav-dd-divider { height: 1px; background: #1a1a1a; margin: 4px 6px; }
 
-          {/* Menu Panel */}
-          <motion.aside
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed right-6 top-24 w-80 rounded-3xl 
-            bg-gradient-to-br from-slate-900/95 to-black/95 
-            backdrop-blur-2xl
-            border border-white/10 
-            shadow-2xl shadow-black/50
-            text-white z-50 overflow-hidden"
-          >
-            {/* Ambient glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+        /* Mobile */
+        @media (max-width: 760px) {
+          .nav-links { display: none; }
+          .nav-avatar-name { display: none; }
+          .nav-avatar-chevron { display: none; }
+        }
+      `}</style>
 
-            <div className="relative">
-              {/* Header */}
-              <div className="px-6 pt-6 pb-5 border-b border-white/10">
+      <header className="nav-root">
+        <div className="nav-inner">
+
+          {/* Logo */}
+          <button className="nav-logo" onClick={() => router.push("/dashboard")}>
+            Autopilot<span>AI</span>
+          </button>
+
+          {/* Nav links */}
+          <nav className="nav-links">
+            {NAV_LINKS.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname?.startsWith(link.href));
+              return (
                 <button
-                  onClick={onClose}
-                  className="absolute right-5 top-5 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
+                  key={link.href}
+                  className={`nav-link ${isActive ? "active" : ""}`}
+                  onClick={() => router.push(link.href)}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <span className="nav-link-icon">{link.icon}</span>
+                  {link.label}
                 </button>
+              );
+            })}
+          </nav>
 
-                <div className="flex items-center gap-4">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 blur-md opacity-50" />
-                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl font-bold border border-white/20 shadow-lg">
-                      {name}
+          {/* Avatar / menu trigger */}
+          <div ref={menuRef} style={{ position: "relative" }}>
+            <button
+              className="nav-avatar-btn"
+              onClick={() => setMenuOpen((p) => !p)}
+            >
+              <div className="nav-avatar-circle">{name}</div>
+              <span className="nav-avatar-name">{name}</span>
+              <span className={`nav-plan-badge ${isPaid ? "paid" : "free"}`}>
+                {isPaid ? plan : "Free"}
+              </span>
+              <ChevronDown
+                size={13}
+                className="nav-avatar-chevron"
+                style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}
+              />
+            </button>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  className="nav-dropdown"
+                  initial={{ opacity: 0, y: -8, scale: .97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: .97 }}
+                  transition={{ duration: .18, ease: "easeOut" }}
+                >
+                  {/* Header */}
+                  <div className="nav-dropdown-header">
+                    <div className="nav-dd-avatar">{name}</div>
+                    <div>
+                      <div className="nav-dd-plan-name">{plan} plan</div>
+                      <div className="nav-dd-plan-sub">
+                        {isPaid ? "Premium features active" : "Free tier · upgrade anytime"}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">
-                      Current Plan
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-lg font-bold capitalize bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                        {subscriptionPlan}
-                      </p>
-                      {subscriptionPlan !== "Free" && (
-                        <div className="px-2 py-0.5 rounded-md bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30">
-                          <span className="text-[10px] font-bold text-indigo-300 uppercase">Pro</span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Items */}
+                  <div className="nav-dropdown-items">
+                    {[
+                      { label: "Dashboard", icon: <LayoutDashboard size={14} />, href: "/dashboard" },
+                      { label: "Profile",   icon: <User size={14} />,            href: "/dashboard/profile" },
+                      { label: "Billing",   icon: <CreditCard size={14} />,      href: "/billing" },
+                      { label: "Upgrade",   icon: <Zap size={14} />,             href: "/upgrade" },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        className="nav-dd-item"
+                        onClick={() => { setMenuOpen(false); router.push(item.href); }}
+                      >
+                        <span className="nav-dd-item-icon">{item.icon}</span>
+                        {item.label}
+                      </button>
+                    ))}
+
+                    <div className="nav-dd-divider" />
+
+                    <button
+                      className="nav-dd-item danger"
+                      onClick={() => {
+                        localStorage.removeItem("autopilot_token");
+                        router.push("/login");
+                      }}
+                    >
+                      <span className="nav-dd-item-icon"><LogOut size={14} /></span>
+                      Log out
+                    </button>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-              {/* Menu Items */}
-              <div className="py-2">
-                <MenuItem 
-                  label="Dashboard" 
-                  icon={<LayoutDashboard className="w-4 h-4" />}
-                  onClick={() => { onClose(); router.push("/dashboard"); }} 
-                />
-                <MenuItem 
-                  label="Profile" 
-                  icon={<User className="w-4 h-4" />}
-                  onClick={() => { onClose(); router.push("/dashboard/profile"); }} 
-                />
-                <MenuItem 
-                  label="Billing" 
-                  icon={<CreditCard className="w-4 h-4" />}
-                  onClick={() => { onClose(); router.push("/billing"); }} 
-                />
-                <MenuItem 
-                  label="Upgrade" 
-                  icon={<Zap className="w-4 h-4" />}
-                  onClick={() => { onClose(); router.push("/upgrade"); }} 
-                />
-
-                <div className="border-t border-white/10 mt-2 pt-2">
-                  <MenuItem
-                    label="Log Out"
-                    icon={<LogOut className="w-4 h-4" />}
-                    danger
-                    onClick={() => {
-                      localStorage.removeItem("autopilot_token");
-                      router.push("/login");
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-/* ---------------- MENU ITEM ---------------- */
-function MenuItem({
-  label,
-  icon,
-  onClick,
-  danger = false,
-}: {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <motion.button
-      whileHover={{ x: 6 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={`group w-full px-6 py-3.5 text-left text-sm font-medium transition-all duration-300 flex items-center gap-3 rounded-lg mx-2
-      ${
-        danger
-          ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-          : "text-gray-400 hover:bg-white/5 hover:text-white"
-      }`}
-    >
-      <span className={`transition-all duration-300 ${
-        danger 
-          ? "text-red-400 group-hover:text-red-300" 
-          : "text-gray-500 group-hover:text-indigo-400"
-      }`}>
-        {icon}
-      </span>
-      <span>{label}</span>
-    </motion.button>
+        </div>
+      </header>
+    </>
   );
 }
