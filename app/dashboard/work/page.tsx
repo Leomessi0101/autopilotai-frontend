@@ -5,18 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import {
+  FileText, Mail, Megaphone, ImageIcon, Zap,
+  Copy, Download, X, Search, CheckCircle,
+  ChevronRight, RotateCcw, ExternalLink,
+} from "lucide-react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type WorkItem = {
   id: number;
-  content_type:
-    | "content"
-    | "email"
-    | "ad"
-    | "growth_pack"
-    | "growth_pack_social"
-    | "growth_pack_email"
-    | "growth_pack_ads"
-    | string; // includes growth_pack_regen_* and growth_pack_refine_* etc
+  content_type: "content" | "email" | "ad" | "growth_pack" | "growth_pack_social" | "growth_pack_email" | "growth_pack_ads" | string;
   prompt: string;
   result: string;
   created_at?: string;
@@ -30,626 +29,658 @@ type ImageItem = {
   created_at?: string;
 };
 
+type FilterType = "all" | "content" | "email" | "ad";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function labelForType(type: string): string {
+  if (type === "content")              return "Content";
+  if (type === "email")                return "Email";
+  if (type === "ad")                   return "Ad";
+  if (type === "growth_pack")          return "Growth Pack";
+  if (type === "growth_pack_social")   return "Social";
+  if (type === "growth_pack_email")    return "Email";
+  if (type === "growth_pack_ads")      return "Ads";
+  if (type.startsWith("growth_pack_refine_")) return "Refine";
+  if (type.startsWith("growth_pack_regen_"))  return "Regenerate";
+  return "AI Output";
+}
+
+function typeColor(type: string): string {
+  if (type === "content" || type.includes("social")) return "#8b5cf6";
+  if (type === "email"   || type.includes("email"))  return "#0ea5e9";
+  if (type === "ad"      || type.includes("ads"))    return "#ef4444";
+  if (type.startsWith("growth_pack"))                return "#f59e0b";
+  return "#555";
+}
+
+function typeIcon(type: string) {
+  if (type === "content" || type.includes("social")) return <FileText size={12} />;
+  if (type === "email"   || type.includes("email"))  return <Mail size={12} />;
+  if (type === "ad"      || type.includes("ads"))    return <Megaphone size={12} />;
+  if (type.startsWith("growth_pack"))                return <Zap size={12} />;
+  return <FileText size={12} />;
+}
+
+function fmtDate(d?: string) {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
 export default function MyWorkPage() {
   const router = useRouter();
 
-  const [items, setItems] = useState<WorkItem[]>([]);
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [name, setName]                         = useState("U");
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [items, setItems]           = useState<WorkItem[]>([]);
+  const [images, setImages]         = useState<ImageItem[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "content" | "email" | "ad">(
-    "all"
-  );
+  const [search, setSearch]         = useState("");
+  const [filter, setFilter]         = useState<FilterType>("all");
+  const [activeTab, setActiveTab]   = useState<"content" | "images">("content");
 
-  const [selected, setSelected] = useState<WorkItem | null>(null);
+  const [selected, setSelected]           = useState<WorkItem | null>(null);
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
+  const [copied, setCopied]               = useState(false);
 
-  const [name, setName] = useState("U");
-  const [subscriptionPlan, setSubscriptionPlan] =
-    useState<string | null>(null);
-
+  // ── Auth + fetch ────────────────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("autopilot_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    if (!token) { router.push("/login"); return; }
 
-    api
-      .get("/api/auth/me")
+    api.get("/api/auth/me")
       .then((res) => {
-        if (res.data?.name)
-          setName(res.data.name.charAt(0).toUpperCase());
-        if (res.data?.subscription)
-          setSubscriptionPlan(res.data.subscription);
+        if (res.data?.name) setName(res.data.name.charAt(0).toUpperCase());
+        if (res.data?.subscription) setSubscriptionPlan(res.data.subscription);
       })
-      .catch(() => {
-        localStorage.removeItem("autopilot_token");
-        router.push("/login");
-      });
+      .catch(() => { localStorage.removeItem("autopilot_token"); router.push("/login"); });
 
-    api
-      .get("/api/work")
+    api.get("/api/work")
       .then((res) => setItems((res.data || []).reverse()))
       .finally(() => setLoading(false));
 
-    api
-      .get("/api/images/history")
+    api.get("/api/images/history")
       .then((res) => setImages(res.data || []))
       .finally(() => setImageLoading(false));
   }, [router]);
 
-  /* ============================
-     Growth Pack grouping (TOP)
-  ============================ */
-
+  // ── Growth pack grouping ────────────────────────────────────────────────────
   const growthPackGroups = useMemo(() => {
-    // base pack items only
     const packs = items.filter((i) => i.content_type === "growth_pack");
-
-    // group by prompt (good enough for now)
     return packs.map((pack) => {
-      const group = items.filter(
-        (i) => i.prompt === pack.prompt && String(i.content_type).startsWith("growth_pack")
-      );
-
-      const social =
-        group.find((x) => x.content_type === "growth_pack_social") || null;
-      const email =
-        group.find((x) => x.content_type === "growth_pack_email") || null;
-      const ads =
-        group.find((x) => x.content_type === "growth_pack_ads") || null;
-
-      const regens = group.filter((x) =>
-        String(x.content_type).startsWith("growth_pack_regen_")
-      );
-
-      const refines = group.filter((x) =>
-        String(x.content_type).startsWith("growth_pack_refine_")
-      );
-
+      const group = items.filter((i) => i.prompt === pack.prompt && String(i.content_type).startsWith("growth_pack"));
       return {
         pack,
-        social,
-        email,
-        ads,
-        regens,
-        refines,
+        social:  group.find((x) => x.content_type === "growth_pack_social")  || null,
+        email:   group.find((x) => x.content_type === "growth_pack_email")   || null,
+        ads:     group.find((x) => x.content_type === "growth_pack_ads")     || null,
+        refines: group.filter((x) => String(x.content_type).startsWith("growth_pack_refine_")),
+        regens:  group.filter((x) => String(x.content_type).startsWith("growth_pack_regen_")),
       };
     });
   }, [items]);
 
-  /* ============================
-     Normal content list (filter/search)
-  ============================ */
-
-  const normalItems = useMemo(() => {
-    return items.filter((i) => !String(i.content_type).startsWith("growth_pack"));
-  }, [items]);
+  const normalItems = useMemo(
+    () => items.filter((i) => !String(i.content_type).startsWith("growth_pack")),
+    [items]
+  );
 
   const filtered = normalItems.filter((item) => {
-    const type = item.content_type as any;
-    const matchType = filter === "all" || type === filter;
-    const matchSearch =
+    const matchType   = filter === "all" || item.content_type === filter;
+    const matchSearch = !search ||
       item.result.toLowerCase().includes(search.toLowerCase()) ||
       item.prompt.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
 
+  const copyText = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  const totalItems = normalItems.length + images.length + growthPackGroups.length;
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#05070d] text-white relative overflow-hidden">
-      {/* Cinematic Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] bg-[conic-gradient(at_top_left,var(--tw-gradient-stops))] from-[#0c1a39] via-[#0a1630] to-transparent blur-[180px]" />
-        <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[conic-gradient(at_bottom_right,var(--tw-gradient-stops))] from-[#0d1b3d] via-[#111a2c] to-transparent blur-[200px]" />
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "white" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
+        .font-sans    { font-family: 'DM Sans', system-ui, sans-serif; }
+
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+        .a1 { animation: fadeUp .5s ease .05s both; }
+        .a2 { animation: fadeUp .5s ease .14s both; }
+        .a3 { animation: fadeUp .5s ease .22s both; }
+
+        .card {
+          background: #111; border: 1px solid #1e1e1e;
+          border-radius: 18px; overflow: hidden;
+        }
+
+        /* Work row */
+        .work-row {
+          background: #111; border: 1px solid #1e1e1e;
+          border-radius: 16px; padding: 20px 22px;
+          cursor: pointer; transition: border-color .18s, background .18s;
+          display: flex; align-items: flex-start; gap: 16px;
+        }
+        .work-row:hover { border-color: #2a2a2a; background: #141414; }
+
+        /* Image grid card */
+        .img-card {
+          background: #111; border: 1px solid #1e1e1e;
+          border-radius: 14px; overflow: hidden; cursor: pointer;
+          transition: border-color .18s, transform .18s;
+        }
+        .img-card:hover { border-color: #2a2a2a; transform: translateY(-2px); }
+
+        /* Type badge */
+        .type-badge {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 3px 9px; border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px; font-weight: 800;
+          letter-spacing: .06em; text-transform: uppercase;
+        }
+
+        /* Tab */
+        .tab-btn {
+          padding: 8px 18px; border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px; font-weight: 600;
+          border: 1px solid #222; background: transparent;
+          cursor: pointer; color: #555;
+          transition: all .18s;
+        }
+        .tab-btn:hover { border-color: #333; color: #aaa; }
+        .tab-btn.active { background: white; color: #111; border-color: white; }
+
+        /* Filter chip */
+        .filter-chip {
+          padding: 7px 14px; border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px; font-weight: 700;
+          border: 1px solid #222; background: #0d0d0d;
+          cursor: pointer; color: #555;
+          transition: all .18s;
+        }
+        .filter-chip:hover { border-color: #333; color: #aaa; }
+        .filter-chip.active { background: #1a1a1a; border-color: #333; color: white; }
+
+        /* Search */
+        .search-field {
+          background: #0d0d0d; border: 1px solid #222;
+          border-radius: 10px; padding: 10px 14px 10px 38px;
+          font-family: 'DM Sans', sans-serif; font-size: 13px;
+          color: #e5e5e5; outline: none; width: 100%;
+          transition: border-color .2s;
+        }
+        .search-field::placeholder { color: #444; }
+        .search-field:focus { border-color: #333; }
+
+        /* Buttons */
+        .btn-ghost {
+          background: transparent; border: 1px solid #2a2a2a; border-radius: 9px;
+          padding: 8px 14px; font-family: 'DM Sans', sans-serif;
+          font-size: 12px; font-weight: 600; color: #666;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: border-color .18s, color .18s, background .18s;
+        }
+        .btn-ghost:hover { border-color: #444; color: #ccc; background: #111; }
+        .btn-solid {
+          background: white; color: #111; border: none; border-radius: 9px;
+          padding: 8px 16px; font-family: 'DM Sans', sans-serif;
+          font-size: 12px; font-weight: 700;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: background .18s;
+        }
+        .btn-solid:hover { background: #eee; }
+
+        /* Modal overlay */
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,.75);
+          z-index: 300; display: flex; align-items: center; justify-content: center;
+          padding: 24px;
+        }
+        .modal-box {
+          background: #111; border: 1px solid #1e1e1e;
+          border-radius: 20px; overflow: hidden;
+          width: 100%; max-height: 85vh;
+          display: flex; flex-direction: column;
+          box-shadow: 0 40px 100px rgba(0,0,0,.6);
+        }
+        .modal-header {
+          padding: 20px 24px; border-bottom: 1px solid #1a1a1a;
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          flex-shrink: 0;
+        }
+        .modal-body {
+          padding: 24px; overflow-y: auto; flex: 1;
+        }
+        .modal-footer {
+          padding: 16px 24px; border-top: 1px solid #1a1a1a;
+          display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+          background: #0d0d0d;
+        }
+
+        /* Growth pack */
+        .gp-card {
+          background: #111; border: 1px solid #1e1e1e; border-radius: 18px; overflow: hidden;
+        }
+        .gp-section {
+          background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px;
+          padding: 16px; cursor: pointer; transition: border-color .18s;
+          text-align: left; width: 100%;
+        }
+        .gp-section:hover { border-color: #2a2a2a; }
+        .gp-section:disabled { opacity: .4; cursor: not-allowed; }
+
+        .section-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: .1em; text-transform: uppercase;
+          color: #444; margin-bottom: 16px;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+      `}</style>
 
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
 
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-        {/* Header */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-20"
-        >
-          <h1 className="text-5xl md:text-6xl font-light">My Work</h1>
-          <p className="mt-6 text-xl text-gray-300">
-            All generated content, emails, ads, and AI images — saved in one
-            place.
-          </p>
-        </motion.section>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
 
-        {/* Growth Packs (Premium) */}
-        {growthPackGroups.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-20"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-3xl font-semibold">Growth Packs</h3>
-              <span className="text-sm text-[#6d8ce8]">Premium</span>
+        {/* PAGE HEADER */}
+        <div className="a1" style={{ marginBottom: 36 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+            <div>
+              <div className="section-label" style={{ marginBottom: 10 }}>Workspace</div>
+              <h1 className="font-display" style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 400, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                My <em style={{ color: "#059669" }}>Work</em>
+              </h1>
+              <p className="font-sans" style={{ fontSize: 15, color: "#555", marginTop: 8 }}>
+                {totalItems > 0 ? `${totalItems} saved item${totalItems !== 1 ? "s" : ""}` : "All your generated content in one place."}
+              </p>
             </div>
+            <button className="btn-ghost" onClick={() => router.push("/dashboard")}>
+              Dashboard <ChevronRight size={13} />
+            </button>
+          </div>
 
-            <div className="space-y-6">
-              {growthPackGroups.map((g) => (
-                <motion.div
-                  key={g.pack.id}
-                  whileHover={{ scale: 1.01 }}
-                  className="rounded-2xl border border-[#6d8ce8]/35 bg-gradient-to-br from-[#111b2d] to-[#1b2f54] p-8 shadow-[0_50px_120px_rgba(0,0,0,.55)]"
-                >
-                  <div className="flex items-start justify-between gap-6 mb-6">
-                    <div className="flex-1">
-                      <p className="text-xs text-white/70 uppercase tracking-wide mb-2">
-                        Growth Pack Prompt
-                      </p>
-                      <p className="text-gray-200 whitespace-pre-wrap line-clamp-3">
-                        {g.pack.prompt}
-                      </p>
-                    </div>
+          {/* Main tabs */}
+          <div style={{ display: "flex", gap: 8, marginTop: 28 }}>
+            <button className={`tab-btn ${activeTab === "content" ? "active" : ""}`} onClick={() => setActiveTab("content")}>
+              Content & Ads
+              {normalItems.length + growthPackGroups.length > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 11, color: activeTab === "content" ? "#888" : "#444" }}>
+                  {normalItems.length + growthPackGroups.length}
+                </span>
+              )}
+            </button>
+            <button className={`tab-btn ${activeTab === "images" ? "active" : ""}`} onClick={() => setActiveTab("images")}>
+              Images
+              {images.length > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 11, color: activeTab === "images" ? "#888" : "#444" }}>
+                  {images.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
 
-                    <button
-                      onClick={() => setSelected(g.pack)}
-                      className="px-5 py-2 rounded-xl bg-white/10 border border-white/15 hover:border-white/30 transition text-sm"
-                    >
-                      Open Full →
-                    </button>
-                  </div>
+        {/* ══════════════════════════════════════════
+            TAB: CONTENT & ADS
+        ══════════════════════════════════════════ */}
+        {activeTab === "content" && (
+          <div className="a2">
 
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <MiniSectionCard
-                      title="Social"
-                      item={g.social}
-                      onOpen={setSelected}
-                    />
-                    <MiniSectionCard
-                      title="Email"
-                      item={g.email}
-                      onOpen={setSelected}
-                    />
-                    <MiniSectionCard
-                      title="Ads"
-                      item={g.ads}
-                      onOpen={setSelected}
-                    />
-                  </div>
+            {/* Growth Packs */}
+            {growthPackGroups.length > 0 && (
+              <div style={{ marginBottom: 40 }}>
+                <div className="section-label" style={{ marginBottom: 16 }}>
+                  <Zap size={11} style={{ display: "inline", marginRight: 5, color: "#f59e0b" }} />
+                  Growth Packs
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {growthPackGroups.map((g) => (
+                    <div key={g.pack.id} className="gp-card">
+                      <div style={{ height: 3, background: "linear-gradient(90deg, #f59e0b, #059669)" }} />
+                      <div style={{ padding: "22px 24px" }}>
+                        {/* Top row */}
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18, flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <span className="type-badge" style={{ background: "rgba(245,158,11,.12)", color: "#f59e0b", borderColor: "rgba(245,158,11,.25)" }}>
+                                <Zap size={10} /> Growth Pack
+                              </span>
+                              {g.pack.created_at && (
+                                <span className="font-sans" style={{ fontSize: 11, color: "#444" }}>{fmtDate(g.pack.created_at)}</span>
+                              )}
+                            </div>
+                            <p className="font-sans" style={{ fontSize: 13, color: "#888", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {g.pack.prompt}
+                            </p>
+                          </div>
+                          <button className="btn-ghost" onClick={() => setSelected(g.pack)}>
+                            Open <ExternalLink size={11} />
+                          </button>
+                        </div>
 
-                  {(g.refines.length > 0 || g.regens.length > 0) && (
-                    <div className="mt-6">
-                      <p className="text-sm text-white/70 mb-3">
-                        Iterations
-                      </p>
-
-                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {[...g.refines, ...g.regens]
-                          .slice(0, 6)
-                          .map((it) => (
+                        {/* 3 section cards */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+                          {[
+                            { label: "Social", item: g.social, color: "#8b5cf6" },
+                            { label: "Email",  item: g.email,  color: "#0ea5e9" },
+                            { label: "Ads",    item: g.ads,    color: "#ef4444" },
+                          ].map(({ label, item, color }) => (
                             <button
-                              key={it.id}
-                              onClick={() => setSelected(it)}
-                              className="text-left rounded-xl bg-black/25 border border-white/15 p-4 hover:border-[#6d8ce8]/70 transition"
+                              key={label}
+                              className="gp-section"
+                              disabled={!item}
+                              onClick={() => item && setSelected(item)}
                             >
-                              <p className="text-xs text-[#6d8ce8] uppercase tracking-wide mb-2">
-                                {labelForType(it.content_type as any)}
-                              </p>
-                              <p className="text-sm text-gray-200 line-clamp-3 whitespace-pre-wrap">
-                                {it.result || "(empty)"}
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                                <span className="font-sans" style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: item ? color : "#333" }}>
+                                  {label}
+                                </span>
+                                {item && <ChevronRight size={11} style={{ color: "#444" }} />}
+                              </div>
+                              <p className="font-sans" style={{ fontSize: 12, color: item ? "#777" : "#333", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                {item ? (item.result.slice(0, 120) + (item.result.length > 120 ? "…" : "")) : "Not generated"}
                               </p>
                             </button>
                           ))}
+                        </div>
                       </div>
                     </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Images Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-20"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-3xl font-semibold">Saved Images</h3>
-          </div>
-
-          {imageLoading ? (
-            <p className="text-gray-400">Loading images…</p>
-          ) : images.length === 0 ? (
-            <p className="text-gray-400">No saved images yet.</p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {images.map((img) => (
-                <motion.div
-                  key={img.id}
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:border-[#2b4e8d] transition"
-                  onClick={() => setSelectedImage(img)}
-                >
-                  <img
-                    src={img.image_url}
-                    className="w-full h-48 object-cover"
-                    alt="AI Generated"
+            {/* Search + filters */}
+            {normalItems.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+                <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+                  <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#444" }} />
+                  <input
+                    className="search-field"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search content, emails, ads…"
                   />
-                  <div className="p-4">
-                    <p className="text-sm text-gray-300 line-clamp-2">
-                      {img.text_content || "No caption"}
-                    </p>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {(["all", "content", "email", "ad"] as FilterType[]).map((t) => (
+                    <button
+                      key={t}
+                      className={`filter-chip ${filter === t ? "active" : ""}`}
+                      onClick={() => setFilter(t)}
+                    >
+                      {t === "all" ? "All" : t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Work items */}
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <div style={{ width: 32, height: 32, border: "2px solid #222", borderTop: "2px solid #059669", borderRadius: "50%", animation: "spin .8s linear infinite", margin: "0 auto 12px" }} />
+                <p className="font-sans" style={{ fontSize: 14, color: "#555" }}>Loading your work…</p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <EmptyState router={router} hasItems={normalItems.length > 0} />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {filtered.map((item) => (
+                  <WorkRow key={item.id} item={item} onClick={() => setSelected(item)} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════
+            TAB: IMAGES
+        ══════════════════════════════════════════ */}
+        {activeTab === "images" && (
+          <div className="a2">
+            {imageLoading ? (
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <div style={{ width: 32, height: 32, border: "2px solid #222", borderTop: "2px solid #059669", borderRadius: "50%", animation: "spin .8s linear infinite", margin: "0 auto 12px" }} />
+                <p className="font-sans" style={{ fontSize: 14, color: "#555" }}>Loading images…</p>
+              </div>
+            ) : images.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "80px 0" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(139,92,246,.1)", border: "1px solid rgba(139,92,246,.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                  <ImageIcon size={22} style={{ color: "#8b5cf6" }} />
+                </div>
+                <p className="font-sans" style={{ fontSize: 15, fontWeight: 600, color: "#888", marginBottom: 6 }}>No saved images yet</p>
+                <p className="font-sans" style={{ fontSize: 13, color: "#555" }}>
+                  Generate images in the Content Generator and save them here.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+                {images.map((img) => (
+                  <div key={img.id} className="img-card" onClick={() => setSelectedImage(img)}>
+                    <img src={img.image_url} alt="AI Generated" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                    <div style={{ padding: "12px 14px" }}>
+                      {img.image_style && (
+                        <div className="font-sans" style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: "#555", marginBottom: 5 }}>
+                          {img.image_style}
+                        </div>
+                      )}
+                      <p className="font-sans" style={{ fontSize: 12, color: "#777", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {img.text_content || "No caption"}
+                      </p>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.section>
-
-        {/* Search + Filters (normal content only) */}
-        {normalItems.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12"
-          >
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search your work..."
-              className="px-5 py-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#2b4e8d] transition w-full md:max-w-md"
-            />
-
-            <div className="flex gap-3 flex-wrap">
-              {["all", "content", "email", "ad"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setFilter(t as any)}
-                  className={`px-6 py-3 rounded-xl text-sm font-medium transition ${
-                    filter === t
-                      ? "bg-[#2b4e8d] text-white"
-                      : "bg-white/5 border border-white/10 text-gray-300 hover:border-[#2b4e8d]"
-                  }`}
-                >
-                  {t === "all"
-                    ? "All"
-                    : t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
-            </div>
-          </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
-
-        {/* Normal Content Items */}
-        {loading ? (
-          <p className="text-center text-gray-400 mt-32">
-            Loading your work…
-          </p>
-        ) : filtered.length === 0 ? (
-          <EmptyState hasItems={normalItems.length > 0} />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="space-y-6 pb-32"
-          >
-            {filtered.map((item) => (
-              <WorkRow
-                key={item.id}
-                item={item}
-                onOpen={() => setSelected(item)}
-              />
-            ))}
-          </motion.div>
-        )}
-
-        <AnimatePresence>
-          {selected && (
-            <WorkModal item={selected} onClose={() => setSelected(null)} />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {selectedImage && (
-            <ImageModal
-              image={selectedImage}
-              onClose={() => setSelectedImage(null)}
-            />
-          )}
-        </AnimatePresence>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-12 border-t border-white/10 text-gray-400">
-        Questions? Reach out at{" "}
-        <a
-          href="mailto:contact@autopilotai.dev"
-          className="text-[#6d8ce8] hover:underline"
-        >
-          contact@autopilotai.dev
-        </a>
-      </footer>
+      {/* ── WORK MODAL ── */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: .2 }}
+            onClick={() => setSelected(null)}
+          >
+            <motion.div
+              className="modal-box"
+              style={{ maxWidth: 680 }}
+              initial={{ scale: .96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: .96, opacity: 0 }}
+              transition={{ duration: .2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span
+                    className="type-badge"
+                    style={{
+                      background: `${typeColor(selected.content_type)}18`,
+                      color: typeColor(selected.content_type),
+                    }}
+                  >
+                    {typeIcon(selected.content_type)}
+                    {labelForType(selected.content_type)}
+                  </span>
+                  {selected.created_at && (
+                    <span className="font-sans" style={{ fontSize: 12, color: "#555" }}>{fmtDate(selected.created_at)}</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelected(null)}
+                  style={{ background: "#1a1a1a", border: "1px solid #222", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#888" }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {selected.prompt && (
+                <div style={{ padding: "14px 24px", borderBottom: "1px solid #1a1a1a", background: "#0d0d0d" }}>
+                  <div className="font-sans" style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#444", marginBottom: 5 }}>Prompt</div>
+                  <p className="font-sans" style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>{selected.prompt}</p>
+                </div>
+              )}
+
+              <div className="modal-body">
+                <pre className="font-sans" style={{ fontSize: 14, color: "#ccc", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                  {selected.result}
+                </pre>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-ghost" onClick={() => setSelected(null)}>
+                  Close
+                </button>
+                <button className="btn-solid" onClick={() => copyText(selected.result)}>
+                  {copied ? <><CheckCircle size={12} style={{ color: "#059669" }} /> Copied</> : <><Copy size={12} /> Copy text</>}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── IMAGE MODAL ── */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: .2 }}
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              className="modal-box"
+              style={{ maxWidth: 760 }}
+              initial={{ scale: .96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: .96, opacity: 0 }}
+              transition={{ duration: .2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span className="type-badge" style={{ background: "rgba(139,92,246,.12)", color: "#8b5cf6" }}>
+                    <ImageIcon size={10} /> AI Image
+                  </span>
+                  {selectedImage.image_style && (
+                    <span className="font-sans" style={{ fontSize: 12, color: "#555" }}>Style: {selectedImage.image_style}</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  style={{ background: "#1a1a1a", border: "1px solid #222", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#888" }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ padding: 0 }}>
+                <img src={selectedImage.image_url} alt="Saved AI" style={{ width: "100%", maxHeight: "60vh", objectFit: "contain", display: "block", background: "#0d0d0d" }} />
+                {selectedImage.text_content && (
+                  <div style={{ padding: "18px 24px", borderTop: "1px solid #1a1a1a" }}>
+                    <p className="font-sans" style={{ fontSize: 13, color: "#888", lineHeight: 1.65 }}>{selectedImage.text_content}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-ghost" onClick={() => setSelectedImage(null)}>
+                  Close
+                </button>
+                <button
+                  className="btn-solid"
+                  onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = selectedImage.image_url;
+                    a.download = "autopilotai-image.png";
+                    a.click();
+                  }}
+                >
+                  <Download size={12} /> Download
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-/* ================= MINI SECTION CARD ================= */
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-function MiniSectionCard({
-  title,
-  item,
-  onOpen,
-}: {
-  title: "Social" | "Email" | "Ads";
-  item: WorkItem | null;
-  onOpen: (item: WorkItem) => void;
-}) {
-  const text = (item?.result || "").trim();
-  const preview =
-    text.length > 260 ? text.slice(0, 260) + "…" : text || "(empty)";
+function WorkRow({ item, onClick }: { item: WorkItem; onClick: () => void }) {
+  const color = typeColor(item.content_type);
+  const preview = item.result.slice(0, 180) + (item.result.length > 180 ? "…" : "");
 
   return (
-    <button
-      onClick={() => item && onOpen(item)}
-      disabled={!item}
-      className={`text-left rounded-2xl border p-5 transition ${
-        item
-          ? "bg-black/25 border-white/15 hover:border-[#6d8ce8]/80"
-          : "bg-black/10 border-white/10 opacity-60 cursor-not-allowed"
-      }`}
-    >
-      <p className="text-xs uppercase tracking-wide text-white/70 mb-2">
-        {title}
-      </p>
-      <p className="text-sm text-gray-200 whitespace-pre-wrap line-clamp-4">
-        {preview}
-      </p>
-      {item && (
-        <span className="mt-4 inline-block text-sm font-medium text-[#6d8ce8]">
-          Open →
-        </span>
-      )}
-    </button>
-  );
-}
-
-/* ---------------- IMAGE MODAL ---------------- */
-function ImageModal({
-  image,
-  onClose,
-}: {
-  image: ImageItem;
-  onClose: () => void;
-}) {
-  const download = () => {
-    const a = document.createElement("a");
-    a.href = image.image_url;
-    a.download = "autopilotai-image.png";
-    a.click();
-  };
-
-  return (
-    <motion.div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        onClick={(e) => e.stopPropagation()}
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        className="bg-[#0b0f1a] text-white rounded-2xl shadow-xl border border-white/10 max-w-4xl w-full overflow-hidden"
-      >
-        <img
-          src={image.image_url}
-          className="w-full max-h-[70vh] object-contain"
-          alt="Saved AI"
-        />
-
-        <div className="p-6">
-          <p className="text-gray-300 mb-2">
-            {image.text_content || "No text content saved"}
-          </p>
-
-          {image.image_style && (
-            <p className="text-sm text-gray-500 mb-4">
-              Style: {image.image_style}
-            </p>
+    <div className="work-row" onClick={onClick}>
+      {/* Color strip */}
+      <div style={{ width: 3, borderRadius: 2, background: color, flexShrink: 0, alignSelf: "stretch", minHeight: 44 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span
+            className="type-badge"
+            style={{ background: `${color}15`, color }}
+          >
+            {typeIcon(item.content_type)}
+            {labelForType(item.content_type)}
+          </span>
+          {item.created_at && (
+            <span className="font-sans" style={{ fontSize: 11, color: "#444" }}>{fmtDate(item.created_at)}</span>
           )}
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={download}
-              className="px-8 py-3 border border-white/20 rounded-xl hover:border-[#2b4e8d]"
-            >
-              Download
-            </button>
-
-            <button
-              onClick={onClose}
-              className="px-8 py-3 bg-[#2b4e8d] text-white rounded-xl hover:bg-[#395fa5]"
-            >
-              Close
-            </button>
-          </div>
         </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* ---------------- WORK ROW ---------------- */
-function WorkRow({
-  item,
-  onOpen,
-}: {
-  item: WorkItem;
-  onOpen: () => void;
-}) {
-  const lines = item.result.split("\n").slice(0, 4);
-  const previewText = lines.join("\n");
-  const preview =
-    previewText.length > 350
-      ? previewText.slice(0, 350) + "…"
-      : previewText;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="bg-white/5 rounded-2xl border border-white/10 p-8 hover:border-[#2b4e8d] transition cursor-pointer group"
-      onClick={onOpen}
-    >
-      <div className="flex items-start justify-between gap-8">
-        <div className="flex-1">
-          <div className="flex items-center gap-4 mb-3">
-            <span className="text-sm font-medium text-[#6d8ce8] uppercase tracking-wide">
-              {labelForType(item.content_type)}
-            </span>
-            {item.created_at && (
-              <span className="text-sm text-gray-400">
-                {new Date(item.created_at).toLocaleDateString()}
-              </span>
-            )}
-          </div>
-
-          <p className="text-gray-200 whitespace-pre-wrap line-clamp-4">
-            {preview || "(empty)"}
-          </p>
-        </div>
-
-        <span className="text-sm text-gray-400 group-hover:text-[#6d8ce8]">
-          View →
-        </span>
+        <p className="font-sans" style={{ fontSize: 13, color: "#777", lineHeight: 1.65, overflow: "hidden" }}>
+          {preview || "(empty)"}
+        </p>
       </div>
-    </motion.div>
+      <ChevronRight size={15} style={{ color: "#333", flexShrink: 0, marginTop: 2 }} />
+    </div>
   );
 }
 
-/* ---------------- EMPTY STATE ---------------- */
-function EmptyState({ hasItems }: { hasItems: boolean }) {
+function EmptyState({ router, hasItems }: { router: any; hasItems: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      className="text-center mt-32 max-w-2xl mx-auto"
-    >
-      <h3 className="text-3xl font-light text-gray-200 mb-6">
-        {hasItems ? "No matching results" : "Your work will appear here"}
-      </h3>
-
-      <p className="text-lg text-gray-400 mb-10">
-        {hasItems
-          ? "Try adjusting your search or filter."
-          : "Everything you generate is automatically saved here."}
+    <div style={{ textAlign: "center", padding: "80px 0" }}>
+      <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(5,150,105,.08)", border: "1px solid rgba(5,150,105,.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+        <FileText size={22} style={{ color: "#059669" }} />
+      </div>
+      <p className="font-sans" style={{ fontSize: 15, fontWeight: 600, color: "#888", marginBottom: 6 }}>
+        {hasItems ? "No matching results" : "Nothing here yet"}
       </p>
-
+      <p className="font-sans" style={{ fontSize: 13, color: "#555", marginBottom: 24 }}>
+        {hasItems ? "Try a different search or filter." : "Everything you generate is saved here automatically."}
+      </p>
       {!hasItems && (
-        <a
-          href="/dashboard"
-          className="px-10 py-4 bg-[#2b4e8d] text-white rounded-xl hover:bg-[#395fa5] transition"
+        <button
+          onClick={() => router.push("/dashboard")}
+          style={{ background: "white", color: "#111", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
         >
-          Start Generating
-        </a>
+          Start generating →
+        </button>
       )}
-    </motion.div>
+    </div>
   );
-}
-
-/* ---------------- MODAL ---------------- */
-function WorkModal({
-  item,
-  onClose,
-}: {
-  item: WorkItem;
-  onClose: () => void;
-}) {
-  const copy = () => navigator.clipboard.writeText(item.result);
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <motion.div
-          onClick={(e) => e.stopPropagation()}
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.9 }}
-          className="bg-[#0b0f1a] text-white rounded-2xl border border-white/10 shadow-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-10"
-        >
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <p className="text-sm text-gray-400 uppercase mb-2">
-                {labelForType(item.content_type)}
-              </p>
-              <h3 className="text-2xl font-semibold">Full Output</h3>
-            </div>
-
-            <button className="text-2xl" onClick={onClose}>
-              ×
-            </button>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-8 mb-8 border border-white/10">
-            <pre className="whitespace-pre-wrap text-gray-200">
-              {item.result}
-            </pre>
-          </div>
-
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={copy}
-              className="px-8 py-4 border border-white/20 rounded-xl hover:border-[#2b4e8d]"
-            >
-              Copy
-            </button>
-
-            <button
-              onClick={onClose}
-              className="px-8 py-4 bg-[#2b4e8d] text-white rounded-xl hover:bg-[#395fa5]"
-            >
-              Close
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
-function labelForType(type: WorkItem["content_type"]) {
-  const t = String(type);
-
-  if (t === "content") return "Content";
-  if (t === "email") return "Email";
-  if (t === "ad") return "Ad";
-
-  if (t === "growth_pack") return "Growth Pack";
-  if (t === "growth_pack_social") return "Growth Pack • Social";
-  if (t === "growth_pack_email") return "Growth Pack • Email";
-  if (t === "growth_pack_ads") return "Growth Pack • Ads";
-
-  if (t.startsWith("growth_pack_refine_")) return "Growth Pack • Refine";
-  if (t.startsWith("growth_pack_regen_")) return "Growth Pack • Regenerate";
-
-  return "AI Output";
 }
