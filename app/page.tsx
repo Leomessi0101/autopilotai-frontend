@@ -2,1138 +2,905 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const SITE_EXAMPLES = [
-  { label: "Plumber NYC", color: "#0ea5e9", icon: "🔧" },
-  { label: "Yoga Studio LA", color: "#8b5cf6", icon: "🧘" },
-  { label: "Dog Groomer Austin", color: "#f59e0b", icon: "🐾" },
-  { label: "Law Firm Boston", color: "#10b981", icon: "⚖️" },
-  { label: "Bakery Chicago", color: "#ef4444", icon: "🍞" },
+const BUSINESSES = [
+  { type: "Plumber", city: "Denver", domain: "denverplumbingpro", color: "#2DD4BF", icon: "🔧", time: "1m 12s" },
+  { type: "Yoga Studio", city: "Austin", domain: "sunriseyogaatx", color: "#F472B6", icon: "🧘", time: "58s" },
+  { type: "Law Firm", city: "Chicago", domain: "meyerlawgroup", color: "#60A5FA", icon: "⚖️", time: "2m 04s" },
+  { type: "Bakery", city: "Portland", domain: "sweetrootbakery", color: "#FB923C", icon: "🍞", time: "47s" },
+  { type: "Dog Groomer", city: "Nashville", domain: "pawfectgrooming", color: "#A78BFA", icon: "🐾", time: "1m 33s" },
 ];
 
 const TESTIMONIALS = [
   {
-    name: "Sarah Chen",
-    role: "Freelance Designer",
-    location: "California",
-    text: "Had zero idea how to build a website. AutopilotAI made mine in 2 minutes. Got my first client within a week.",
-    revenue: "+$4,200/mo",
-    initials: "SC",
-    color: "#8b5cf6",
+    name: "Lisa M.",
+    biz: "Plumbing business, Ohio",
+    quote: "My phone hasn't stopped ringing since I published. Three new jobs in the first 48 hours.",
+    earned: "$12k added/mo",
+    initials: "LM",
+    hue: "#2DD4BF",
   },
   {
-    name: "Mike Rodriguez",
-    role: "Marketing Consultant",
-    location: "Texas",
-    text: "Spent $0 on design. Got 3 new clients the first month. ROI on $10/mo is genuinely absurd.",
-    revenue: "+$8,500/mo",
-    initials: "MR",
-    color: "#f59e0b",
+    name: "David K.",
+    biz: "Marketing consultant, TX",
+    quote: "I tried Squarespace for 3 days and gave up. AutopilotAI gave me a better site in 4 minutes.",
+    earned: "$8.5k added/mo",
+    initials: "DK",
+    hue: "#60A5FA",
   },
   {
-    name: "Lisa Thompson",
-    role: "Plumbing Business Owner",
-    location: "Ohio",
-    text: "I'm not tech savvy at all. Created my whole site in 5 minutes. My phone hasn't stopped ringing.",
-    revenue: "+$12,000/mo",
-    initials: "LT",
-    color: "#10b981",
+    name: "Rachel S.",
+    biz: "Freelance designer, CA",
+    quote: "Sent the link to a prospect on Monday. Signed the contract on Wednesday. Site paid for itself.",
+    earned: "$4.2k added/mo",
+    initials: "RS",
+    hue: "#F472B6",
   },
 ];
 
-const FAQS = [
-  {
-    q: "Is it really free to start?",
-    a: "Yes — create, edit, and preview everything for free. You only pay $10/month when you're ready to publish with your own domain. No credit card to start.",
-  },
-  {
-    q: "Will my site look professional?",
-    a: "Our AI is trained on thousands of premium agency sites. Every output includes conversion-optimized layouts, custom copy, and industry-specific design. Customers can't tell it wasn't hand-built.",
-  },
-  {
-    q: "Can I edit it after AI creates it?",
-    a: "Click any text to edit it. Drag images. Add sections. Or just type a new prompt and regenerate entirely. No coding, no friction.",
-  },
-  {
-    q: "What if I don't like the result?",
-    a: "Regenerate as many times as you want — it's free. Try different styles, tones, layouts. You only pay when you love it.",
-  },
+const PROBLEMS = [
+  { label: "Squarespace", issue: "You spend 3 days and still hate it", icon: "😩" },
+  { label: "Wix", issue: "Bloated, slow, cookie-cutter templates", icon: "🐌" },
+  { label: "Hiring an agency", issue: "$5,000 minimum. 6-week wait. Revisions cost extra.", icon: "💸" },
+  { label: "DIY from scratch", issue: "Nobody has time for that", icon: "😅" },
 ];
 
 export default function HomePage() {
-  const [inputValue, setInputValue] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeExample, setActiveExample] = useState(0);
+  const [inputVal, setInputVal] = useState("");
+  const [activeBiz, setActiveBiz] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [heroVisible, setHeroVisible] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [typedText, setTypedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [phraseIdx, setPhraseIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const placeholderTexts = [
-    "I'm a fitness trainer in NYC...",
-    "I run a pet grooming salon...",
-    "I'm a freelance photographer...",
-    "I own a restaurant in Miami...",
+  const phrases = [
+    "I run a dog grooming salon in Nashville…",
+    "I'm a freelance photographer in Miami…",
+    "I own a restaurant in San Francisco…",
+    "I'm a personal trainer in New York…",
   ];
 
   useEffect(() => {
-    setHeroVisible(true);
-    const handleScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
+    setVisible(true);
+    const onScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", onScroll);
 
-    const exampleInterval = setInterval(() => {
-      setActiveExample((prev) => (prev + 1) % SITE_EXAMPLES.length);
-    }, 2200);
-
-    const placeholderInterval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length);
-    }, 2500);
+    const bizInterval = setInterval(() => {
+      setActiveBiz((p) => (p + 1) % BUSINESSES.length);
+    }, 2600);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearInterval(exampleInterval);
-      clearInterval(placeholderInterval);
+      window.removeEventListener("scroll", onScroll);
+      clearInterval(bizInterval);
     };
   }, []);
 
-  const handleTry = () => {
-    window.location.href = `/upgrade?prompt=${encodeURIComponent(inputValue)}`;
+  useEffect(() => {
+    const phrase = phrases[phraseIdx];
+    const speed = isDeleting ? 28 : 52;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        if (typedText.length < phrase.length) {
+          setTypedText(phrase.slice(0, typedText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 1800);
+        }
+      } else {
+        if (typedText.length > 0) {
+          setTypedText(phrase.slice(0, typedText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setPhraseIdx((p) => (p + 1) % phrases.length);
+        }
+      }
+    }, speed);
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, phraseIdx]);
+
+  const handleBuild = () => {
+    window.location.href = `/upgrade?prompt=${encodeURIComponent(inputVal)}`;
   };
 
+  const biz = BUSINESSES[activeBiz];
+
   return (
-    <div className="page-root">
+    <div className="root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --green: #059669;
-          --green-light: #4ade80;
-          --blue: #0ea5e9;
-          --purple: #8b5cf6;
-          --amber: #f59e0b;
-          --bg: #FAFAF8;
-          --bg-dark: #111111;
-          --text: #111111;
+          --cream: #F5F0E8;
+          --ink: #0D0D0D;
+          --ink2: #1A1A1A;
+          --sage: #2DD4BF;
           --muted: #666;
-          --border: #e5e5e5;
-          --white: #ffffff;
+          --border: rgba(13,13,13,0.1);
+          --card: #FFFFFF;
+          --display: 'Bebas Neue', sans-serif;
+          --head: 'Syne', sans-serif;
+          --body: 'Syne', sans-serif;
           --serif: 'Instrument Serif', Georgia, serif;
-          --sans: 'DM Sans', system-ui, sans-serif;
         }
 
         html { scroll-behavior: smooth; }
 
-        .page-root {
+        .root {
+          background: var(--cream);
+          color: var(--ink);
+          font-family: var(--body);
           min-height: 100vh;
-          background: var(--bg);
-          color: var(--text);
-          font-family: var(--sans);
           overflow-x: hidden;
         }
 
-        /* ── ANIMATIONS ── */
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(28px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.85); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .anim-fade-up { animation: fadeUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .anim-fade-in { animation: fadeIn 0.5s ease both; }
-        .d1 { animation-delay: 0.08s; }
-        .d2 { animation-delay: 0.2s; }
-        .d3 { animation-delay: 0.34s; }
-        .d4 { animation-delay: 0.48s; }
-        .d5 { animation-delay: 0.6s; }
-        .hidden-init { opacity: 0; }
-
-        /* ── HEADER ── */
-        .header {
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          z-index: 100;
-          transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
-          border-bottom: 1px solid transparent;
-        }
-        .header.scrolled {
-          background: rgba(250, 250, 248, 0.92);
-          backdrop-filter: blur(20px);
-          border-color: var(--border);
-        }
-        .header-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 24px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .logo {
-          font-family: var(--serif);
-          font-size: 22px;
-          color: var(--text);
-          text-decoration: none;
-          letter-spacing: -0.02em;
-        }
-        .header-nav {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .nav-link {
-          padding: 8px 16px;
-          font-size: 14px;
-          color: #555;
-          text-decoration: none;
-          font-weight: 500;
-          border-radius: 8px;
-          transition: color 0.2s, background 0.2s;
-        }
-        .nav-link:hover { color: var(--text); background: rgba(0,0,0,0.04); }
-
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 10px 20px;
-          font-size: 14px;
-          font-weight: 600;
-          background: var(--text);
-          color: white;
-          border-radius: 10px;
-          text-decoration: none;
-          border: none;
-          cursor: pointer;
-          font-family: var(--sans);
-          letter-spacing: -0.01em;
-          transition: transform 0.2s, box-shadow 0.2s;
-          position: relative;
-          overflow: hidden;
-        }
-        .btn-primary::before {
+        /* NOISE TEXTURE */
+        .root::before {
           content: '';
-          position: absolute;
+          position: fixed;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
           pointer-events: none;
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-
-        .btn-green {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 13px 24px;
-          font-size: 15px;
-          font-weight: 700;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white;
-          border-radius: 12px;
-          text-decoration: none;
-          border: none;
-          cursor: pointer;
-          font-family: var(--sans);
-          letter-spacing: -0.01em;
-          transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-          white-space: nowrap;
-        }
-        .btn-green:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 36px rgba(5,150,105,0.35);
-          filter: brightness(1.06);
+          z-index: 0;
+          opacity: 0.4;
         }
 
-        .hamburger {
-          display: none;
-          flex-direction: column;
-          gap: 5px;
-          cursor: pointer;
-          padding: 8px;
-          background: none;
-          border: none;
+        /* ANIMATIONS */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.85); opacity: 0.5; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes gradShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
-        .hamburger span {
-          display: block;
-          width: 22px;
-          height: 2px;
-          background: var(--text);
-          border-radius: 2px;
+
+        .fu1 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+        .fu2 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+        .fu3 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.36s both; }
+        .fu4 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+        .fu5 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.64s both; }
+        .hidden { opacity: 0; }
+
+        /* NAV */
+        .nav {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+          height: 62px;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 32px;
           transition: all 0.3s;
         }
-        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-        .hamburger.open span:nth-child(2) { opacity: 0; }
-        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-        .mobile-menu {
-          display: none;
-          position: fixed;
-          top: 64px; left: 0; right: 0;
-          background: rgba(250,250,248,0.97);
+        .nav.scrolled {
+          background: rgba(245,240,232,0.92);
           backdrop-filter: blur(20px);
           border-bottom: 1px solid var(--border);
-          padding: 20px 24px 28px;
-          z-index: 99;
-          flex-direction: column;
-          gap: 12px;
-          animation: slideDown 0.25s ease;
         }
-        .mobile-menu.open { display: flex; }
-        .mobile-menu .nav-link {
-          font-size: 16px;
-          padding: 12px 16px;
-          border-radius: 10px;
+        .nav-logo {
+          font-family: var(--display);
+          font-size: 26px;
+          letter-spacing: 0.04em;
+          color: var(--ink);
+          text-decoration: none;
         }
-        .mobile-menu .btn-primary { width: 100%; justify-content: center; padding: 14px; font-size: 15px; }
+        .nav-logo span { color: var(--sage); }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+        .nav-ghost {
+          font-size: 13px; font-weight: 600; color: var(--muted);
+          text-decoration: none; padding: 8px 14px; border-radius: 8px;
+          transition: color 0.2s, background 0.2s;
+        }
+        .nav-ghost:hover { color: var(--ink); background: rgba(0,0,0,0.05); }
+        .nav-pill {
+          background: var(--ink); color: var(--cream);
+          font-size: 13px; font-weight: 700; padding: 9px 20px;
+          border-radius: 100px; text-decoration: none;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .nav-pill:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
-        /* ── HERO ── */
+        /* HERO */
         .hero {
           min-height: 100vh;
-          display: flex;
-          align-items: center;
-          padding: 100px 24px 80px;
+          padding: 100px 32px 80px;
+          display: flex; align-items: center;
           position: relative;
-          overflow: hidden;
         }
-        .hero-bg-orb-1 {
-          position: absolute;
-          top: 100px; right: -80px;
-          width: 500px; height: 500px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(5,150,105,0.09) 0%, transparent 70%);
-          pointer-events: none;
+        .hero-layout {
+          max-width: 1240px; margin: 0 auto; width: 100%;
+          display: grid; grid-template-columns: 1.1fr 0.9fr;
+          gap: 80px; align-items: center;
+          position: relative; z-index: 1;
         }
-        .hero-bg-orb-2 {
-          position: absolute;
-          bottom: 0; left: -100px;
-          width: 400px; height: 400px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .hero-grid {
-          max-width: 1200px;
-          margin: 0 auto;
-          width: 100%;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 72px;
-          align-items: center;
-        }
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          padding: 5px 14px;
-          border-radius: 100px;
-          margin-bottom: 24px;
-        }
-        .hero-title {
-          font-family: var(--serif);
-          font-size: clamp(44px, 5.5vw, 72px);
-          line-height: 1.04;
-          font-weight: 400;
-          letter-spacing: -0.03em;
-          color: var(--text);
-          margin-bottom: 24px;
-        }
-        .hero-title em { font-style: italic; color: var(--green); }
-        .hero-subtitle {
-          font-size: 17px;
-          color: var(--muted);
-          line-height: 1.7;
-          margin-bottom: 40px;
-          max-width: 440px;
-        }
-        .hero-subtitle strong { color: var(--text); font-weight: 600; }
 
-        .input-wrap {
+        /* BIG DECORATIVE TEXT */
+        .hero-stamp {
+          font-family: var(--display);
+          font-size: clamp(100px, 14vw, 200px);
+          line-height: 0.88;
+          letter-spacing: -0.01em;
+          color: var(--ink);
+          margin-bottom: 32px;
+          user-select: none;
+        }
+        .hero-stamp .line2 {
+          -webkit-text-stroke: 2px var(--ink);
+          color: transparent;
+        }
+        .hero-stamp .accent {
+          color: var(--sage);
+          -webkit-text-stroke: 0;
+          display: block;
+        }
+
+        .hero-sub {
+          font-size: 17px; font-weight: 400; color: #555;
+          line-height: 1.7; max-width: 440px; margin-bottom: 36px;
+        }
+        .hero-sub strong { color: var(--ink); font-weight: 700; }
+
+        /* INPUT FIELD */
+        .build-box {
           background: white;
-          border: 2px solid var(--border);
-          border-radius: 16px;
-          padding: 8px;
-          display: flex;
-          gap: 8px;
-          margin-bottom: 16px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-          transition: border-color 0.25s, box-shadow 0.25s;
-        }
-        .input-wrap:focus-within {
-          border-color: var(--green);
-          box-shadow: 0 4px 24px rgba(5,150,105,0.18);
-        }
-        .hero-input {
-          flex: 1;
-          border: none;
-          background: transparent;
-          font-size: 15px;
-          color: var(--text);
-          padding: 10px 14px;
-          outline: none;
-          font-family: var(--sans);
-          min-width: 0;
-        }
-        .hero-input::placeholder { color: #aaa; }
-        .input-btn {
-          flex-shrink: 0;
-        }
-
-        .trust-row {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-        .avatars { display: flex; }
-        .avatar {
-          width: 36px; height: 36px;
-          border-radius: 50%;
-          border: 2.5px solid var(--bg);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 11px;
-          font-weight: 700;
-          color: white;
-          margin-left: -10px;
-        }
-        .avatar:first-child { margin-left: 0; }
-        .trust-text-title { font-weight: 600; font-size: 14px; color: var(--text); }
-        .trust-text-sub { font-size: 12px; color: #888; }
-
-        /* ── PREVIEW MOCKUP ── */
-        .preview-wrap { position: relative; }
-        .preview-float-label {
-          position: absolute;
-          top: -16px; left: 50%;
-          transform: translateX(-50%);
-          background: var(--text);
-          color: white;
-          padding: 6px 16px;
-          border-radius: 100px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          z-index: 10;
-          white-space: nowrap;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .live-dot {
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          background: #22c55e;
-          animation: pulse-dot 2s ease infinite;
-        }
-        .mockup-card {
-          background: white;
+          border: 2px solid var(--ink);
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 40px 100px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06);
+          box-shadow: 6px 6px 0 var(--ink);
+          margin-bottom: 20px;
+          transition: box-shadow 0.2s;
         }
-        .browser-bar {
-          background: #f2f2f2;
-          border-bottom: 1px solid #e0e0e0;
-          padding: 10px 16px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .build-box:focus-within {
+          box-shadow: 6px 6px 0 var(--sage);
+          border-color: var(--sage);
         }
-        .browser-dots { display: flex; gap: 6px; }
-        .browser-dot { width: 11px; height: 11px; border-radius: 50%; }
-        .browser-url {
-          flex: 1;
-          background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: 6px;
-          padding: 5px 12px;
-          font-size: 12px;
-          color: #666;
-          margin-left: 10px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          overflow: hidden;
-          white-space: nowrap;
+        .build-input {
+          width: 100%; border: none; outline: none;
+          font-family: var(--body); font-size: 15px; font-weight: 500;
+          color: var(--ink); padding: 18px 22px 10px;
+          background: transparent; resize: none;
         }
-        .mockup-body {
+        .build-input::placeholder { color: transparent; }
+        .input-bottom {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 10px 12px 12px;
+        }
+        .input-placeholder {
+          font-size: 13px; color: #aaa; padding-left: 10px;
+          pointer-events: none; font-style: italic;
+        }
+        .cursor { animation: blink 1s step-end infinite; }
+        .build-btn {
+          background: var(--ink); color: var(--cream);
+          border: none; cursor: pointer; font-family: var(--body);
+          font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
+          padding: 12px 24px; border-radius: 12px;
+          transition: background 0.2s, transform 0.15s;
+          white-space: nowrap; text-transform: uppercase;
+        }
+        .build-btn:hover { background: var(--sage); transform: translateY(-1px); }
+
+        .hero-fine {
+          font-size: 12px; color: #999; display: flex; gap: 20px;
+          flex-wrap: wrap; margin-bottom: 36px;
+        }
+        .hero-fine span::before { content: '✓ '; color: var(--sage); font-weight: 700; }
+
+        .social-proof {
+          display: flex; align-items: center; gap: 14px;
+          background: white; border: 1.5px solid var(--border);
+          border-radius: 16px; padding: 14px 18px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+        .avatars { display: flex; }
+        .av {
+          width: 34px; height: 34px; border-radius: 50%;
+          border: 2.5px solid var(--cream);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 10px; font-weight: 800; color: white;
+          margin-left: -9px;
+        }
+        .av:first-child { margin-left: 0; }
+        .sp-text { font-size: 13px; font-weight: 600; }
+        .sp-sub { font-size: 11px; color: #888; }
+        .stars { color: #F59E0B; font-size: 11px; }
+
+        /* MOCKUP */
+        .mockup-outer {
           position: relative;
-          height: 360px;
-          overflow: hidden;
+        }
+        .mockup-screen {
           background: white;
+          border: 2px solid var(--ink);
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 10px 10px 0 var(--ink);
+          position: relative;
         }
-        .mockup-slide {
-          position: absolute;
-          inset: 0;
-          padding: 24px;
-          transition: opacity 0.55s ease;
+        .screen-top-bar {
+          background: #1A1A1A; padding: 12px 16px;
+          display: flex; align-items: center; gap: 10px;
         }
-        .mockup-tabs {
-          background: #f7f7f7;
-          border-top: 1px solid #eee;
-          padding: 12px 14px;
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
+        .screen-dots { display: flex; gap: 6px; }
+        .screen-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .screen-url {
+          flex: 1; background: #2d2d2d; border-radius: 6px;
+          padding: 5px 12px; font-size: 11px; color: #888;
+          display: flex; align-items: center; gap: 6px;
+          font-family: monospace; overflow: hidden; white-space: nowrap;
         }
-        .mockup-tab {
-          padding: 4px 12px;
-          border-radius: 100px;
-          border: 1px solid;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
+        .screen-url-lock { color: var(--sage); font-size: 9px; }
+        .screen-body {
+          height: 340px; position: relative; overflow: hidden;
+        }
+        .screen-slide {
+          position: absolute; inset: 0; padding: 22px;
+          transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .slide-header {
+          border-radius: 14px; padding: 20px;
+          margin-bottom: 14px;
+        }
+        .slide-eyebrow {
+          font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
+          text-transform: uppercase; margin-bottom: 8px;
+        }
+        .slide-title {
+          font-family: var(--serif);
+          font-size: 18px; line-height: 1.25; margin-bottom: 10px;
+          letter-spacing: -0.02em;
+        }
+        .slide-body { font-size: 11px; color: #777; margin-bottom: 13px; line-height: 1.6; }
+        .slide-ctas { display: flex; gap: 8px; }
+        .slide-btn-main {
+          padding: 8px 14px; border-radius: 7px;
+          font-size: 11px; font-weight: 800; color: white;
+        }
+        .slide-btn-ghost {
+          padding: 8px 14px; border-radius: 7px;
+          font-size: 11px; font-weight: 600; border: 1.5px solid;
           background: transparent;
-          font-family: var(--sans);
         }
-        .preview-time-badge {
+        .slide-features {
+          display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+        }
+        .slide-feat {
+          background: #f8f8f8; border-radius: 9px;
+          padding: 10px 7px; text-align: center;
+        }
+        .slide-feat-icon { font-size: 14px; margin-bottom: 4px; }
+        .slide-feat-text { font-size: 9px; color: #666; font-weight: 600; }
+        .screen-tabs {
+          background: #FAFAFA; border-top: 1.5px solid #eee;
+          padding: 10px 12px; display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .screen-tab {
+          padding: 4px 10px; border-radius: 100px;
+          font-size: 10px; font-weight: 700; cursor: pointer;
+          border: 1.5px solid; background: transparent;
+          font-family: var(--body); transition: all 0.2s;
+        }
+
+        /* FLOATING BADGES */
+        .float-badge {
           position: absolute;
-          bottom: -16px; right: 20px;
           background: white;
           border: 1.5px solid var(--border);
-          border-radius: 12px;
-          padding: 10px 16px;
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--text);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          animation: float 4s ease-in-out infinite;
-        }
-
-        /* ── MARQUEE ── */
-        .marquee-outer {
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
-          background: white;
-          padding: 18px 0;
-          overflow: hidden;
-        }
-        .marquee-track {
-          animation: marquee 22s linear infinite;
-          display: flex;
-          gap: 0;
-        }
-        .marquee-item {
-          padding: 0 36px;
-          font-size: 13px;
-          font-weight: 500;
+          border-radius: 14px;
+          padding: 10px 14px;
+          box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
+          font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; gap: 8px;
           white-space: nowrap;
-          display: flex;
-          align-items: center;
-          gap: 0;
+          z-index: 10;
         }
-        .marquee-sep { margin-left: 36px; color: #ddd; }
-
-        /* ── SECTIONS ── */
-        .section { padding: 120px 24px; }
-        .section-inner { max-width: 1100px; margin: 0 auto; }
-        .section-inner-md { max-width: 900px; margin: 0 auto; }
-        .section-inner-sm { max-width: 720px; margin: 0 auto; }
-        .section-label {
+        .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2s ease infinite; }
+        .badge-top {
+          top: -18px; left: 50%; transform: translateX(-50%);
+          background: var(--ink); color: white; border-color: transparent;
           font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--green);
+        }
+        .badge-bottom-right {
+          bottom: -18px; right: -10px;
+          animation: float 3.5s ease-in-out infinite;
+        }
+        .badge-bottom-left {
+          bottom: 50px; left: -20px;
+          animation: float 4s ease-in-out 1s infinite;
+        }
+
+        /* TICKER */
+        .ticker-wrap {
+          background: var(--ink); overflow: hidden;
+          padding: 13px 0; border-top: 1px solid var(--cream);
+          border-bottom: 1px solid var(--cream);
+        }
+        .ticker-track {
+          display: flex; gap: 0;
+          animation: ticker 28s linear infinite;
+        }
+        .ticker-item {
+          padding: 0 32px; font-size: 12px; font-weight: 700;
+          color: rgba(255,255,255,0.5); white-space: nowrap;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          display: flex; align-items: center;
+        }
+        .ticker-item.bright { color: var(--sage); }
+        .ticker-sep { margin-left: 32px; color: rgba(255,255,255,0.2); }
+
+        /* PROBLEM SECTION */
+        .problem {
+          padding: 120px 32px;
+          background: var(--ink);
+          position: relative; overflow: hidden;
+        }
+        .problem-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+        .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+
+        .problem-eyebrow {
+          font-size: 11px; font-weight: 800; letter-spacing: 0.12em;
+          text-transform: uppercase; color: var(--sage); margin-bottom: 20px;
+        }
+        .problem-heading {
+          font-family: var(--display);
+          font-size: clamp(48px, 6vw, 80px);
+          line-height: 0.92; letter-spacing: 0.01em;
+          color: white; margin-bottom: 28px;
+        }
+        .problem-heading .struck {
+          -webkit-text-stroke: 1.5px rgba(255,255,255,0.25);
+          color: transparent;
+          position: relative;
+        }
+        .problem-heading .struck::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; top: 50%;
+          height: 2px; background: #ef4444;
+          transform: rotate(-2deg);
+        }
+        .problem-body { font-size: 16px; color: #888; line-height: 1.75; }
+
+        .problem-list { display: flex; flex-direction: column; gap: 14px; }
+        .problem-item {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px; padding: 22px 24px;
+          display: flex; align-items: center; gap: 18px;
+          transition: background 0.2s, transform 0.2s;
+        }
+        .problem-item:hover { background: rgba(255,255,255,0.07); transform: translateX(4px); }
+        .problem-emoji { font-size: 24px; flex-shrink: 0; }
+        .problem-label { font-size: 14px; font-weight: 700; color: white; margin-bottom: 3px; }
+        .problem-issue { font-size: 13px; color: #666; }
+
+        /* PROCESS */
+        .process { padding: 120px 32px; background: var(--cream); }
+        .process-inner { max-width: 1100px; margin: 0 auto; }
+        .section-tag {
+          display: inline-block;
+          font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
+          text-transform: uppercase; color: var(--sage);
+          margin-bottom: 18px;
+        }
+        .section-h {
+          font-family: var(--display);
+          font-size: clamp(48px, 6vw, 80px);
+          line-height: 0.92; letter-spacing: 0.01em;
           margin-bottom: 16px;
         }
-        .section-heading {
-          font-family: var(--serif);
-          font-size: clamp(36px, 4vw, 56px);
-          font-weight: 400;
-          letter-spacing: -0.03em;
-          color: var(--text);
-          line-height: 1.06;
-          margin-bottom: 16px;
-        }
-        .section-heading em { font-style: italic; }
-        .section-sub {
-          font-size: 17px;
-          color: var(--muted);
-          max-width: 480px;
-          line-height: 1.6;
-        }
+        .section-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 460px; }
         .section-center { text-align: center; margin-bottom: 72px; }
         .section-center .section-sub { margin: 0 auto; }
 
-        /* ── HOW IT WORKS ── */
-        .steps-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 28px;
-        }
-        .step-card {
+        .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 64px; }
+        .step {
           background: white;
-          border: 1.5px solid var(--border);
-          border-radius: 20px;
-          padding: 40px 32px;
-          position: relative;
-          overflow: hidden;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+          border: 2px solid var(--ink);
+          border-radius: 24px; padding: 40px 32px;
+          position: relative; overflow: hidden;
+          box-shadow: 5px 5px 0 var(--ink);
+          transition: transform 0.25s, box-shadow 0.25s;
         }
-        .step-card:hover { transform: translateY(-5px); box-shadow: 0 24px 60px rgba(0,0,0,0.09); }
-        .step-ghost-num {
-          font-family: var(--serif);
-          font-size: 80px;
-          line-height: 1;
-          position: absolute;
-          top: -18px; left: 18px;
-          opacity: 0.06;
-          user-select: none;
-          color: var(--text);
-        }
-        .step-icon { font-size: 32px; margin-bottom: 18px; }
-        .step-divider { width: 40px; height: 2.5px; border-radius: 2px; margin-bottom: 18px; }
-        .step-title {
-          font-family: var(--serif);
-          font-size: 22px;
-          font-weight: 400;
-          color: var(--text);
-          margin-bottom: 10px;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-        }
-        .step-body { font-size: 14px; color: var(--muted); line-height: 1.75; }
-
-        /* ── TESTIMONIALS ── */
-        .section-dark {
-          background: var(--bg-dark);
-          position: relative;
-          overflow: hidden;
-        }
-        .section-dark .section-heading { color: white; }
-        .section-dark .section-sub { color: #888; }
-        .section-dark .section-label { color: #4ade80; }
-        .testi-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 22px;
-        }
-        .testi-card {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 20px;
-          padding: 32px;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s;
-        }
-        .testi-card:hover {
-          transform: translateY(-6px);
-          background: rgba(255,255,255,0.08);
-          box-shadow: 0 28px 60px rgba(0,0,0,0.3);
-        }
-        .testi-revenue {
-          display: inline-block;
-          background: rgba(74,222,128,0.15);
-          color: #4ade80;
-          padding: 4px 12px;
-          border-radius: 100px;
-          font-size: 12px;
-          font-weight: 700;
-          margin-bottom: 20px;
-        }
-        .testi-text {
-          font-family: var(--serif);
-          font-size: 17px;
-          color: rgba(255,255,255,0.82);
-          line-height: 1.65;
-          margin-bottom: 24px;
-          font-style: italic;
-        }
-        .testi-author { display: flex; align-items: center; gap: 13px; }
-        .testi-avatar {
-          width: 44px; height: 44px;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px; font-weight: 700; color: white;
-          flex-shrink: 0;
-        }
-        .testi-name { font-weight: 600; font-size: 14px; color: white; }
-        .testi-role { font-size: 12px; color: #888; }
-
-        /* ── FEATURES ── */
-        .features-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 72px;
-          align-items: center;
-        }
-        .feature-list { display: flex; flex-direction: column; gap: 22px; margin-top: 36px; }
-        .feature-item { display: flex; gap: 16px; align-items: flex-start; }
-        .feature-icon-wrap {
-          width: 44px; height: 44px;
-          background: white;
-          border: 1.5px solid var(--border);
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 20px;
-          flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .feature-item-title { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 3px; }
-        .feature-item-body { font-size: 14px; color: #888; line-height: 1.6; }
-        .metrics-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px;
-        }
-        .metric-card {
-          background: white;
-          border: 1.5px solid var(--border);
-          border-radius: 20px;
-          padding: 28px 26px;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-        .metric-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.09); }
-        .metric-value {
-          font-family: var(--serif);
-          font-size: 46px;
-          font-weight: 400;
-          line-height: 1;
-          margin-bottom: 10px;
-          letter-spacing: -0.03em;
-        }
-        .metric-label { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-        /* ── PRICING ── */
-        .pricing-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 22px;
-          max-width: 760px;
-          margin: 0 auto;
-        }
-        .pricing-free {
-          background: var(--bg);
-          border: 1.5px solid var(--border);
-          border-radius: 24px;
-          padding: 40px 36px;
-        }
-        .pricing-popular {
-          background: var(--bg-dark);
-          border-radius: 24px;
-          padding: 40px 36px;
-          position: relative;
-        }
-        .pricing-popular::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          background: linear-gradient(135deg, #059669, #0ea5e9, #8b5cf6);
-          border-radius: 26px;
-          z-index: -1;
-        }
-        .pricing-tier-label {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          margin-bottom: 20px;
-        }
-        .pricing-price {
-          font-family: var(--serif);
-          font-size: 58px;
-          font-weight: 400;
-          line-height: 1;
-          margin-bottom: 4px;
-          letter-spacing: -0.03em;
-        }
-        .pricing-desc { font-size: 14px; margin-bottom: 32px; }
-        .pricing-feature {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 12px;
-          font-size: 14px;
-        }
-        .check-icon {
-          width: 20px; height: 20px;
-          border-radius: 50%;
-          background: rgba(5,150,105,0.12);
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          color: #059669;
-          font-size: 10px;
-          font-weight: 700;
-        }
-        .cross-icon {
-          width: 20px; height: 20px;
-          border-radius: 50%;
-          background: rgba(0,0,0,0.06);
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          color: #ccc;
-          font-size: 10px;
-        }
-        .pricing-btn {
-          display: block;
-          margin-top: 32px;
-          padding: 14px 0;
-          border-radius: 12px;
-          text-align: center;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 700;
-          font-family: var(--sans);
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-        }
-        .pricing-btn-outline {
-          background: transparent;
-          border: 1.5px solid #222;
-          color: var(--text);
-        }
-        .pricing-btn-outline:hover { background: rgba(0,0,0,0.04); }
-        .popular-chip {
-          display: inline-flex;
-          align-items: center;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white;
-          padding: 2px 10px;
-          border-radius: 100px;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          margin-left: 8px;
-        }
-
-        /* ── FAQ ── */
-        .faq-item { border-bottom: 1px solid var(--border); }
-        .faq-btn {
-          width: 100%;
-          background: none;
-          border: none;
-          padding: 24px 0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          cursor: pointer;
-          text-align: left;
-          font-size: 16px;
-          font-weight: 600;
-          color: var(--text);
-          letter-spacing: -0.01em;
-          font-family: var(--sans);
-          gap: 16px;
-        }
-        .faq-icon {
-          font-size: 22px;
-          color: #888;
-          transition: transform 0.3s ease;
-          flex-shrink: 0;
-          line-height: 1;
-        }
-        .faq-icon.open { transform: rotate(45deg); }
-        .faq-answer {
-          overflow: hidden;
-          transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
-          font-size: 15px;
-          color: var(--muted);
-          line-height: 1.75;
-          max-height: 0;
-          opacity: 0;
-          padding-bottom: 0;
-        }
-        .faq-answer.open { max-height: 240px; opacity: 1; padding-bottom: 24px; }
-
-        /* ── FINAL CTA ── */
-        .final-cta {
-          padding: 120px 24px;
-          background: var(--bg-dark);
-          position: relative;
-          overflow: hidden;
-        }
-        .final-cta-orb {
-          position: absolute;
-          top: 50%; left: 50%;
-          transform: translate(-50%, -50%);
-          width: 700px; height: 400px;
-          background: radial-gradient(ellipse, rgba(5,150,105,0.2) 0%, transparent 70%);
+        .step:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--ink); }
+        .step-num {
+          font-family: var(--display);
+          font-size: 90px; line-height: 1;
+          position: absolute; top: -18px; right: 16px;
+          opacity: 0.04; user-select: none; color: var(--ink);
           pointer-events: none;
         }
-        .cta-input-wrap {
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 18px;
-          padding: 7px;
-          display: flex;
-          gap: 8px;
-          max-width: 520px;
-          margin: 0 auto 20px;
+        .step-icon-wrap {
+          width: 52px; height: 52px; border-radius: 14px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 24px; margin-bottom: 22px;
+          border: 1.5px solid rgba(0,0,0,0.08);
         }
-        .cta-input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          font-size: 15px;
-          color: white;
-          padding: 12px 14px;
-          font-family: var(--sans);
-          min-width: 0;
-        }
-        .cta-input::placeholder { color: #666; }
+        .step-line { width: 40px; height: 3px; border-radius: 2px; margin-bottom: 18px; }
+        .step-title { font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 10px; letter-spacing: -0.02em; }
+        .step-body { font-size: 14px; color: var(--muted); line-height: 1.75; }
 
-        /* ── FOOTER ── */
+        /* TESTIMONIALS */
+        .testimonials { padding: 120px 32px; background: white; border-top: 2px solid var(--ink); }
+        .testi-inner { max-width: 1100px; margin: 0 auto; }
+        .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 64px; }
+        .testi-card {
+          border: 2px solid var(--ink);
+          border-radius: 24px; padding: 34px;
+          box-shadow: 5px 5px 0 var(--ink);
+          transition: transform 0.25s, box-shadow 0.25s;
+          position: relative; background: white;
+        }
+        .testi-card:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--ink); }
+        .testi-tag {
+          display: inline-block;
+          font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+          padding: 4px 12px; border-radius: 100px; margin-bottom: 18px;
+          color: white;
+        }
+        .testi-quote {
+          font-family: var(--serif); font-size: 17px;
+          font-style: italic; color: var(--ink);
+          line-height: 1.65; margin-bottom: 26px;
+        }
+        .testi-author { display: flex; align-items: center; gap: 12px; }
+        .testi-av {
+          width: 42px; height: 42px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 800; color: white;
+          border: 2px solid var(--ink);
+        }
+        .testi-name { font-size: 14px; font-weight: 700; }
+        .testi-biz { font-size: 12px; color: #888; }
+
+        /* FEATURES */
+        .features { padding: 120px 32px; background: var(--cream); }
+        .features-inner { max-width: 1100px; margin: 0 auto; }
+        .features-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+        .feat-list { display: flex; flex-direction: column; gap: 0; margin-top: 44px; }
+        .feat-item {
+          padding: 22px 0; border-bottom: 1.5px solid var(--border);
+          display: flex; gap: 18px; align-items: flex-start;
+          transition: padding 0.2s;
+        }
+        .feat-item:first-child { border-top: 1.5px solid var(--border); }
+        .feat-item:hover { padding-left: 8px; }
+        .feat-icon-box {
+          width: 42px; height: 42px; border-radius: 11px;
+          background: white; border: 1.5px solid var(--border);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 18px; flex-shrink: 0;
+          box-shadow: 3px 3px 0 var(--border);
+        }
+        .feat-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+        .feat-body { font-size: 13px; color: #888; line-height: 1.6; }
+        .metrics-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .metric {
+          background: white; border: 2px solid var(--ink);
+          border-radius: 20px; padding: 28px 24px;
+          box-shadow: 5px 5px 0 var(--ink);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .metric:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--ink); }
+        .metric-val {
+          font-family: var(--display);
+          font-size: 52px; line-height: 1; margin-bottom: 10px;
+          letter-spacing: 0.02em;
+        }
+        .metric-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+        /* PRICING */
+        .pricing { padding: 120px 32px; background: white; border-top: 2px solid var(--ink); }
+        .pricing-inner { max-width: 800px; margin: 0 auto; }
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 64px; }
+        .price-card {
+          border: 2px solid var(--ink);
+          border-radius: 24px; padding: 44px 38px;
+          box-shadow: 5px 5px 0 var(--ink);
+          position: relative; background: var(--cream);
+        }
+        .price-card-dark {
+          background: var(--ink); border-color: var(--ink);
+          box-shadow: 5px 5px 0 var(--sage);
+        }
+        .price-popular-badge {
+          position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+          background: var(--sage); color: var(--ink);
+          font-size: 10px; font-weight: 900; letter-spacing: 0.1em;
+          padding: 4px 16px; border-radius: 100px; text-transform: uppercase;
+          border: 2px solid var(--ink); white-space: nowrap;
+        }
+        .price-tier { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 18px; }
+        .price-tier-dark { color: #555; }
+        .price-amount {
+          font-family: var(--display);
+          font-size: 72px; line-height: 1; margin-bottom: 6px; letter-spacing: 0.02em;
+        }
+        .price-amount-dark { color: white; }
+        .price-period { font-size: 14px; color: #888; margin-bottom: 32px; }
+        .price-period-dark { color: #555; }
+        .price-feats { display: flex; flex-direction: column; gap: 11px; }
+        .pf {
+          display: flex; align-items: center; gap: 12px;
+          font-size: 14px;
+        }
+        .pf-check {
+          width: 20px; height: 20px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 10px; font-weight: 800; flex-shrink: 0;
+        }
+        .pf-check-yes { background: rgba(45,212,191,0.2); color: var(--sage); }
+        .pf-check-no { background: rgba(0,0,0,0.06); color: #ccc; }
+        .price-cta {
+          display: block; margin-top: 36px; padding: 15px;
+          border-radius: 12px; text-align: center; text-decoration: none;
+          font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
+          text-transform: uppercase; font-family: var(--body); cursor: pointer;
+          border: 2px solid var(--ink); transition: all 0.2s;
+        }
+        .price-cta-ghost { background: transparent; color: var(--ink); }
+        .price-cta-ghost:hover { background: var(--ink); color: var(--cream); }
+        .price-cta-solid { background: var(--sage); color: var(--ink); border-color: var(--sage); }
+        .price-cta-solid:hover { background: #1fc4b1; border-color: #1fc4b1; transform: translateY(-2px); }
+
+        /* FAQ */
+        .faq { padding: 120px 32px; background: var(--cream); }
+        .faq-inner { max-width: 680px; margin: 0 auto; }
+        .faq-item { border-bottom: 2px solid var(--ink); }
+        .faq-btn {
+          width: 100%; background: none; border: none;
+          padding: 24px 0; display: flex; justify-content: space-between;
+          align-items: center; cursor: pointer; text-align: left;
+          font-size: 16px; font-weight: 700; color: var(--ink);
+          font-family: var(--body); gap: 16px;
+        }
+        .faq-plus {
+          font-size: 24px; color: var(--sage); font-weight: 300;
+          transition: transform 0.3s; flex-shrink: 0; line-height: 1;
+        }
+        .faq-plus.open { transform: rotate(45deg); }
+        .faq-body {
+          overflow: hidden; max-height: 0; opacity: 0;
+          transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s;
+          font-size: 15px; color: var(--muted); line-height: 1.75;
+          padding-bottom: 0;
+        }
+        .faq-body.open { max-height: 220px; opacity: 1; padding-bottom: 24px; }
+
+        /* FINAL CTA */
+        .final {
+          padding: 140px 32px;
+          background: var(--ink); position: relative; overflow: hidden;
+        }
+        .final-orb {
+          position: absolute; top: -200px; left: 50%;
+          transform: translateX(-50%);
+          width: 900px; height: 600px; border-radius: 50%;
+          background: radial-gradient(ellipse, rgba(45,212,191,0.18) 0%, transparent 65%);
+          pointer-events: none;
+        }
+        .final-inner {
+          max-width: 720px; margin: 0 auto;
+          text-align: center; position: relative; z-index: 1;
+        }
+        .final-h {
+          font-family: var(--display);
+          font-size: clamp(52px, 8vw, 110px);
+          line-height: 0.9; letter-spacing: 0.01em;
+          color: white; margin-bottom: 24px;
+        }
+        .final-h .outline {
+          -webkit-text-stroke: 2px white;
+          color: transparent;
+        }
+        .final-h .teal { color: var(--sage); }
+        .final-sub { font-size: 17px; color: #666; line-height: 1.7; margin-bottom: 52px; }
+        .final-input-row {
+          background: rgba(255,255,255,0.07);
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-radius: 18px; padding: 7px;
+          display: flex; gap: 8px; max-width: 520px; margin: 0 auto 18px;
+        }
+        .final-input {
+          flex: 1; background: transparent; border: none; outline: none;
+          font-size: 15px; color: white; padding: 13px 14px;
+          font-family: var(--body); min-width: 0;
+        }
+        .final-input::placeholder { color: #555; }
+        .final-btn {
+          background: var(--sage); color: var(--ink);
+          border: none; cursor: pointer;
+          font-family: var(--body); font-size: 13px; font-weight: 800;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          padding: 13px 22px; border-radius: 12px;
+          transition: filter 0.2s, transform 0.15s; white-space: nowrap;
+        }
+        .final-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .final-fine { font-size: 12px; color: #555; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .final-fine span::before { content: '✓ '; color: var(--sage); }
+
+        /* FOOTER */
         .footer {
-          background: #0a0a0a;
-          border-top: 1px solid #1f1f1f;
-          padding: 40px 24px;
+          background: #080808; border-top: 1px solid #1f1f1f;
+          padding: 36px 32px;
         }
         .footer-inner {
-          max-width: 1100px;
-          margin: 0 auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
+          max-width: 1100px; margin: 0 auto;
+          display: flex; justify-content: space-between;
+          align-items: center; flex-wrap: wrap; gap: 20px;
         }
-        .footer-logo { font-family: var(--serif); font-size: 20px; color: white; text-decoration: none; }
-        .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
-        .footer-link {
-          font-size: 13px;
-          color: #555;
-          text-decoration: none;
-          transition: color 0.2s;
-        }
+        .footer-logo { font-family: var(--display); font-size: 22px; color: white; text-decoration: none; }
+        .footer-logo span { color: var(--sage); }
+        .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+        .footer-link { font-size: 13px; color: #444; text-decoration: none; transition: color 0.2s; }
         .footer-link:hover { color: white; }
 
-        /* ── MOBILE ── */
-        @media (max-width: 900px) {
-          .header-nav { display: none; }
-          .hamburger { display: flex; }
-
+        /* MOBILE */
+        @media (max-width: 960px) {
+          .nav { padding: 0 20px; }
+          .nav-ghost { display: none; }
           .hero { padding: 90px 20px 60px; min-height: unset; }
-          .hero-grid {
-            grid-template-columns: 1fr;
-            gap: 48px;
-          }
-          .hero-title { font-size: clamp(38px, 9vw, 56px); }
-          .hero-subtitle { font-size: 16px; max-width: 100%; }
-          .input-wrap { flex-wrap: wrap; }
-          .input-btn { width: 100%; }
-          .input-btn .btn-green { width: 100%; justify-content: center; }
-          .preview-float-label { font-size: 10px; padding: 5px 12px; }
-          .mockup-body { height: 300px; }
-
-          .section { padding: 80px 20px; }
-          .steps-grid { grid-template-columns: 1fr; gap: 18px; }
-          .step-card { padding: 32px 28px; }
+          .hero-layout { grid-template-columns: 1fr; gap: 52px; }
+          .hero-stamp { font-size: clamp(72px, 18vw, 110px); }
+          .problem { padding: 80px 20px; }
+          .problem-grid { grid-template-columns: 1fr; gap: 48px; }
+          .process { padding: 80px 20px; }
+          .steps { grid-template-columns: 1fr; gap: 18px; margin-top: 48px; }
+          .testimonials { padding: 80px 20px; }
           .testi-grid { grid-template-columns: 1fr; gap: 18px; }
-          .features-grid { grid-template-columns: 1fr; gap: 48px; }
-          .metrics-grid { grid-template-columns: 1fr 1fr; }
+          .features { padding: 80px 20px; }
+          .features-layout { grid-template-columns: 1fr; gap: 52px; }
+          .metrics-2 { grid-template-columns: 1fr 1fr; }
+          .pricing { padding: 80px 20px; }
           .pricing-grid { grid-template-columns: 1fr; gap: 18px; }
-          .pricing-free, .pricing-popular { padding: 32px 28px; }
-          .section-heading { font-size: clamp(30px, 7vw, 48px); }
-
-          .final-cta { padding: 80px 20px; }
-          .cta-input-wrap { flex-wrap: wrap; }
-          .cta-input-wrap .btn-green { width: 100%; justify-content: center; }
-
+          .price-card, .price-card-dark { padding: 36px 28px; }
+          .faq { padding: 80px 20px; }
+          .final { padding: 100px 20px; }
+          .final-input-row { flex-wrap: wrap; }
+          .final-btn { width: 100%; justify-content: center; }
+          .footer { padding: 28px 20px; }
           .footer-inner { flex-direction: column; align-items: flex-start; }
-          .footer-links { gap: 20px; }
         }
 
-        @media (max-width: 540px) {
-          .hero-badge { font-size: 10px; }
-          .hero-title { font-size: clamp(34px, 10vw, 50px); }
-          .trust-row { gap: 12px; }
-          .metrics-grid { grid-template-columns: 1fr; }
-          .testi-card { padding: 24px 22px; }
-          .pricing-popular::before { display: none; }
-          .pricing-popular { border: 2px solid #059669; }
+        @media (max-width: 560px) {
+          .metrics-2 { grid-template-columns: 1fr; }
+          .pricing-grid { grid-template-columns: 1fr; }
+          .screen-tabs { gap: 4px; }
         }
       `}</style>
 
-      {/* ── HEADER ── */}
-      <header className={`header ${isScrolled ? "scrolled" : ""}`}>
-        <div className="header-inner">
-          <a href="/" className="logo">AutopilotAI</a>
-          <nav className="header-nav">
-            <a href="/login" className="nav-link">Sign in</a>
-            <a href="/upgrade" className="btn-primary">Get started free</a>
-          </nav>
-          <button
-            className={`hamburger ${mobileMenuOpen ? "open" : ""}`}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Menu"
-          >
-            <span /><span /><span />
-          </button>
+      {/* NAV */}
+      <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
+        <a href="/" className="nav-logo">Autopilot<span>AI</span></a>
+        <div className="nav-right">
+          <a href="/login" className="nav-ghost">Sign in</a>
+          <a href="/upgrade" className="nav-pill">Start free →</a>
         </div>
-      </header>
+      </nav>
 
-      {/* ── MOBILE MENU ── */}
-      <div className={`mobile-menu ${mobileMenuOpen ? "open" : ""}`}>
-        <a href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Sign in</a>
-        <a href="/upgrade" className="btn-primary" onClick={() => setMobileMenuOpen(false)}>Get started free →</a>
-      </div>
-
-      {/* ── HERO ── */}
+      {/* HERO */}
       <section className="hero">
-        <div className="hero-bg-orb-1" />
-        <div className="hero-bg-orb-2" />
-
-        <div className="hero-grid">
-          {/* Left: copy */}
+        <div className="hero-layout">
+          {/* Left */}
           <div>
-            <div className={`hidden-init ${heroVisible ? "anim-fade-up d1" : ""}`}>
-              <div className="hero-badge">
-                <span>✦</span>
-                AI Website Builder
-              </div>
+            <div className={visible ? "fu1" : "hidden"}>
+              <h1 className="hero-stamp">
+                <span>Your</span>
+                <br />
+                <span className="line2">website</span>
+                <br />
+                <span className="accent">in 60s.</span>
+              </h1>
             </div>
 
-            <h1 className={`hero-title hidden-init ${heroVisible ? "anim-fade-up d2" : ""}`}>
-              Your professional
-              <br />
-              <em>website</em>,{" "}
-              <br style={{ display: "none" }} />
-              built in 60 seconds.
-            </h1>
-
-            <p className={`hero-subtitle hidden-init ${heroVisible ? "anim-fade-up d3" : ""}`}>
-              Describe your business. AI builds a conversion-optimized,
-              professional website. Edit anything. Publish for{" "}
-              <strong>$10/month</strong> — or start free, forever.
+            <p className={`hero-sub ${visible ? "fu2" : "hidden"}`}>
+              Describe your business. AI builds a <strong>conversion-ready,
+              professional website</strong> in under a minute. Edit anything.
+              Publish for <strong>$10/mo</strong> — or explore free, forever.
             </p>
 
-            <div className={`hidden-init ${heroVisible ? "anim-fade-up d4" : ""}`}>
-              <div className="input-wrap">
+            <div className={visible ? "fu3" : "hidden"}>
+              <div className="build-box">
                 <input
                   ref={inputRef}
-                  className="hero-input"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleTry()}
-                  placeholder={placeholderTexts[placeholderIndex]}
+                  className="build-input"
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleBuild()}
+                  placeholder="type here"
                 />
-                <div className="input-btn">
-                  <button onClick={handleTry} className="btn-green">
-                    Build my site →
+                <div className="input-bottom">
+                  {inputVal === "" ? (
+                    <div className="input-placeholder">
+                      {typedText}<span className="cursor">|</span>
+                    </div>
+                  ) : (
+                    <div style={{ flex: 1 }} />
+                  )}
+                  <button className="build-btn" onClick={handleBuild}>
+                    Generate site →
                   </button>
                 </div>
               </div>
-              <p style={{ fontSize: 13, color: "#888", marginBottom: 44 }}>
-                No credit card · No design skills · Takes 2 minutes
-              </p>
 
-              <div className="trust-row">
+              <div className="hero-fine">
+                <span>No credit card</span>
+                <span>No design skills needed</span>
+                <span>Cancel anytime</span>
+              </div>
+
+              <div className="social-proof">
                 <div className="avatars">
-                  {[
-                    ["SC", "#059669"], ["MR", "#f59e0b"], ["LT", "#8b5cf6"],
-                    ["JP", "#0ea5e9"], ["AW", "#ef4444"],
-                  ].map(([initials, color], i) => (
-                    <div key={i} className="avatar" style={{ background: color }}>
-                      {initials}
-                    </div>
+                  {[["LM","#2DD4BF"],["DK","#60A5FA"],["RS","#F472B6"],["JP","#FB923C"],["AW","#A78BFA"]].map(([i,c],idx) => (
+                    <div key={idx} className="av" style={{ background: c }}>{i}</div>
                   ))}
                 </div>
                 <div>
-                  <div className="trust-text-title">2,847 businesses launched</div>
-                  <div className="trust-text-sub">⭐⭐⭐⭐⭐ 4.9 avg rating</div>
+                  <div className="sp-text">2,847 businesses launched</div>
+                  <div className="stars">★★★★★ <span className="sp-sub">4.9 avg rating</span></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right: preview mockup */}
-          <div className="preview-wrap">
-            <div className="preview-float-label">
+          {/* Right: Mockup */}
+          <div className={`mockup-outer ${visible ? "fu4" : "hidden"}`}>
+            <div className="float-badge badge-top">
               <span className="live-dot" />
-              LIVE PREVIEW — AI GENERATING
+              AI GENERATING LIVE
             </div>
 
-            <div className="mockup-card">
-              <div className="browser-bar">
-                <div className="browser-dots">
-                  {["#ff5f57", "#febc2e", "#28c840"].map((c, i) => (
-                    <div key={i} className="browser-dot" style={{ background: c }} />
+            <div className="mockup-screen">
+              <div className="screen-top-bar">
+                <div className="screen-dots">
+                  {["#ff5f57","#febc2e","#28c840"].map((c,i)=>(
+                    <div key={i} className="screen-dot" style={{background:c}} />
                   ))}
                 </div>
-                <div className="browser-url">
-                  <span style={{ color: "#22c55e", fontSize: 10 }}>🔒</span>
-                  {SITE_EXAMPLES[activeExample].label.toLowerCase().replace(/\s+/g, "")}.com
+                <div className="screen-url">
+                  <span className="screen-url-lock">🔒</span>
+                  <span key={activeBiz} style={{animation:"slideIn 0.4s ease both",animationDelay:"0.1s"}}>
+                    {biz.domain}.com
+                  </span>
                 </div>
               </div>
 
-              <div className="mockup-body">
-                {SITE_EXAMPLES.map((ex, i) => (
+              <div className="screen-body">
+                {BUSINESSES.map((b,i) => (
                   <div
                     key={i}
-                    className="mockup-slide"
-                    style={{ opacity: activeExample === i ? 1 : 0 }}
+                    className="screen-slide"
+                    style={{
+                      opacity: activeBiz === i ? 1 : 0,
+                      transform: activeBiz === i ? "none" : "scale(0.97)",
+                      pointerEvents: activeBiz === i ? "auto" : "none"
+                    }}
                   >
-                    <div style={{
-                      background: `linear-gradient(135deg, ${ex.color}18, ${ex.color}06)`,
-                      borderRadius: 12,
-                      padding: "20px 22px",
-                      marginBottom: 14,
-                      borderLeft: `4px solid ${ex.color}`,
-                    }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: ex.color, marginBottom: 7, textTransform: "uppercase" }}>
-                        {ex.icon} Professional {ex.label.split(" ")[0]} Services
+                    <div className="slide-header" style={{ background: `linear-gradient(135deg, ${b.color}20, ${b.color}08)`, borderLeft: `4px solid ${b.color}` }}>
+                      <div className="slide-eyebrow" style={{ color: b.color }}>{b.icon} {b.type} · {b.city}</div>
+                      <div className="slide-title">
+                        The Most Trusted {b.type} in {b.city} —
+                        <em style={{ color: b.color }}> Guaranteed.</em>
                       </div>
-                      <div style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 400, color: "#111", lineHeight: 1.2, marginBottom: 9, letterSpacing: "-0.02em" }}>
-                        The #1 Trusted {ex.label}{" "}
-                        <em style={{ color: ex.color }}>You Can Rely On</em>
+                      <div className="slide-body">
+                        Licensed & insured. 5-star rated. Serving {b.city} since 2019.
                       </div>
-                      <div style={{ fontSize: 11, color: "#777", marginBottom: 13, lineHeight: 1.6 }}>
-                        Serving customers since 2019. Licensed, insured & 5-star rated.
-                      </div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <div style={{ background: ex.color, color: "white", padding: "7px 14px", borderRadius: 7, fontSize: 11, fontWeight: 700 }}>Get Free Quote</div>
-                        <div style={{ border: `1.5px solid ${ex.color}40`, color: ex.color, padding: "7px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600 }}>See Our Work</div>
+                      <div className="slide-ctas">
+                        <div className="slide-btn-main" style={{ background: b.color }}>Get Free Quote</div>
+                        <div className="slide-btn-ghost" style={{ borderColor: `${b.color}50`, color: b.color }}>See Our Work</div>
                       </div>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 9 }}>
-                      {["Licensed & Insured", "5★ Reviews", "Same Day"].map((feat, fi) => (
-                        <div key={fi} style={{ background: "#f8f8f8", borderRadius: 8, padding: "11px 8px", textAlign: "center" }}>
-                          <div style={{ fontSize: 15, marginBottom: 4 }}>{["✅","⭐","⚡"][fi]}</div>
-                          <div style={{ fontSize: 9, color: "#555", fontWeight: 600 }}>{feat}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: 14 }}>
-                      {[80, 65, 90].map((w, pi) => (
-                        <div key={pi} style={{ height: 4, background: "#f0f0f0", borderRadius: 4, marginBottom: 6, overflow: "hidden" }}>
-                          <div style={{ width: `${w}%`, height: "100%", background: ex.color, borderRadius: 4, opacity: 0.4 }} />
+                    <div className="slide-features">
+                      {["✅ Licensed","⭐ 5-Star","⚡ Same Day"].map((f,fi)=>(
+                        <div key={fi} className="slide-feat">
+                          <div className="slide-feat-text">{f}</div>
                         </div>
                       ))}
                     </div>
@@ -1141,116 +908,133 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="mockup-tabs">
-                {SITE_EXAMPLES.map((ex, i) => (
+              <div className="screen-tabs">
+                {BUSINESSES.map((b,i)=>(
                   <button
                     key={i}
-                    onClick={() => setActiveExample(i)}
-                    className="mockup-tab"
+                    className="screen-tab"
+                    onClick={()=>setActiveBiz(i)}
                     style={{
-                      borderColor: activeExample === i ? ex.color : "#ddd",
-                      background: activeExample === i ? `${ex.color}18` : "transparent",
-                      color: activeExample === i ? ex.color : "#999",
+                      borderColor: activeBiz===i ? b.color : "#ddd",
+                      background: activeBiz===i ? `${b.color}18` : "transparent",
+                      color: activeBiz===i ? b.color : "#999"
                     }}
                   >
-                    {ex.label}
+                    {b.icon} {b.type}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="preview-time-badge">
-              <span style={{ fontSize: 16 }}>⚡</span> Built in 47 seconds
+            <div className="float-badge badge-bottom-right">
+              ⚡ Built in {biz.time}
+            </div>
+            <div className="float-badge badge-bottom-left" style={{ fontSize: 11 }}>
+              🔒 <span style={{ color: "#888" }}>SEO optimized</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── MARQUEE ── */}
-      <div className="marquee-outer">
+      {/* TICKER */}
+      <div className="ticker-wrap">
         <div style={{ overflow: "hidden" }}>
-          <div className="marquee-track">
-            {[
-              "2,847 websites built",
-              "$4.2M+ revenue generated",
-              "4.9 ★ average rating",
-              "No coding required",
-              "Publish in under 5 minutes",
-              "14-day free trial",
-              "Cancel anytime",
-              "2,847 websites built",
-              "$4.2M+ revenue generated",
-              "4.9 ★ average rating",
-              "No coding required",
-              "Publish in under 5 minutes",
-              "14-day free trial",
-              "Cancel anytime",
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="marquee-item"
-                style={{ color: i % 3 === 0 ? "#059669" : "#888" }}
-              >
-                {item}
-                <span className="marquee-sep">◆</span>
+          <div className="ticker-track">
+            {["2,847 websites built","$4.2M+ revenue generated","4.9★ avg rating","No code required","Publish in under 5 minutes","14-day free trial","Cancel anytime",
+              "2,847 websites built","$4.2M+ revenue generated","4.9★ avg rating","No code required","Publish in under 5 minutes","14-day free trial","Cancel anytime"]
+              .map((t,i) => (
+              <div key={i} className={`ticker-item ${i%4===0?"bright":""}`}>
+                {t}<span className="ticker-sep">◆</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="section">
-        <div className="section-inner">
-          <div className="section-center">
-            <div className="section-label">The process</div>
-            <h2 className="section-heading">
-              From zero to live in <em style={{ color: "#059669" }}>three steps</em>
-            </h2>
-            <p className="section-sub">No designers. No developers. No headaches.</p>
+      {/* PROBLEM */}
+      <section className="problem">
+        <div className="problem-inner">
+          <div className="problem-grid">
+            <div>
+              <div className="problem-eyebrow">Why you're here</div>
+              <h2 className="problem-heading">
+                BUILDING<br />A SITE<br />
+                <span className="struck">SUCKS</span><br />
+                RIGHT?
+              </h2>
+              <p className="problem-body">
+                You've wasted hours on drag-and-drop builders.
+                You've gotten quotes from agencies that start at $5,000.
+                You just want something that looks great and gets you clients.
+                <br /><br />
+                AutopilotAI builds your whole site in the time it takes to make coffee.
+              </p>
+            </div>
+            <div className="problem-list">
+              {PROBLEMS.map((p, i) => (
+                <div key={i} className="problem-item">
+                  <div className="problem-emoji">{p.icon}</div>
+                  <div>
+                    <div className="problem-label">{p.label}</div>
+                    <div className="problem-issue">{p.issue}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="steps-grid">
+        </div>
+      </section>
+
+      {/* PROCESS */}
+      <section className="process">
+        <div className="process-inner">
+          <div className="section-center">
+            <div className="section-tag">How it works</div>
+            <h2 className="section-h">THREE STEPS.<br />ZERO HEADACHES.</h2>
+            <p className="section-sub">No designers. No developers. No waiting.</p>
+          </div>
+          <div className="steps">
             {[
-              { n: "01", title: "Describe your business", body: 'Spend 60 seconds telling us what you do. "I\'m a fitness trainer in NYC specializing in weight loss for busy professionals." That\'s all it takes.', icon: "✍️", accent: "#059669" },
-              { n: "02", title: "AI builds your site", body: "Our AI writes your copy, designs your layout, and structures your pages for conversions — all tailored to your industry.", icon: "🤖", accent: "#0ea5e9" },
-              { n: "03", title: "Edit, then publish", body: "Click any element to tweak it. Add your logo. Regenerate sections you don't love. When you're ready, hit publish.", icon: "🚀", accent: "#8b5cf6" },
-            ].map((step, i) => (
-              <div key={i} className="step-card">
-                <div className="step-ghost-num">{step.n}</div>
-                <div className="step-icon">{step.icon}</div>
-                <div className="step-divider" style={{ background: step.accent }} />
-                <h3 className="step-title">{step.title}</h3>
-                <p className="step-body">{step.body}</p>
+              { n:"01", icon:"✍️", color:"#2DD4BF", bg:"rgba(45,212,191,0.12)",
+                title: "Tell us who you are",
+                body: "60 seconds of typing. Your business type, your city, your vibe. That's all we need. Our AI figures out the rest." },
+              { n:"02", icon:"🤖", color:"#60A5FA", bg:"rgba(96,165,250,0.12)",
+                title: "AI builds your whole site",
+                body: "Custom copy written for your industry. Conversion-optimized layout. Professional design. All generated in under a minute." },
+              { n:"03", icon:"🚀", color:"#F472B6", bg:"rgba(244,114,182,0.12)",
+                title: "Edit & go live",
+                body: "Click any element to change it. Swap images. Tweak copy. Hit publish — your site is live at your own domain." },
+            ].map((s,i)=>(
+              <div key={i} className="step">
+                <div className="step-num">{s.n}</div>
+                <div className="step-icon-wrap" style={{ background: s.bg }}>
+                  {s.icon}
+                </div>
+                <div className="step-line" style={{ background: s.color }} />
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-body">{s.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      <section className="section section-dark">
-        <div style={{ position: "absolute", top: -80, left: "30%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div className="section-inner" style={{ position: "relative" }}>
-          <div style={{ marginBottom: 60 }}>
-            <div className="section-label">Proof it works</div>
-            <h2 className="section-heading">
-              Real businesses.{" "}
-              <em style={{ color: "#4ade80" }}>Real results.</em>
-            </h2>
-            <p className="section-sub">Not cherry-picked. These are our last three featured reviews.</p>
-          </div>
+      {/* TESTIMONIALS */}
+      <section className="testimonials">
+        <div className="testi-inner">
+          <div className="section-tag">Proof it works</div>
+          <h2 className="section-h">REAL PEOPLE.<br />REAL REVENUE.</h2>
+          <p className="section-sub" style={{ marginTop: 16 }}>Not cherry-picked case studies. These are the last three featured reviews.</p>
           <div className="testi-grid">
-            {TESTIMONIALS.map((t, i) => (
+            {TESTIMONIALS.map((t,i)=>(
               <div key={i} className="testi-card">
-                <div className="testi-revenue">{t.revenue}</div>
-                <p className="testi-text">"{t.text}"</p>
+                <div className="testi-tag" style={{ background: t.hue }}>{t.earned}</div>
+                <p className="testi-quote">"{t.quote}"</p>
                 <div className="testi-author">
-                  <div className="testi-avatar" style={{ background: t.color }}>
-                    {t.initials}
-                  </div>
+                  <div className="testi-av" style={{ background: t.hue }}>{t.initials}</div>
                   <div>
                     <div className="testi-name">{t.name}</div>
-                    <div className="testi-role">{t.role} · {t.location}</div>
+                    <div className="testi-biz">{t.biz}</div>
                   </div>
                 </div>
               </div>
@@ -1259,47 +1043,44 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section className="section" style={{ background: "#FAFAF8" }}>
-        <div className="section-inner">
-          <div className="features-grid">
+      {/* FEATURES */}
+      <section className="features">
+        <div className="features-inner">
+          <div className="features-layout">
             <div>
-              <div className="section-label">What's included</div>
-              <h2 className="section-heading">
-                Everything built in.
-                <br />
-                <em style={{ color: "#0ea5e9" }}>Nothing left out.</em>
-              </h2>
-              <p style={{ fontSize: 16, color: "#666", lineHeight: 1.7, maxWidth: 420 }}>
-                You shouldn't have to stitch together five tools to have a working website. AutopilotAI includes everything you need to get customers.
+              <div className="section-tag">Everything included</div>
+              <h2 className="section-h">BUILT IN.<br /><em style={{ fontFamily:"'Instrument Serif',serif", WebkitTextStroke:"0" }}>Nothing extra.</em></h2>
+              <p style={{ fontSize:16, color:"#666", lineHeight:1.7, maxWidth:400, marginTop:16 }}>
+                One tool. No plugin shopping. No duct tape. Everything you need to get customers online is already here.
               </p>
-              <div className="feature-list">
+              <div className="feat-list">
                 {[
-                  { icon: "✏️", title: "Click-to-edit anything", body: "Change text, images, colors, or layout without touching code." },
-                  { icon: "📊", title: "Built-in analytics", body: "See visitor numbers, top pages, and where people click." },
-                  { icon: "📬", title: "Lead capture forms", body: "Automatically collect emails and enquiries. No plugin needed." },
-                  { icon: "🌐", title: "Custom domain", body: "Publish to yourcompany.com, not a subdomain nobody trusts." },
-                ].map((f, i) => (
-                  <div key={i} className="feature-item">
-                    <div className="feature-icon-wrap">{f.icon}</div>
+                  { icon:"✏️", title:"Click-to-edit anything", body:"Text, images, colors, layout — all editable with zero code." },
+                  { icon:"📊", title:"Built-in analytics", body:"Visitor counts, top pages, click heatmaps — all native." },
+                  { icon:"📬", title:"Lead capture forms", body:"Automatically collect enquiries and emails. No plugin needed." },
+                  { icon:"🌐", title:"Custom domain", body:"Your real domain, not a branded subdomain nobody trusts." },
+                  { icon:"📱", title:"Mobile perfect", body:"Every site is 100% responsive from the first generation." },
+                ].map((f,i)=>(
+                  <div key={i} className="feat-item">
+                    <div className="feat-icon-box">{f.icon}</div>
                     <div>
-                      <div className="feature-item-title">{f.title}</div>
-                      <div className="feature-item-body">{f.body}</div>
+                      <div className="feat-title">{f.title}</div>
+                      <div className="feat-body">{f.body}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="metrics-grid">
+            <div className="metrics-2">
               {[
-                { metric: "60s", label: "Average time to first website", color: "#059669" },
-                { metric: "$10", label: "Per month to publish with custom domain", color: "#0ea5e9" },
-                { metric: "100%", label: "Mobile responsive, guaranteed", color: "#8b5cf6" },
-                { metric: "4.9★", label: "Average customer rating", color: "#f59e0b" },
-              ].map((m, i) => (
-                <div key={i} className="metric-card">
-                  <div className="metric-value" style={{ color: m.color }}>{m.metric}</div>
-                  <div className="metric-label">{m.label}</div>
+                { val:"60s", label:"Average time to first website", color:"#2DD4BF" },
+                { val:"$10", label:"Per month to publish on your domain", color:"#60A5FA" },
+                { val:"100%", label:"Mobile responsive, guaranteed", color:"#F472B6" },
+                { val:"4.9★", label:"Average customer satisfaction rating", color:"#FB923C" },
+              ].map((m,i)=>(
+                <div key={i} className="metric">
+                  <div className="metric-val" style={{ color:m.color }}>{m.val}</div>
+                  <div className="metric-desc">{m.label}</div>
                 </div>
               ))}
             </div>
@@ -1307,123 +1088,129 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── PRICING ── */}
-      <section className="section" style={{ background: "white", borderTop: "1px solid var(--border)" }}>
-        <div className="section-inner-md">
+      {/* PRICING */}
+      <section className="pricing">
+        <div className="pricing-inner">
           <div className="section-center">
-            <div className="section-label">Pricing</div>
-            <h2 className="section-heading">
-              Straightforward pricing.
-              <br />
-              <em style={{ color: "#059669" }}>No surprises.</em>
-            </h2>
-            <p className="section-sub">
-              Create and edit everything for free. Pay only when you're ready to publish.
-            </p>
+            <div className="section-tag">Pricing</div>
+            <h2 className="section-h">HONEST PRICING.<br />NO GOTCHAS.</h2>
+            <p className="section-sub">Build and edit everything free. Only pay when you're ready to go live.</p>
           </div>
-
           <div className="pricing-grid">
             {/* Free */}
-            <div className="pricing-free">
-              <div className="pricing-tier-label" style={{ color: "#888" }}>Free Forever</div>
-              <div className="pricing-price">$0</div>
-              <div className="pricing-desc" style={{ color: "#888" }}>Create and explore, always free</div>
-              {([
-                [true, "Build 1 website"],
-                [true, "Unlimited edits"],
-                [true, "10 AI content generations"],
-                [true, "Mobile responsive"],
-                [false, "Custom domain"],
-                [false, "Publish publicly"],
-              ] as [boolean, string][]).map(([yes, label], i) => (
-                <div key={i} className="pricing-feature" style={{ color: yes ? "#111" : "#bbb" }}>
-                  <div className={yes ? "check-icon" : "cross-icon"}>{yes ? "✓" : "✕"}</div>
-                  {label}
-                </div>
-              ))}
-              <a href="/upgrade" className="pricing-btn pricing-btn-outline">Start building free</a>
+            <div className="price-card">
+              <div className="price-tier">Free Forever</div>
+              <div className="price-amount">$0</div>
+              <div className="price-period">Create and explore, no card needed</div>
+              <div className="price-feats">
+                {([
+                  [true,"Build 1 website"],
+                  [true,"Unlimited edits"],
+                  [true,"10 AI generations"],
+                  [true,"Mobile responsive"],
+                  [false,"Custom domain"],
+                  [false,"Publish publicly"],
+                ] as [boolean,string][]).map(([yes,label],i)=>(
+                  <div key={i} className="pf" style={{ color: yes?"var(--ink)":"#bbb" }}>
+                    <div className={`pf-check ${yes?"pf-check-yes":"pf-check-no"}`}>{yes?"✓":"✕"}</div>
+                    {label}
+                  </div>
+                ))}
+              </div>
+              <a href="/upgrade" className="price-cta price-cta-ghost">Start building free</a>
             </div>
 
             {/* Starter */}
-            <div className="pricing-popular">
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
-                <div className="pricing-tier-label" style={{ color: "#aaa", marginBottom: 0 }}>Starter</div>
-                <span className="popular-chip">MOST POPULAR</span>
+            <div className="price-card price-card-dark">
+              <div className="price-popular-badge">MOST POPULAR</div>
+              <div className="price-tier price-tier-dark">Starter</div>
+              <div className="price-amount price-amount-dark">
+                $10<span style={{ fontSize:22, color:"#555" }}>/mo</span>
               </div>
-              <div className="pricing-price" style={{ color: "white" }}>
-                $10<span style={{ fontSize: 20, color: "#888" }}>/mo</span>
+              <div className="price-period price-period-dark">14-day free trial — cancel anytime</div>
+              <div className="price-feats">
+                {[
+                  "Publish your website",
+                  "Custom domain included",
+                  "Unlimited AI generations",
+                  "20 AI images/month",
+                  "Analytics dashboard",
+                  "Priority support",
+                ].map((label,i)=>(
+                  <div key={i} className="pf" style={{ color:"rgba(255,255,255,0.85)" }}>
+                    <div className="pf-check pf-check-yes">✓</div>
+                    {label}
+                  </div>
+                ))}
               </div>
-              <div className="pricing-desc" style={{ color: "#888" }}>14-day free trial · cancel anytime</div>
-              {[
-                "Publish your website",
-                "Custom domain (yourco.com)",
-                "Unlimited AI generations",
-                "20 AI images/month",
-                "Advanced analytics",
-                "Priority support",
-              ].map((label, i) => (
-                <div key={i} className="pricing-feature" style={{ color: "rgba(255,255,255,0.85)" }}>
-                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(5,150,105,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#4ade80", fontSize: 10, fontWeight: 700 }}>✓</div>
-                  {label}
-                </div>
-              ))}
-              <a href="/upgrade" className="pricing-btn btn-green">Start free trial →</a>
+              <a href="/upgrade" className="price-cta price-cta-solid">Start free trial →</a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="section" style={{ borderTop: "1px solid var(--border)", background: "#FAFAF8" }}>
-        <div className="section-inner-sm">
-          <h2 className="section-heading" style={{ textAlign: "center", marginBottom: 56 }}>Common questions</h2>
-          {FAQS.map((faq, i) => (
+      {/* FAQ */}
+      <section className="faq">
+        <div className="faq-inner">
+          <h2 className="section-h" style={{ textAlign:"center", marginBottom:56 }}>COMMON QUESTIONS</h2>
+          {[
+            { q:"Is it really free to start?",
+              a:"Yes — build, edit, and preview everything for free, forever. You only pay $10/month when you're ready to publish with your own domain. No credit card required to start." },
+            { q:"Will my site look professional?",
+              a:"Our AI is trained on thousands of premium agency sites. Every output is conversion-optimized with custom copy and industry-specific design. Most customers say it looks better than sites they've paid thousands for." },
+            { q:"Can I edit it after the AI builds it?",
+              a:"Click any text to edit. Drag images. Add sections. Or just type a new prompt and regenerate entirely. No code, no friction, no waiting." },
+            { q:"What if I don't like the first result?",
+              a:"Regenerate as many times as you want — it's always free. Try different styles, tones, and layouts. You only pay when you love it." },
+            { q:"Do I need a domain name?",
+              a:"Your $10/month plan includes connecting your own domain. If you don't have one yet, we'll walk you through getting one for under $15/year." },
+          ].map((faq,i)=>(
             <div key={i} className="faq-item">
-              <button className="faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+              <button className="faq-btn" onClick={()=>setOpenFaq(openFaq===i?null:i)}>
                 {faq.q}
-                <span className={`faq-icon ${openFaq === i ? "open" : ""}`}>+</span>
+                <span className={`faq-plus ${openFaq===i?"open":""}`}>+</span>
               </button>
-              <div className={`faq-answer ${openFaq === i ? "open" : ""}`}>
-                {faq.a}
-              </div>
+              <div className={`faq-body ${openFaq===i?"open":""}`}>{faq.a}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── FINAL CTA ── */}
-      <section className="final-cta">
-        <div className="final-cta-orb" />
-        <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
-          <h2 style={{ fontFamily: "var(--serif)", fontSize: "clamp(38px, 5vw, 62px)", fontWeight: 400, letterSpacing: "-0.03em", color: "white", marginBottom: 20, lineHeight: 1.06 }}>
-            Your customers are searching
-            <br />
-            <em style={{ color: "#4ade80" }}>right now.</em>
+      {/* FINAL CTA */}
+      <section className="final">
+        <div className="final-orb" />
+        <div className="final-inner">
+          <h2 className="final-h">
+            YOUR NEXT<br />
+            <span className="outline">CUSTOMER</span><br />
+            IS <span className="teal">SEARCHING</span>
           </h2>
-          <p style={{ fontSize: 17, color: "#888", marginBottom: 48, lineHeight: 1.65 }}>
-            Don't let them land on a competitor's site. Get professional online in the next 10 minutes — free to start.
+          <p className="final-sub">
+            Right now. On Google. Looking for exactly what you offer.
+            Don't let them land on a competitor's site.
           </p>
-
-          <div className="cta-input-wrap">
+          <div className="final-input-row">
             <input
-              className="cta-input"
+              className="final-input"
               placeholder="Describe your business..."
+              onKeyDown={(e)=> e.key==="Enter" && handleBuild()}
             />
-            <a href="/upgrade" className="btn-green">Build it free →</a>
+            <button className="final-btn" onClick={handleBuild}>Build it free →</button>
           </div>
-
-          <p style={{ fontSize: 13, color: "#555" }}>
-            ✓ No credit card &nbsp;&nbsp; ✓ 2 minutes &nbsp;&nbsp; ✓ Try before you pay
-          </p>
+          <div className="final-fine">
+            <span>No credit card</span>
+            <span>2-minute setup</span>
+            <span>Try before you pay</span>
+          </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer className="footer">
         <div className="footer-inner">
-          <a href="/" className="footer-logo">AutopilotAI</a>
+          <a href="/" className="footer-logo">Autopilot<span>AI</span></a>
           <div className="footer-links">
-            {["Terms", "Privacy", "Contact", "Twitter"].map((link) => (
+            {["Terms","Privacy","Contact","Twitter"].map(link=>(
               <a key={link} href="#" className="footer-link">{link}</a>
             ))}
           </div>
