@@ -189,6 +189,7 @@ export default function DashboardPage() {
           transition: border-color 0.2s, background 0.2s, transform 0.2s;
           position: relative;
           overflow: hidden;
+          -webkit-tap-highlight-color: transparent;
         }
         .shortcut-card:hover {
           border-color: #2a2a2a;
@@ -214,6 +215,7 @@ export default function DashboardPage() {
           color: #e5e5e5;
           outline: none;
           transition: border-color 0.2s, box-shadow 0.2s;
+          -webkit-appearance: none;
         }
         .input-field::placeholder { color: #444; }
         .input-field:hover { border-color: #333; }
@@ -238,6 +240,7 @@ export default function DashboardPage() {
           resize: none;
           transition: border-color 0.2s, box-shadow 0.2s;
           line-height: 1.6;
+          -webkit-appearance: none;
         }
         .textarea-field::placeholder { color: #444; }
         .textarea-field:hover { border-color: #333; }
@@ -260,6 +263,7 @@ export default function DashboardPage() {
           gap: 10px;
           transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
           letter-spacing: -0.01em;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-generate:hover:not(:disabled) {
           filter: brightness(1.08);
@@ -285,6 +289,7 @@ export default function DashboardPage() {
           transition: background 0.2s, transform 0.2s;
           display: flex; align-items: center; gap: 8px;
           text-decoration: none;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-primary:hover { background: #eee; transform: translateY(-1px); }
 
@@ -301,6 +306,7 @@ export default function DashboardPage() {
           transition: border-color 0.2s, color 0.2s;
           display: flex; align-items: center; gap: 8px;
           text-decoration: none;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-secondary:hover { border-color: #444; color: #ccc; }
 
@@ -364,6 +370,121 @@ export default function DashboardPage() {
           justify-content: center;
           flex-shrink: 0;
         }
+
+        /* ─────────────────────────────────────────────
+           MOBILE RESPONSIVE — added only, nothing changed above
+           ───────────────────────────────────────────── */
+
+        /* Main padding shrinks on small screens */
+        .main-wrapper { padding: 24px 16px 80px; }
+        @media (min-width: 560px) { .main-wrapper { padding: 32px 24px 80px; } }
+        @media (min-width: 900px) { .main-wrapper { padding: 40px 24px 80px; } }
+
+        /* Upgrade banner: stack vertically on mobile */
+        @media (max-width: 559px) {
+          .upgrade-banner {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            gap: 14px;
+          }
+        }
+
+        /* Stats: 2×2 on mobile → 4×1 on desktop */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin-bottom: 28px;
+        }
+        @media (min-width: 700px) {
+          .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 36px;
+          }
+        }
+        @media (max-width: 559px) {
+          .stat-card { padding: 14px 16px; }
+        }
+
+        /* Tools: 2 cols → 3 cols → 5 cols */
+        .tools-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        @media (min-width: 560px) { .tools-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+        @media (min-width: 900px) { .tools-grid { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 559px) {
+          .shortcut-card { padding: 16px 14px; border-radius: 14px; }
+        }
+
+        /* Existing site card inner layout */
+        .site-card-inner {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          padding: 24px 20px;
+        }
+        @media (min-width: 560px) { .site-card-inner { padding: 32px 36px; } }
+        @media (min-width: 680px) {
+          .site-card-inner {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 36px 40px;
+          }
+        }
+
+        /* Site action buttons: row on mobile, column on desktop */
+        .site-actions {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        @media (min-width: 680px) {
+          .site-actions {
+            flex-direction: column;
+            min-width: 200px;
+          }
+        }
+
+        /* Builder card: stack on mobile, side-by-side on desktop */
+        .builder-grid {
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 860px) {
+          .builder-grid { display: grid; grid-template-columns: 1fr 1fr; }
+        }
+
+        .builder-left {
+          padding: 24px 20px;
+        }
+        @media (min-width: 560px) { .builder-left { padding: 28px 32px; } }
+        @media (min-width: 860px) { .builder-left { padding: 36px 40px; border-right: 1px solid #1a1a1a; } }
+
+        .builder-right {
+          padding: 24px 20px;
+          background: #0d0d0d;
+          border-top: 1px solid #1a1a1a;
+        }
+        @media (min-width: 560px) { .builder-right { padding: 28px 32px; } }
+        @media (min-width: 860px) { .builder-right { padding: 36px 40px; border-top: none; } }
+
+        /* Hide ".autopilotai.dev" suffix on very small phones to prevent overlap */
+        .slug-suffix { display: inline; }
+        @media (max-width: 420px) {
+          .slug-suffix { display: none; }
+          .slug-input { padding-right: 18px !important; }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
       `}</style>
 
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
@@ -394,6 +515,7 @@ export default function DashboardPage() {
               toast.type === "ok" ? "#4ade80" :
               toast.type === "err" ? "#f87171" : "#60a5fa",
             whiteSpace: "nowrap",
+            maxWidth: "calc(100vw - 32px)",
           }}
         >
           {toast.type === "ok" && <CheckCircle size={16} />}
@@ -403,7 +525,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <main className="main-wrapper" style={{ maxWidth: 1100, margin: "0 auto" }}>
 
         {/* UPGRADE BANNER */}
         {subscriptionPlan === "free" && existingSite && (
@@ -436,6 +558,7 @@ export default function DashboardPage() {
                 alignItems: "center",
                 gap: 8,
                 transition: "filter 0.2s",
+                flexShrink: 0,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
               onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
@@ -450,7 +573,7 @@ export default function DashboardPage() {
           <h1
             className="font-display"
             style={{
-              fontSize: "clamp(28px, 3.5vw, 40px)",
+              fontSize: "clamp(26px, 4vw, 40px)",
               fontWeight: 400,
               letterSpacing: "-0.03em",
               color: "white",
@@ -466,15 +589,7 @@ export default function DashboardPage() {
         </div>
 
         {/* STATS */}
-        <div
-          className="anim-2"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 12,
-            marginBottom: 36,
-          }}
-        >
+        <div className="anim-2 stats-grid">
           <StatCard
             icon={<Globe size={15} />}
             label="Website"
@@ -508,8 +623,7 @@ export default function DashboardPage() {
         {/* TOOLS */}
         <div className="anim-3" style={{ marginBottom: 36 }}>
           <div className="section-label">Tools</div>
-          {/* ── 5 cards: 3 on top row, 2 on bottom row ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+          <div className="tools-grid">
             <ShortcutCard
               icon={<FileText size={16} />}
               title="Content"
@@ -703,118 +817,119 @@ function ExistingSiteCard({ site, router }: {
             : "linear-gradient(90deg, #333, #555)",
         }}
       />
-      <div style={{ padding: "36px 40px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 280 }}>
-            {/* Status pill */}
-            <div
-              className="font-sans"
+      <div className="site-card-inner">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Status pill */}
+          <div
+            className="font-sans"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              padding: "5px 14px",
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 700,
+              marginBottom: 20,
+              background: isLive ? "rgba(5,150,105,0.12)" : "rgba(30,30,30,0.8)",
+              border: isLive ? "1px solid rgba(5,150,105,0.3)" : "1px solid #2a2a2a",
+              color: isLive ? "#4ade80" : "#888",
+            }}
+          >
+            <span
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "5px 14px",
-                borderRadius: 100,
-                fontSize: 12,
-                fontWeight: 700,
-                marginBottom: 20,
-                background: isLive ? "rgba(5,150,105,0.12)" : "rgba(30,30,30,0.8)",
-                border: isLive ? "1px solid rgba(5,150,105,0.3)" : "1px solid #2a2a2a",
-                color: isLive ? "#4ade80" : "#888",
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: isLive ? "#4ade80" : "#555",
+                animation: isLive ? "pulse-dot 2s ease infinite" : "none",
+                display: "inline-block",
               }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: isLive ? "#4ade80" : "#555",
-                  animation: isLive ? "pulse-dot 2s ease infinite" : "none",
-                  display: "inline-block",
-                }}
-              />
-              {isLive ? "Published & Live" : "Draft"}
-            </div>
-
-            <h2
-              className="font-display"
-              style={{
-                fontSize: "clamp(28px, 3vw, 40px)",
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: "white",
-                marginBottom: 10,
-                lineHeight: 1.1,
-              }}
-            >
-              {isLive ? (
-                <>Your site is <em style={{ color: "#4ade80" }}>live</em></>
-              ) : (
-                <>Ready to <em style={{ color: "#0ea5e9" }}>edit</em></>
-              )}
-            </h2>
-            <p
-              className="font-sans"
-              style={{ fontSize: 15, color: "#555", lineHeight: 1.6, maxWidth: 440, marginBottom: 28 }}
-            >
-              {isLive
-                ? "Customers can find you right now. Keep your site fresh — edit anytime."
-                : "Your website is built. Customize it, then hit publish to go live."}
-            </p>
-
-            {/* URL display */}
-            <div
-              className="font-sans"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "#0d0d0d",
-                border: "1px solid #1e1e1e",
-                borderRadius: 10,
-                padding: "8px 14px",
-                fontSize: 13,
-                color: "#666",
-                fontFamily: "monospace",
-              }}
-            >
-              <Globe size={13} style={{ color: "#444" }} />
-              autopilotai.dev/r/
-              <span style={{ color: "#ccc" }}>{site.username}</span>
-            </div>
+            />
+            {isLive ? "Published & Live" : "Draft"}
           </div>
 
-          {/* Action buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 200 }}>
-            <button
-              className="btn-primary font-sans"
-              onClick={() => router.push(`/r/${site.username}?edit=1`)}
-            >
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Edit Website
-            </button>
-            <a
-              href={`/r/${site.username}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary font-sans"
-            >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              View Live
-            </a>
-            {/* ── NEW: Custom Domain button ── */}
-            <button
-              className="btn-secondary font-sans"
-              onClick={() => router.push("/dashboard/domains")}
-            >
-              <Link size={14} />
-              Custom Domain
-            </button>
+          <h2
+            className="font-display"
+            style={{
+              fontSize: "clamp(26px, 3vw, 40px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "white",
+              marginBottom: 10,
+              lineHeight: 1.1,
+            }}
+          >
+            {isLive ? (
+              <>Your site is <em style={{ color: "#4ade80" }}>live</em></>
+            ) : (
+              <>Ready to <em style={{ color: "#0ea5e9" }}>edit</em></>
+            )}
+          </h2>
+          <p
+            className="font-sans"
+            style={{ fontSize: 15, color: "#555", lineHeight: 1.6, maxWidth: 440, marginBottom: 28 }}
+          >
+            {isLive
+              ? "Customers can find you right now. Keep your site fresh — edit anytime."
+              : "Your website is built. Customize it, then hit publish to go live."}
+          </p>
+
+          {/* URL display */}
+          <div
+            className="font-sans"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#0d0d0d",
+              border: "1px solid #1e1e1e",
+              borderRadius: 10,
+              padding: "8px 14px",
+              fontSize: 13,
+              color: "#666",
+              fontFamily: "monospace",
+              maxWidth: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <Globe size={13} style={{ color: "#444", flexShrink: 0 }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              autopilotai.dev/r/<span style={{ color: "#ccc" }}>{site.username}</span>
+            </span>
           </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="site-actions">
+          <button
+            className="btn-primary font-sans"
+            onClick={() => router.push(`/r/${site.username}?edit=1`)}
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Website
+          </button>
+          <a
+            href={`/r/${site.username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary font-sans"
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View Live
+          </a>
+          {/* ── NEW: Custom Domain button ── */}
+          <button
+            className="btn-secondary font-sans"
+            onClick={() => router.push("/dashboard/domains")}
+          >
+            <Link size={14} />
+            Custom Domain
+          </button>
         </div>
       </div>
     </div>
@@ -847,9 +962,9 @@ function WebsiteBuilderCard({
     <div className="main-card">
       <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+      <div className="builder-grid">
         {/* LEFT — form */}
-        <div style={{ padding: "36px 40px", borderRight: "1px solid #1a1a1a" }}>
+        <div className="builder-left">
           <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: 12 }}>
             AI Builder
           </div>
@@ -922,7 +1037,7 @@ function WebsiteBuilderCard({
             </label>
             <div style={{ position: "relative" }}>
               <input
-                className={`input-field input-field-mono ${username.length > 0 && !usernameValid ? "input-field-error" : ""}`}
+                className={`input-field input-field-mono slug-input ${username.length > 0 && !usernameValid ? "input-field-error" : ""}`}
                 value={username}
                 onChange={(e) => onUsernameChange(e.target.value)}
                 placeholder="my-business-name"
@@ -930,7 +1045,7 @@ function WebsiteBuilderCard({
                 style={{ paddingRight: 140 }}
               />
               <div
-                className="font-sans"
+                className="font-sans slug-suffix"
                 style={{
                   position: "absolute",
                   right: 14,
@@ -983,13 +1098,13 @@ function WebsiteBuilderCard({
         </div>
 
         {/* RIGHT — what you get */}
-        <div style={{ padding: "36px 40px", background: "#0d0d0d" }}>
+        <div className="builder-right">
           <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: 12 }}>
             What you get
           </div>
           <h3
             className="font-display"
-            style={{ fontSize: 24, fontWeight: 400, color: "white", marginBottom: 8, letterSpacing: "-0.02em" }}
+            style={{ fontSize: "clamp(20px, 2vw, 24px)", fontWeight: 400, color: "white", marginBottom: 8, letterSpacing: "-0.02em" }}
           >
             A complete website,
             <br />

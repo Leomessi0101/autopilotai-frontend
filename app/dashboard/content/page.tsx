@@ -180,6 +180,7 @@ export default function ContentPage() {
           color: #e5e5e5;
           outline: none;
           transition: border-color .2s, box-shadow .2s;
+          -webkit-appearance: none;
         }
         .field::placeholder { color: #444; }
         .field:hover  { border-color: #333; }
@@ -198,6 +199,7 @@ export default function ContentPage() {
           color: white;
           display: flex; align-items: center; justify-content: center; gap: 9px;
           transition: filter .2s, transform .2s, box-shadow .2s;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-generate:hover:not(:disabled) {
           filter: brightness(1.08);
@@ -215,6 +217,7 @@ export default function ContentPage() {
           font-size: 13px; font-weight: 600; color: #888;
           cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
           transition: border-color .2s, color .2s, background .2s;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-ghost:hover { border-color: #444; color: #ccc; background: #111; }
         .btn-ghost:disabled { opacity: .4; cursor: not-allowed; }
@@ -227,6 +230,7 @@ export default function ContentPage() {
           font-size: 13px; font-weight: 700;
           cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
           transition: background .2s, transform .15s;
+          -webkit-tap-highlight-color: transparent;
         }
         .btn-solid:hover { background: #eee; transform: translateY(-1px); }
 
@@ -277,6 +281,7 @@ export default function ContentPage() {
           transition: border-color .2s, background .2s;
           font-family: 'DM Sans', sans-serif;
           width: 100%;
+          -webkit-tap-highlight-color: transparent;
         }
         .style-pill:hover  { border-color: #333; background: #111; }
         .style-pill.active { border-color: rgba(5,150,105,.5); background: rgba(5,150,105,.07); }
@@ -293,6 +298,7 @@ export default function ContentPage() {
           cursor: pointer; color: #888;
           transition: border-color .2s, color .2s, background .2s;
           white-space: nowrap;
+          -webkit-tap-highlight-color: transparent;
         }
         .template-chip:hover { border-color: #333; color: #ccc; background: #141414; }
 
@@ -325,6 +331,73 @@ export default function ContentPage() {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+
+        /* ─────────────────────────────────────────────
+           MOBILE RESPONSIVE — added only, nothing changed above
+           ───────────────────────────────────────────── */
+
+        /* Main padding */
+        .main-wrapper { padding: 24px 16px 80px; }
+        @media (min-width: 560px) { .main-wrapper { padding: 32px 24px 80px; } }
+        @media (min-width: 900px) { .main-wrapper { padding: 40px 24px 80px; } }
+
+        /* Page header: stack on mobile */
+        .page-header {
+          margin-bottom: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        @media (min-width: 680px) {
+          .page-header {
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 36px;
+          }
+        }
+        .page-header-actions {
+          display: flex;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+
+        /* Main grid: single col on mobile, 2-col on desktop */
+        .main-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        @media (min-width: 860px) {
+          .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            align-items: start;
+          }
+        }
+
+        /* Sidebar: horizontal scroll row on mobile, stack on desktop */
+        .sidebar-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        /* Input card inner padding */
+        .input-card-pad { padding: 24px 20px; }
+        @media (min-width: 560px) { .input-card-pad { padding: 32px 36px; } }
+
+        /* Toast max width on mobile */
+        .toast-wrap { max-width: calc(100vw - 32px); }
+
+        /* Output grid: single col on mobile, 2-col when image present */
+        .output-grid-single { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .output-grid-double { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 700px) {
+          .output-grid-double { grid-template-columns: 1fr 1fr; }
+        }
       `}</style>
 
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
@@ -332,7 +405,7 @@ export default function ContentPage() {
       {/* ── TOAST ── */}
       {toast && (
         <div
-          className="font-sans"
+          className="font-sans toast-wrap"
           style={{
             position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
             zIndex: 200, padding: "11px 18px", borderRadius: 12,
@@ -350,10 +423,10 @@ export default function ContentPage() {
         </div>
       )}
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <main className="main-wrapper" style={{ maxWidth: 1100, margin: "0 auto" }}>
 
         {/* ── PAGE HEADER ── */}
-        <div className="a1" style={{ marginBottom: 36, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+        <div className="a1 page-header">
           <div>
             <div className="section-label" style={{ marginBottom: 10 }}>
               <Sparkles size={11} style={{ display: "inline", marginRight: 5, color: "#f59e0b" }} />
@@ -366,7 +439,7 @@ export default function ContentPage() {
               AI-written captions, posts, and scripts — paired with generated images when you need them.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="page-header-actions">
             <button className="btn-ghost" onClick={() => router.push("/dashboard/work")}>
               My Work <ChevronRight size={13} />
             </button>
@@ -377,12 +450,12 @@ export default function ContentPage() {
         </div>
 
         {/* ── MAIN GRID ── */}
-        <div className="a2" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20, alignItems: "start" }}>
+        <div className="a2 main-grid">
 
           {/* ════ LEFT: INPUT CARD ════ */}
           <div className="card">
             <div style={{ height: 3, background: "linear-gradient(90deg, #059669, #0ea5e9)" }} />
-            <div style={{ padding: "32px 36px" }}>
+            <div className="input-card-pad">
 
               {/* Title */}
               <div style={{ marginBottom: 22 }}>
@@ -527,7 +600,7 @@ export default function ContentPage() {
           </div>
 
           {/* ════ RIGHT: SIDEBAR ════ */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="sidebar-col">
 
             {/* Tips */}
             <div className="card" style={{ padding: "22px 24px" }}>
@@ -629,7 +702,7 @@ export default function ContentPage() {
               Generated output
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: imageUrl ? "1fr 1fr" : "1fr", gap: 20 }}>
+            <div className={imageUrl ? "output-grid-double" : "output-grid-single"}>
 
               {/* Caption preview */}
               <div className="preview-post">

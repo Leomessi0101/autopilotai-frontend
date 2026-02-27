@@ -107,10 +107,230 @@ export default function DomainsPage() {
         .result-row:hover { background: #141414 !important; border-color: #2a2a2a !important; }
         .copy-btn:hover { background: #2a2a2a !important; color: #fff !important; }
         input:focus { border-color: #059669 !important; box-shadow: 0 0 0 3px rgba(5,150,105,0.12) !important; outline: none; }
+
+        /* ─────────────────────────────────────────────
+           MOBILE RESPONSIVE — added only, nothing changed above
+           ───────────────────────────────────────────── */
+
+        /* Sidebar: hidden on mobile, shown on desktop */
+        .sidebar-col {
+          width: 240px;
+          background: #0d0d0d;
+          border-right: 1px solid #1a1a1a;
+          display: flex;
+          flex-direction: column;
+          padding: 24px 16px;
+          flex-shrink: 0;
+          min-height: 100vh;
+        }
+        @media (max-width: 700px) {
+          .sidebar-col { display: none; }
+        }
+
+        /* Mobile top nav bar (hidden on desktop) */
+        .mobile-nav {
+          display: none;
+        }
+        @media (max-width: 700px) {
+          .mobile-nav {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: #0d0d0d;
+            border-bottom: 1px solid #1a1a1a;
+            padding: 0 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+          }
+          .mobile-nav-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            padding: 14px 12px 14px 0;
+          }
+          .mobile-nav-tabs {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            gap: 4px;
+          }
+          .mobile-nav-tab {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            padding: 14px 12px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+          }
+          .mobile-nav-tab.active {
+            color: #f4f4f5;
+            border-bottom-color: #059669;
+          }
+        }
+
+        /* Tab content padding */
+        .tab-content-wrap {
+          flex: 1;
+          padding: 40px 48px;
+          max-width: 900px;
+          width: 100%;
+        }
+        @media (max-width: 860px) {
+          .tab-content-wrap { padding: 28px 24px; }
+        }
+        @media (max-width: 700px) {
+          .tab-content-wrap { padding: 20px 16px 80px; }
+        }
+
+        /* Tab header: stack on mobile */
+        .tab-header-wrap {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 36px;
+          gap: 16px;
+        }
+        @media (max-width: 560px) {
+          .tab-header-wrap {
+            flex-direction: column;
+            margin-bottom: 24px;
+            gap: 14px;
+          }
+        }
+
+        /* Domain card: stack on mobile */
+        .domain-card-inner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+        }
+        @media (max-width: 600px) {
+          .domain-card-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .domain-card-right-wrap {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+        }
+
+        /* Search form: stack on very small screens */
+        .search-form-wrap {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 28px;
+        }
+        @media (max-width: 480px) {
+          .search-form-wrap {
+            flex-direction: column;
+          }
+        }
+
+        /* Result row: stack on small screens */
+        .result-row-inner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        @media (max-width: 480px) {
+          .result-row-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+        }
+
+        /* Modal actions: stack on very small */
+        .modal-actions-wrap {
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+          margin-top: 24px;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 400px) {
+          .modal-actions-wrap { flex-direction: column-reverse; }
+          .modal-actions-wrap button,
+          .modal-actions-wrap a { width: 100%; justify-content: center; }
+        }
+
+        /* Form grid: single col on mobile */
+        .form-grid-wrap {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 4px;
+        }
+        @media (max-width: 480px) {
+          .form-grid-wrap { grid-template-columns: 1fr; }
+          .form-grid-wrap > div[style*="1 / -1"] { grid-column: auto !important; }
+        }
+
+        /* DNS row: allow value to wrap on mobile */
+        .dns-row-wrap {
+          display: flex;
+          align-items: center;
+          padding: 11px 16px;
+          border-bottom: 1px solid #111;
+          gap: 12px;
+        }
+        @media (max-width: 500px) {
+          .dns-row-wrap {
+            flex-wrap: wrap;
+          }
+          .dns-field-label { width: auto !important; font-weight: 700; }
+          .dns-value-val { flex: unset; width: 100%; margin-top: 2px; word-break: break-all; }
+        }
+
+        /* Empty state buttons */
+        .empty-btns {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
       `}</style>
 
-      {/* SIDEBAR */}
-      <aside style={s.sidebar}>
+      {/* MOBILE NAV (visible only on small screens) */}
+      <div className="mobile-nav">
+        <button className="mobile-nav-back" onClick={() => router.push("/dashboard")}>
+          <ArrowLeft size={15} /> Dashboard
+        </button>
+        <div className="mobile-nav-tabs">
+          <button
+            className={`mobile-nav-tab ${tab === "connected" ? "active" : ""}`}
+            onClick={() => setTab("connected")}
+          >
+            My Domains
+          </button>
+          <button
+            className={`mobile-nav-tab ${tab === "purchase" ? "active" : ""}`}
+            onClick={() => setTab("purchase")}
+          >
+            Buy a Domain
+          </button>
+        </div>
+      </div>
+
+      {/* SIDEBAR (hidden on mobile via CSS) */}
+      <aside className="sidebar-col">
         <button onClick={() => router.push("/dashboard")} style={s.backBtn}>
           <ArrowLeft size={15} />
           Dashboard
@@ -212,9 +432,9 @@ function ConnectedTab({ domains, loading, onRefresh, onSelectDomain, onConnectCl
   };
 
   return (
-    <div style={s.tabContent} className="fade-up">
+    <div className="tab-content-wrap fade-up">
       {/* Header */}
-      <div style={s.tabHeader}>
+      <div className="tab-header-wrap">
         <div>
           <h1 style={s.tabTitle}>My Domains</h1>
           <p style={s.tabSubtitle}>Manage domains connected to your AutopilotAI site.</p>
@@ -234,7 +454,7 @@ function ConnectedTab({ domains, loading, onRefresh, onSelectDomain, onConnectCl
           <div style={s.emptyIcon}><Globe size={32} color="#333" /></div>
           <h3 style={s.emptyTitle}>No domains connected yet</h3>
           <p style={s.emptyDesc}>Connect your own domain or buy a new one and we'll configure everything automatically.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="empty-btns">
             <button style={s.btnPrimary} className="btn-primary" onClick={onConnectClick}>
               <Link size={15} /> Connect a Domain
             </button>
@@ -278,44 +498,46 @@ function DomainCard({ domain, deleting, onInspect, onDelete }: {
 
   return (
     <div className="domain-card" style={s.domainCard}>
-      <div style={s.domainCardLeft}>
-        <div style={s.domainCardIcon}>
-          {domain.source === "purchased" ? "🏷️" : "🔗"}
-        </div>
-        <div>
-          <div style={s.domainName}>{domain.domain}</div>
-          <div style={s.domainMeta}>
-            {domain.source === "purchased" ? "Purchased" : "Connected"} ·{" "}
-            {domain.expires_at
-              ? `Expires ${new Date(domain.expires_at).toLocaleDateString()}`
-              : `Added ${new Date(domain.created_at).toLocaleDateString()}`}
+      <div className="domain-card-inner">
+        <div style={s.domainCardLeft}>
+          <div style={s.domainCardIcon}>
+            {domain.source === "purchased" ? "🏷️" : "🔗"}
+          </div>
+          <div>
+            <div style={{ ...s.domainName, wordBreak: "break-all" }}>{domain.domain}</div>
+            <div style={s.domainMeta}>
+              {domain.source === "purchased" ? "Purchased" : "Connected"} ·{" "}
+              {domain.expires_at
+                ? `Expires ${new Date(domain.expires_at).toLocaleDateString()}`
+                : `Added ${new Date(domain.created_at).toLocaleDateString()}`}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div style={s.domainCardRight}>
-        <div style={{ ...s.statusPill, color: st.color, background: st.bg }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: st.dot, display: "inline-block", animation: domain.status === "active" ? "pulse 2s infinite" : "none" }} />
-          {st.label}
-        </div>
+        <div className="domain-card-right-wrap" style={s.domainCardRight}>
+          <div style={{ ...s.statusPill, color: st.color, background: st.bg }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: st.dot, display: "inline-block", animation: domain.status === "active" ? "pulse 2s infinite" : "none" }} />
+            {st.label}
+          </div>
 
-        {domain.status !== "active" && (
-          <button className="btn-ghost" style={s.btnGhost} onClick={onInspect}>
-            View Setup
+          {domain.status !== "active" && (
+            <button className="btn-ghost" style={s.btnGhost} onClick={onInspect}>
+              View Setup
+            </button>
+          )}
+          {domain.status === "active" && (
+            <a href={`https://${domain.domain}`} target="_blank" rel="noopener noreferrer" style={s.btnGhost} className="btn-ghost">
+              Visit ↗
+            </a>
+          )}
+          <button
+            style={{ ...s.btnDelete, opacity: deleting ? 0.5 : 1 }}
+            onClick={onDelete}
+            disabled={deleting}
+          >
+            <Trash2 size={14} />
           </button>
-        )}
-        {domain.status === "active" && (
-          <a href={`https://${domain.domain}`} target="_blank" rel="noopener noreferrer" style={s.btnGhost} className="btn-ghost">
-            Visit ↗
-          </a>
-        )}
-        <button
-          style={{ ...s.btnDelete, opacity: deleting ? 0.5 : 1 }}
-          onClick={onDelete}
-          disabled={deleting}
-        >
-          <Trash2 size={14} />
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -360,7 +582,7 @@ function ConnectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
           spellCheck={false}
         />
         {error && <div style={s.errorBox}>{error}</div>}
-        <div style={s.modalActions}>
+        <div className="modal-actions-wrap">
           <button type="button" style={s.btnSecondary} onClick={onClose}>Cancel</button>
           <button type="submit" style={s.btnPrimary} className="btn-primary" disabled={loading || !domain.trim()}>
             {loading ? "Checking…" : "Get DNS Instructions →"}
@@ -427,9 +649,9 @@ function DNSModal({ domain, onClose, onVerified }: { domain: Domain; onClose: ()
                   { field: "Value / Points to", value: ins.recommended.value },
                   { field: "TTL", value: ins.recommended.ttl },
                 ].map(({ field, value }) => (
-                  <div key={field} style={s.dnsRow}>
-                    <span style={s.dnsField}>{field}</span>
-                    <span style={s.dnsValue}>{value}</span>
+                  <div key={field} className="dns-row-wrap">
+                    <span className="dns-field-label" style={s.dnsField}>{field}</span>
+                    <span className="dns-value-val" style={s.dnsValue}>{value}</span>
                     {(field === "Name / Host" || field === "Value / Points to") && (
                       <button className="copy-btn" style={s.copyBtn} onClick={() => copy(value, field)}>
                         {copied === field ? "✓ Copied" : "Copy"}
@@ -450,9 +672,9 @@ function DNSModal({ domain, onClose, onVerified }: { domain: Domain; onClose: ()
                     { field: "IP Address", value: ins.alternative.value },
                     { field: "TTL", value: ins.alternative.ttl },
                   ].map(({ field, value }) => (
-                    <div key={field} style={s.dnsRow}>
-                      <span style={s.dnsField}>{field}</span>
-                      <span style={s.dnsValue}>{value}</span>
+                    <div key={field} className="dns-row-wrap">
+                      <span className="dns-field-label" style={s.dnsField}>{field}</span>
+                      <span className="dns-value-val" style={s.dnsValue}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -466,7 +688,7 @@ function DNSModal({ domain, onClose, onVerified }: { domain: Domain; onClose: ()
             <div style={s.errorBox}>{result.error || "DNS not verified yet — check your settings and try again."}</div>
           )}
 
-          <div style={s.modalActions}>
+          <div className="modal-actions-wrap">
             <button style={s.btnSecondary} onClick={onClose}>Close</button>
             <button style={s.btnPrimary} className="btn-primary" onClick={verify} disabled={verifying}>
               {verifying ? <><span style={s.spinnerSm} /> Checking…</> : "✓ Verify DNS"}
@@ -501,15 +723,15 @@ function PurchaseTab() {
   };
 
   return (
-    <div style={s.tabContent} className="fade-up">
-      <div style={s.tabHeader}>
+    <div className="tab-content-wrap fade-up">
+      <div className="tab-header-wrap">
         <div>
           <h1 style={s.tabTitle}>Buy a Domain</h1>
           <p style={s.tabSubtitle}>Search availability and purchase — DNS configures automatically.</p>
         </div>
       </div>
 
-      <form onSubmit={search} style={s.searchForm}>
+      <form onSubmit={search} className="search-form-wrap">
         <div style={s.searchWrap}>
           <Search size={16} style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }} />
           <input
@@ -531,24 +753,26 @@ function PurchaseTab() {
         <div style={s.resultsList}>
           {results.map((r) => (
             <div key={r.domain} className="result-row" style={{ ...s.resultRow, opacity: r.available ? 1 : 0.45 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={s.resultDomain}>{r.domain}</span>
-                {r.popular && r.available && <span style={s.popularBadge}>Popular</span>}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                {r.available ? (
-                  <>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={s.price}>{r.display_price}</span>
-                      <span style={s.priceLabel}>/yr</span>
-                    </div>
-                    <button style={s.btnPrimary} className="btn-primary" onClick={() => setPurchasing(r)}>
-                      Buy
-                    </button>
-                  </>
-                ) : (
-                  <span style={s.takenBadge}>Taken</span>
-                )}
+              <div className="result-row-inner" style={{ width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ ...s.resultDomain, wordBreak: "break-all" }}>{r.domain}</span>
+                  {r.popular && r.available && <span style={s.popularBadge}>Popular</span>}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+                  {r.available ? (
+                    <>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={s.price}>{r.display_price}</span>
+                        <span style={s.priceLabel}>/yr</span>
+                      </div>
+                      <button style={s.btnPrimary} className="btn-primary" onClick={() => setPurchasing(r)}>
+                        Buy
+                      </button>
+                    </>
+                  ) : (
+                    <span style={s.takenBadge}>Taken</span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -609,7 +833,7 @@ function PurchaseModal({ domain, onClose, onSuccess }: { domain: SearchResult; o
           <div style={s.modalTitle}>Register {domain.domain}</div>
           <p style={s.modalDesc}>ICANN requires contact info. WHOIS privacy is enabled by default — your details stay private.</p>
           <form onSubmit={submitContact}>
-            <div style={s.formGrid}>
+            <div className="form-grid-wrap">
               {[
                 { k: "first_name", label: "First Name", ph: "Jane" },
                 { k: "last_name", label: "Last Name", ph: "Smith" },
@@ -627,7 +851,7 @@ function PurchaseModal({ domain, onClose, onSuccess }: { domain: SearchResult; o
               ))}
             </div>
             {error && <div style={s.errorBox}>{error}</div>}
-            <div style={s.modalActions}>
+            <div className="modal-actions-wrap">
               <button type="button" style={s.btnSecondary} onClick={onClose}>Cancel</button>
               <button type="submit" style={s.btnPrimary} className="btn-primary">Continue →</button>
             </div>
@@ -650,7 +874,7 @@ function PurchaseModal({ domain, onClose, onSuccess }: { domain: SearchResult; o
             💳 Integrate <strong>@stripe/react-stripe-js</strong> here for the card form
           </div>
           {error && <div style={s.errorBox}>{error}</div>}
-          <div style={s.modalActions}>
+          <div className="modal-actions-wrap">
             <button style={s.btnSecondary} onClick={() => setStep("contact")}>← Back</button>
             <button style={s.btnPrimary} className="btn-primary" onClick={purchase} disabled={loading}>
               {loading ? "Processing…" : `Pay ${domain.display_price}`}
@@ -688,6 +912,7 @@ const s: Record<string, React.CSSProperties> = {
     background: "#0a0a0a",
     color: "#f4f4f5",
     fontFamily: "'DM Sans', system-ui, sans-serif",
+    flexDirection: "column",
   },
   sidebar: {
     width: 240,
@@ -873,10 +1098,6 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #1e1e1e",
     borderRadius: 14,
     padding: "18px 22px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 16,
     transition: "border-color 0.15s, background 0.15s",
     cursor: "default",
   },
@@ -1004,9 +1225,6 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #1e1e1e",
     borderRadius: 12,
     padding: "16px 20px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
     transition: "background 0.15s, border-color 0.15s",
   },
   resultDomain: {
