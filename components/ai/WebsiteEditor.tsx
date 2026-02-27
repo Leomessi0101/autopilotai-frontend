@@ -25,6 +25,7 @@ type Props = {
 };
 
 type Toast = { type: "success" | "error" | "info"; text: string };
+type ViewMode = "desktop" | "tablet" | "mobile";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
@@ -34,6 +35,12 @@ const REGEN_LIMITS: Record<string, number> = {
   free: 1,
   starter: 3,
   pro: 5,
+};
+
+const VIEW_SIZES: Record<ViewMode, { width: string; label: string }> = {
+  desktop: { width: "100%", label: "Desktop" },
+  tablet: { width: "768px", label: "Tablet" },
+  mobile: { width: "390px", label: "Mobile" },
 };
 
 function getToken() {
@@ -155,7 +162,6 @@ function buildEditorScript() {
     select(newEl);
   }
 
-  // ── IMAGE EDITOR WITH FILE UPLOAD ──────────────────────────────────────
   function showImageEditor(img){
     var origW=img.offsetWidth||img.naturalWidth||0;
     var origH=img.offsetHeight||img.naturalHeight||0;
@@ -177,11 +183,9 @@ function buildEditorScript() {
     card.appendChild(el('p','margin:0 0 4px;font-size:18px;font-weight:700;color:#fff','Change Image'));
     card.appendChild(el('p','margin:0 0 20px;font-size:13px;color:#71717a','Upload from your device or paste a URL. Image fits the original size.'));
 
-    // Hidden file input
     var fileInput=el('input'); fileInput.type='file'; fileInput.accept='image/*'; fileInput.style.display='none';
     card.appendChild(fileInput);
 
-    // Upload zone
     var zone=el('div','border:2px dashed #3f3f46;border-radius:10px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color .2s,background .2s',
       '<div style="font-size:28px;margin-bottom:8px">📁</div><p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#e4e4e7">Click to upload or drag & drop</p><p style="margin:0;font-size:12px;color:#71717a">JPG, PNG, WebP, GIF — from your device or phone</p>');
     zone.onmouseenter=function(){ zone.style.borderColor='#059669'; zone.style.background='rgba(5,150,105,0.05)'; };
@@ -196,20 +200,17 @@ function buildEditorScript() {
     };
     card.appendChild(zone);
 
-    // Divider
     var divRow=el('div','display:flex;align-items:center;gap:10px;margin-bottom:16px');
     divRow.appendChild(el('div','flex:1;height:1px;background:#27272a'));
     divRow.appendChild(el('span','font-size:12px;color:#52525b;white-space:nowrap','or paste URL'));
     divRow.appendChild(el('div','flex:1;height:1px;background:#27272a'));
     card.appendChild(divRow);
 
-    // URL input
     var inp=el('input','width:100%;box-sizing:border-box;background:#09090b;border:1px solid #3f3f46;border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none;margin-bottom:14px;font-family:inherit');
     inp.type='text'; inp.placeholder='https://images.unsplash.com/...';
     inp.value=(img.src&&!img.src.startsWith('data:'))?img.src:'';
     card.appendChild(inp);
 
-    // Preview
     var previewWrap=el('div','width:100%;height:160px;border-radius:8px;margin-bottom:16px;background:#09090b;border:1px solid #27272a;overflow:hidden;display:none;align-items:center;justify-content:center');
     var preview=el('img','max-width:100%;max-height:160px;object-fit:contain;display:block;margin:auto');
     previewWrap.appendChild(preview);
@@ -246,7 +247,6 @@ function buildEditorScript() {
     });
     if(img.src&&!img.src.startsWith('data:')) showPreview(img.src,'');
 
-    // Buttons
     var row=el('div','display:flex;gap:10px;justify-content:flex-end');
     var cancel=el('button','background:#27272a;border:1px solid #3f3f46;color:#a1a1aa;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:14px;font-family:inherit','Cancel');
     cancel.onclick=function(){ document.body.removeChild(box); };
@@ -266,7 +266,6 @@ function buildEditorScript() {
     setTimeout(function(){ inp.focus(); },50);
   }
 
-  // ── HOVER ─────────────────────────────────────────────────────────────────
   document.addEventListener('mouseover',function(e){
     if(_selected) return;
     if(e.target.tagName==='IMG'){
@@ -285,7 +284,6 @@ function buildEditorScript() {
     e.target.style.outline=''; e.target.style.outlineOffset='';
   });
 
-  // ── CLICK ─────────────────────────────────────────────────────────────────
   document.addEventListener('click',function(e){
     if(e.target.closest&&e.target.closest('#__ap_toolbar')) return;
     if(e.target.closest&&e.target.closest('#__ap_imgbox')) return;
@@ -304,7 +302,6 @@ function buildEditorScript() {
     else if(_selected&&!_selected.contains(e.target)) deselect();
   });
 
-  // ── KEYBOARD ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'&&_selected) deselect();
     if((e.metaKey||e.ctrlKey)&&e.key==='s'){
@@ -323,6 +320,139 @@ function buildEditorScript() {
 </script>`;
 }
 
+// ─── Icons ───────────────────────────────────────────────────────────────────
+const Icons = {
+  back: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  ),
+  save: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+    </svg>
+  ),
+  eye: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  ),
+  eyeOff: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    </svg>
+  ),
+  desktop: (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path strokeLinecap="round" d="M8 21h8M12 17v4" />
+    </svg>
+  ),
+  tablet: (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  mobile: (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  external: (
+    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    </svg>
+  ),
+  copy: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  ),
+  chevronRight: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  ),
+  sparkles: (
+    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3l1.5 1.5L5 6 3.5 4.5 5 3zm14 0l1.5 1.5L19 6l-1.5-1.5L19 3zM5 18l1.5 1.5L5 21l-1.5-1.5L5 18zm14 0l1.5 1.5L19 21l-1.5-1.5L19 18zM12 2v2m0 16v2M2 12h2m16 0h2" />
+    </svg>
+  ),
+};
+
+// ─── Spinner ─────────────────────────────────────────────────────────────────
+const Spinner = ({ size = 13, color = "#fff", track = "rgba(255,255,255,0.25)" }: { size?: number; color?: string; track?: string }) => (
+  <div style={{
+    width: size, height: size,
+    border: `2px solid ${track}`,
+    borderTopColor: color,
+    borderRadius: "50%",
+    animation: "ap-spin 0.7s linear infinite",
+    flexShrink: 0,
+  }} />
+);
+
+// ─── RegenSteps ──────────────────────────────────────────────────────────────
+const REGEN_STEPS = ["Analyzing your business", "Generating layout", "Writing copy", "Styling sections", "Finishing up"];
+
+function RegenProgress({ active }: { active: boolean }) {
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    if (!active) { setStep(0); setDone([]); return; }
+    setStep(0); setDone([]);
+    const intervals: any[] = [];
+    REGEN_STEPS.forEach((_, i) => {
+      intervals.push(setTimeout(() => {
+        setStep(i);
+        if (i > 0) setDone(prev => { const n = [...prev]; n[i - 1] = true; return n; });
+      }, i * 1800));
+    });
+    return () => intervals.forEach(clearTimeout);
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+      {REGEN_STEPS.map((s, i) => (
+        <div key={s} style={{
+          display: "flex", alignItems: "center", gap: 8,
+          opacity: i > step ? 0.3 : 1,
+          transition: "opacity 0.4s ease",
+        }}>
+          <div style={{
+            width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: done[i] ? "rgba(5,150,105,0.2)" : i === step ? "rgba(99,102,241,0.2)" : "rgba(63,63,70,0.3)",
+            border: `1px solid ${done[i] ? "#059669" : i === step ? "#6366f1" : "#3f3f46"}`,
+            transition: "all 0.3s ease",
+          }}>
+            {done[i] ? (
+              <svg width="10" height="10" fill="none" stroke="#4ade80" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : i === step ? (
+              <Spinner size={8} color="#818cf8" track="rgba(99,102,241,0.2)" />
+            ) : (
+              <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#52525b" }} />
+            )}
+          </div>
+          <span style={{ fontSize: 12, color: done[i] ? "#4ade80" : i === step ? "#a5b4fc" : "#71717a", transition: "color 0.3s" }}>
+            {s}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function WebsiteEditor({ username, initialData, userPlan }: Props) {
   const [data, setData] = useState(initialData);
   const [currentHtml, setCurrentHtml] = useState(initialData.html);
@@ -337,6 +467,10 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
   const [activePanel, setActivePanel] = useState<"edit" | "settings">("edit");
   const [toast, setToast] = useState<Toast | null>(null);
   const [regenCount, setRegenCount] = useState(initialData.regen_count || 0);
+  const [viewMode, setViewMode] = useState<ViewMode>("desktop");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const toastTimer = useRef<any>(null);
 
@@ -344,6 +478,7 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
   const regenLimit = REGEN_LIMITS[plan] ?? 1;
   const regenRemaining = Math.max(0, regenLimit - regenCount);
   const canPublish = ["starter", "pro", "business"].includes(plan);
+  const siteUrl = `autopilotai.dev/r/${username}`;
 
   const showToast = useCallback((type: Toast["type"], text: string) => {
     setToast({ type, text });
@@ -356,41 +491,28 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
     if (!iframe) return;
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!doc) return;
-
     const cleaned = html
       .replace(/<script[\s\S]*?AP_EDITOR_READY[\s\S]*?<\/script>/gi, "")
       .replace(/<div id="__ap_toolbar"[\s\S]*?<\/div>/gi, "")
       .replace(/<div id="__ap_overlay"[\s\S]*?<\/div>/gi, "");
-
     const withEditor = cleaned.includes("</body>")
       ? cleaned.replace("</body>", buildEditorScript() + "\n</body>")
       : cleaned + buildEditorScript();
-
-    const isFullDoc =
-      withEditor.trimStart().startsWith("<!DOCTYPE") ||
-      withEditor.trimStart().startsWith("<html");
-
-    const fullDoc = isFullDoc
-      ? withEditor
-      : `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;min-height:100vh;}a{color:inherit;text-decoration:none;}</style></head><body>${withEditor}</body></html>`;
-
-    doc.open();
-    doc.write(fullDoc);
-    doc.close();
+    const isFullDoc = withEditor.trimStart().startsWith("<!DOCTYPE") || withEditor.trimStart().startsWith("<html");
+    const fullDoc = isFullDoc ? withEditor : `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;min-height:100vh;}a{color:inherit;text-decoration:none;}</style></head><body>${withEditor}</body></html>`;
+    doc.open(); doc.write(fullDoc); doc.close();
   }, []);
 
-  useEffect(() => {
-    writeIframe(currentHtml);
-  }, []); // eslint-disable-line
+  useEffect(() => { writeIframe(currentHtml); }, []); // eslint-disable-line
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       if (!e.data || typeof e.data !== "object") return;
       switch (e.data.type) {
-        case "AP_EDITOR_READY":
-          setEditorReady(true);
-          break;
+        case "AP_EDITOR_READY": setEditorReady(true); break;
+        case "AP_EDITING": setIsEditing(true); break;
         case "AP_HTML_CHANGE": {
+          setIsEditing(false);
           const clean = (e.data.html as string)
             .replace(/<script[\s\S]*?AP_EDITOR_READY[\s\S]*?<\/script>/gi, "")
             .replace(/<div id="__ap_toolbar"[\s\S]*?<\/div>/gi, "")
@@ -399,9 +521,7 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
           setHasUnsaved(true);
           break;
         }
-        case "AP_SAVE":
-          handleSave();
-          break;
+        case "AP_SAVE": handleSave(); break;
       }
     }
     window.addEventListener("message", onMessage);
@@ -421,7 +541,7 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
       const result = await res.json();
       if (!result.ok) throw new Error(result.detail || "Save failed");
       setHasUnsaved(false);
-      showToast("success", "Changes saved!");
+      showToast("success", "Changes saved successfully");
     } catch (err: any) {
       showToast("error", err.message || "Save failed");
     } finally {
@@ -439,14 +559,13 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
       const token = getToken();
       const endpoint = isPublished ? "unpublish" : "publish";
       const res = await fetch(`${API_BASE}/api/dashboard/websites/${username}/${endpoint}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed");
       const result = await res.json();
       if (!result.ok) throw new Error(result.detail || "Failed");
       setIsPublished(!isPublished);
-      showToast("success", isPublished ? "Website unpublished" : `🚀 Live at autopilotai.dev/r/${username}`);
+      showToast("success", isPublished ? "Website unpublished" : `🚀 Live at ${siteUrl}`);
     } catch (err: any) {
       showToast("error", err.message || "Failed");
     } finally {
@@ -477,7 +596,6 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
       }
       const result = await res.json();
       if (!result.ok) throw new Error(result.detail || "Failed");
-
       const freshRes = await fetch(`${API_BASE}/api/dashboard/websites/${username}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -492,7 +610,7 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
           setHasUnsaved(false);
           writeIframe(newHtml);
           const left = regenLimit - newCount;
-          showToast("success", `Regenerated! (${left} use${left !== 1 ? "s" : ""} left)`);
+          showToast("success", `Regenerated! ${left} use${left !== 1 ? "s" : ""} remaining`);
         }
       }
     } catch (err: any) {
@@ -502,207 +620,585 @@ export default function WebsiteEditor({ username, initialData, userPlan }: Props
     }
   };
 
-  const Spinner = ({ color = "#fff", track = "rgba(255,255,255,0.3)" }: { color?: string; track?: string }) => (
-    <div style={{ width: 13, height: 13, border: `2px solid ${track}`, borderTopColor: color, borderRadius: "50%", animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
-  );
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(`https://${siteUrl}`).then(() => {
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    });
+  };
 
   return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", background: "#09090b", fontFamily: "'DM Sans', system-ui, sans-serif", zIndex: 30 }}>
+    <div style={{
+      position: "fixed", inset: 0, display: "flex", flexDirection: "column",
+      background: "#09090b",
+      fontFamily: "'Geist', 'DM Sans', system-ui, sans-serif",
+      zIndex: 30,
+    }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap');
         * { box-sizing: border-box; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        .ap-btn:hover:not(:disabled) { filter: brightness(1.15) !important; }
-        .ap-tab:hover { background: #27272a !important; }
-        .ap-input:focus { border-color: #059669 !important; box-shadow: 0 0 0 3px rgba(5,150,105,0.12) !important; outline: none; }
+        @keyframes ap-spin { to { transform: rotate(360deg); } }
+        @keyframes ap-slide-up { from { opacity:0; transform:translateY(10px) translateX(-50%); } to { opacity:1; transform:translateY(0) translateX(-50%); } }
+        @keyframes ap-fade-in { from { opacity:0; } to { opacity:1; } }
+        @keyframes ap-pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        .ap-btn { transition: filter 0.15s, transform 0.1s !important; }
+        .ap-btn:hover:not(:disabled) { filter: brightness(1.12) !important; transform: translateY(-1px) !important; }
+        .ap-btn:active:not(:disabled) { transform: translateY(0px) !important; }
+
+        .ap-tab-btn { transition: all 0.15s !important; }
+        .ap-tab-btn:hover { background: #1c1c1f !important; }
+
+        .ap-input { transition: border-color 0.15s, box-shadow 0.15s !important; }
+        .ap-input:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important; outline: none !important; }
+
+        .ap-view-btn { transition: all 0.15s !important; }
+        .ap-view-btn:hover { color: #e4e4e7 !important; background: #27272a !important; }
+
+        .ap-sidebar-item:hover { background: rgba(255,255,255,0.04) !important; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
       `}</style>
 
-      {/* TOP BAR */}
-      <div style={{ height: 54, background: "#18181b", borderBottom: "1px solid #27272a", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0, gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <a href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 6, color: "#71717a", textDecoration: "none", fontSize: 13, fontWeight: 500, padding: "5px 10px", borderRadius: 8, border: "1px solid #27272a", background: "#09090b", flexShrink: 0 }}>
-            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-            Dashboard
+      {/* ── TOP BAR ───────────────────────────────────────────────── */}
+      <div style={{
+        height: 52, background: "#111113",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 14px", flexShrink: 0, gap: 10,
+      }}>
+        {/* Left */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+          <a href="/dashboard" style={{
+            display: "flex", alignItems: "center", gap: 5,
+            color: "#71717a", textDecoration: "none",
+            fontSize: 12, fontWeight: 500,
+            padding: "5px 10px", borderRadius: 7,
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.03)",
+            flexShrink: 0, transition: "all 0.15s",
+          }}>
+            {Icons.back} Dashboard
           </a>
-          <div style={{ height: 18, width: 1, background: "#27272a" }} />
-          <span style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 15, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
-            {businessName || username}
-          </span>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: isPublished ? "rgba(5,150,105,0.12)" : "rgba(63,63,70,0.5)", color: isPublished ? "#4ade80" : "#71717a", border: `1px solid ${isPublished ? "rgba(5,150,105,0.3)" : "#3f3f46"}`, flexShrink: 0 }}>
-            {isPublished ? "● Live" : "Draft"}
-          </span>
-          {hasUnsaved && (
-            <span style={{ fontSize: 11, color: "#f59e0b", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "2px 8px", borderRadius: 999, flexShrink: 0 }}>
-              Unsaved
+
+          <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.08)" }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+            <span style={{
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontSize: 15, color: "#f4f4f5",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              maxWidth: 150,
+            }}>
+              {businessName || username}
             </span>
+
+            <span style={{
+              fontSize: 10, fontWeight: 600, letterSpacing: "0.04em",
+              padding: "2px 7px", borderRadius: 999,
+              background: isPublished ? "rgba(5,150,105,0.1)" : "rgba(63,63,70,0.4)",
+              color: isPublished ? "#34d399" : "#52525b",
+              border: `1px solid ${isPublished ? "rgba(52,211,153,0.2)" : "rgba(63,63,70,0.6)"}`,
+              flexShrink: 0, textTransform: "uppercase",
+            }}>
+              {isPublished ? "● Live" : "Draft"}
+            </span>
+
+            {hasUnsaved && (
+              <span style={{
+                fontSize: 10, color: "#f59e0b", letterSpacing: "0.04em", textTransform: "uppercase",
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.2)",
+                padding: "2px 7px", borderRadius: 999, flexShrink: 0, fontWeight: 600,
+                animation: "ap-fade-in 0.2s ease",
+              }}>
+                Unsaved
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Center — viewport controls */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 2,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 9, padding: "3px",
+        }}>
+          {(["desktop", "tablet", "mobile"] as ViewMode[]).map((mode) => (
+            <button
+              key={mode}
+              className="ap-view-btn"
+              onClick={() => setViewMode(mode)}
+              title={VIEW_SIZES[mode].label}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 28, height: 28, border: "none", borderRadius: 6, cursor: "pointer",
+                background: viewMode === mode ? "#27272a" : "transparent",
+                color: viewMode === mode ? "#e4e4e7" : "#52525b",
+                boxShadow: viewMode === mode ? "0 1px 3px rgba(0,0,0,0.4)" : "none",
+                fontFamily: "inherit",
+              }}
+            >
+              {mode === "desktop" ? Icons.desktop : mode === "tablet" ? Icons.tablet : Icons.mobile}
+            </button>
+          ))}
+        </div>
+
+        {/* Center — editor status */}
+        <div style={{
+          fontSize: 11, color: "#52525b",
+          display: "flex", alignItems: "center", justifyContent: "flex-end",
+          gap: 5, pointerEvents: "none", flex: 1,
+          paddingRight: 4,
+        }}>
+          {!editorReady ? (
+            <><Spinner size={10} color="#6366f1" track="#27272a" /> <span>Loading editor…</span></>
+          ) : isEditing ? (
+            <><span style={{ color: "#f59e0b", animation: "ap-pulse-dot 1.2s infinite", fontSize: 8 }}>●</span> <span style={{ color: "#a1a1aa" }}>Editing — Esc when done</span></>
+          ) : (
+            <><span style={{ color: "#34d399", fontSize: 8 }}>●</span> <span>Click text or image to edit</span></>
           )}
         </div>
 
-        <div style={{ fontSize: 12, color: "#52525b", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none" }}>
-          {editorReady
-            ? <><span style={{ color: "#4ade80", fontSize: 8 }}>●</span> Click any text or image to edit</>
-            : <><Spinner color="#059669" track="#3f3f46" /> Loading editor…</>}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {/* Right — actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
           {isPublished && (
-            <a href={`/r/${username}`} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 13, color: "#a1a1aa", textDecoration: "none", padding: "6px 12px", borderRadius: 8, border: "1px solid #27272a", background: "#09090b", fontWeight: 500 }}>
-              View Live ↗
+            <a href={`/r/${username}`} target="_blank" rel="noopener noreferrer" style={{
+              display: "flex", alignItems: "center", gap: 5,
+              fontSize: 12, color: "#71717a", textDecoration: "none",
+              padding: "6px 11px", borderRadius: 7,
+              border: "1px solid rgba(255,255,255,0.07)",
+              background: "rgba(255,255,255,0.03)",
+              fontWeight: 500, transition: "all 0.15s",
+            }}>
+              View Live {Icons.external}
             </a>
           )}
-          <button className="ap-btn" onClick={handleSave} disabled={isSaving}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: "1px solid #3f3f46", background: "#27272a", color: "#e4e4e7", fontSize: 13, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.6 : 1, fontFamily: "inherit" }}>
-            {isSaving ? <Spinner color="#fff" track="#52525b" /> : (
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-            )}
+
+          <button className="ap-btn" onClick={handleSave} disabled={isSaving} style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "6px 14px", borderRadius: 7,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: hasUnsaved ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.05)",
+            color: hasUnsaved ? "#a5b4fc" : "#a1a1aa",
+            fontSize: 12, fontWeight: 600,
+            cursor: isSaving ? "not-allowed" : "pointer",
+            opacity: isSaving ? 0.6 : 1, fontFamily: "inherit",
+          }}>
+            {isSaving ? <Spinner size={11} color="#a5b4fc" track="rgba(99,102,241,0.2)" /> : Icons.save}
             {isSaving ? "Saving…" : "Save"}
-          </button>
-          <button className="ap-btn" onClick={handlePublishToggle} disabled={isPublishing}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: "none", background: isPublished ? "#27272a" : "#059669", color: "#fff", fontSize: 13, fontWeight: 600, cursor: isPublishing ? "not-allowed" : "pointer", opacity: isPublishing ? 0.6 : 1, fontFamily: "inherit" }}>
-            {isPublishing ? <Spinner /> : isPublished ? (
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            ) : (
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+            {!isSaving && (
+              <span style={{ fontSize: 10, color: "#52525b", marginLeft: 2 }}>
+                ⌘S
+              </span>
             )}
+          </button>
+
+          <button className="ap-btn" onClick={handlePublishToggle} disabled={isPublishing} style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "6px 14px", borderRadius: 7, border: "none",
+            background: isPublished
+              ? "rgba(255,255,255,0.07)"
+              : "linear-gradient(135deg, #059669, #047857)",
+            color: isPublished ? "#71717a" : "#fff",
+            fontSize: 12, fontWeight: 600,
+            cursor: isPublishing ? "not-allowed" : "pointer",
+            opacity: isPublishing ? 0.6 : 1, fontFamily: "inherit",
+            boxShadow: !isPublished ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
+          }}>
+            {isPublishing ? <Spinner size={11} /> : isPublished ? Icons.eyeOff : Icons.eye}
             {isPublishing ? "…" : isPublished ? "Unpublish" : "Publish"}
           </button>
         </div>
       </div>
 
-      {/* BODY */}
+      {/* ── BODY ──────────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* SIDEBAR */}
-        <div style={{ width: 272, background: "#18181b", borderRight: "1px solid #27272a", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-          <div style={{ display: "flex", borderBottom: "1px solid #27272a", padding: "8px 8px 0", gap: 4 }}>
+        {/* ── SIDEBAR ───────────────────────────────────────────── */}
+        <div style={{
+          width: sidebarCollapsed ? 0 : 268,
+          minWidth: sidebarCollapsed ? 0 : 268,
+          background: "#111113",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", flexDirection: "column",
+          flexShrink: 0,
+          overflow: "hidden",
+          transition: "width 0.25s ease, min-width 0.25s ease",
+        }}>
+
+          {/* Tab bar */}
+          <div style={{
+            display: "flex",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            padding: "8px 10px 0", gap: 2,
+          }}>
             {(["edit", "settings"] as const).map((tab) => (
-              <button key={tab} className="ap-tab" onClick={() => setActivePanel(tab)}
-                style={{ flex: 1, padding: "8px 0", borderRadius: "8px 8px 0 0", border: "none", background: activePanel === tab ? "#09090b" : "transparent", color: activePanel === tab ? "#fff" : "#71717a", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", borderBottom: activePanel === tab ? "2px solid #059669" : "2px solid transparent" }}>
-                {tab === "edit" ? "✏️ Edit" : "⚙️ Settings"}
+              <button key={tab} className="ap-tab-btn" onClick={() => setActivePanel(tab)} style={{
+                flex: 1, padding: "7px 0", borderRadius: "7px 7px 0 0",
+                border: "none",
+                background: activePanel === tab ? "#09090b" : "transparent",
+                color: activePanel === tab ? "#e4e4e7" : "#52525b",
+                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                fontFamily: "inherit",
+                borderBottom: activePanel === tab ? "2px solid #6366f1" : "2px solid transparent",
+                letterSpacing: "0.02em",
+              }}>
+                {tab === "edit" ? "✏️  Edit" : "⚙️  Settings"}
               </button>
             ))}
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          {/* Panel content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "14px 12px" }}>
             {activePanel === "edit" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                {/* Guide */}
-                <div style={{ background: "rgba(5,150,105,0.06)", border: "1px solid rgba(5,150,105,0.15)", borderRadius: 10, padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#4ade80", textTransform: "uppercase", letterSpacing: "0.06em" }}>How to edit</p>
+                {/* Tip card */}
+                <div style={{
+                  background: "rgba(99,102,241,0.06)",
+                  border: "1px solid rgba(99,102,241,0.15)",
+                  borderRadius: 10, padding: "11px 13px",
+                }}>
+                  <p style={{ margin: "0 0 9px", fontSize: 10, fontWeight: 700, color: "#818cf8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Quick Guide
+                  </p>
                   {[
-                    ["🖱️", "Click any text to edit it inline"],
-                    ["🖼️", "Click any image to replace it"],
-                    ["📁", "Upload from device or paste a URL"],
-                    ["⌨️", "Esc to finish · Cmd+S to save"],
+                    ["🖱️", "Click any text to edit inline"],
+                    ["🖼️", "Click any image to replace"],
+                    ["⌨️", "Esc to confirm · ⌘S to save"],
                   ].map(([icon, text]) => (
-                    <div key={String(text)} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 5 }}>
-                      <span style={{ fontSize: 13, width: 20, flexShrink: 0 }}>{icon}</span>
-                      <span style={{ fontSize: 12, color: "#71717a" }}>{text}</span>
+                    <div key={String(text)} style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 5 }}>
+                      <span style={{ fontSize: 12, width: 18, flexShrink: 0 }}>{icon}</span>
+                      <span style={{ fontSize: 11, color: "#71717a", lineHeight: 1.5 }}>{text}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Business name */}
                 <div>
-                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 7 }}>Business Name</label>
-                  <input className="ap-input" type="text" value={businessName}
+                  <label style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    fontSize: 10, fontWeight: 700, color: "#52525b",
+                    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7,
+                  }}>
+                    Business Name
+                  </label>
+                  <input
+                    className="ap-input" type="text" value={businessName}
                     onChange={(e) => { setBusinessName(e.target.value); setHasUnsaved(true); }}
                     placeholder="Your business name"
-                    style={{ width: "100%", background: "#09090b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", padding: "9px 12px", fontSize: 14, fontFamily: "inherit", transition: "border-color .15s, box-shadow .15s" }} />
+                    style={{
+                      width: "100%", background: "#09090b",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 8, color: "#f4f4f5",
+                      padding: "8px 11px", fontSize: 13,
+                      fontFamily: "inherit",
+                    }}
+                  />
                 </div>
 
-                <div style={{ height: 1, background: "#27272a" }} />
+                <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 
-                {/* Regenerate */}
+                {/* Regenerate section */}
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Regenerate with AI</label>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: regenRemaining > 0 ? "rgba(5,150,105,0.1)" : "rgba(239,68,68,0.1)", color: regenRemaining > 0 ? "#4ade80" : "#f87171", border: `1px solid ${regenRemaining > 0 ? "rgba(5,150,105,0.2)" : "rgba(239,68,68,0.2)"}` }}>
-                      {regenRemaining}/{regenLimit} left
-                    </span>
+                    <label style={{
+                      fontSize: 10, fontWeight: 700, color: "#52525b",
+                      textTransform: "uppercase", letterSpacing: "0.08em",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}>
+                      {Icons.sparkles} Regenerate with AI
+                    </label>
+
+                    {/* Usage pill */}
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 3,
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.04em",
+                      padding: "2px 8px", borderRadius: 999,
+                      background: regenRemaining > 0 ? "rgba(52,211,153,0.08)" : "rgba(239,68,68,0.08)",
+                      color: regenRemaining > 0 ? "#34d399" : "#f87171",
+                      border: `1px solid ${regenRemaining > 0 ? "rgba(52,211,153,0.2)" : "rgba(239,68,68,0.2)"}`,
+                    }}>
+                      {Array.from({ length: regenLimit }).map((_, i) => (
+                        <div key={i} style={{
+                          width: 6, height: 6, borderRadius: "50%",
+                          background: i < regenRemaining ? (regenRemaining > 0 ? "#34d399" : "#f87171") : "rgba(255,255,255,0.1)",
+                        }} />
+                      ))}
+                      <span style={{ marginLeft: 3 }}>{regenRemaining}/{regenLimit}</span>
+                    </div>
                   </div>
-                  <p style={{ fontSize: 12, color: "#52525b", marginBottom: 10, lineHeight: 1.6 }}>
-                    AI rebuilds the whole site from scratch with your description.
+
+                  <p style={{ fontSize: 11, color: "#52525b", marginBottom: 9, lineHeight: 1.65 }}>
+                    AI rebuilds your entire site from your description.
                   </p>
-                  <textarea className="ap-input" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={5}
-                    placeholder="Describe your business, services, location..."
-                    style={{ width: "100%", background: "#09090b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", padding: "9px 12px", fontSize: 13, fontFamily: "inherit", resize: "none", lineHeight: 1.6, marginBottom: 10, transition: "border-color .15s, box-shadow .15s" }} />
-                  <button onClick={handleRegenerate}
+
+                  <textarea
+                    className="ap-input"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    rows={5}
+                    placeholder="Describe your business, services, target audience, and any key pages or features you want..."
+                    style={{
+                      width: "100%", background: "#09090b",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 8, color: "#f4f4f5",
+                      padding: "8px 11px", fontSize: 12,
+                      fontFamily: "inherit", resize: "none",
+                      lineHeight: 1.6, marginBottom: 9,
+                    }}
+                  />
+
+                  <button
+                    onClick={handleRegenerate}
                     disabled={isRegenerating || regenRemaining <= 0 || !prompt.trim() || !businessName.trim()}
-                    style={{ width: "100%", padding: "10px", borderRadius: 8, border: "none", background: regenRemaining > 0 ? "linear-gradient(135deg,#4f46e5,#7c3aed)" : "#27272a", color: regenRemaining > 0 ? "#fff" : "#52525b", fontSize: 13, fontWeight: 600, cursor: (isRegenerating || regenRemaining <= 0) ? "not-allowed" : "pointer", opacity: (isRegenerating || !prompt.trim() || !businessName.trim()) ? 0.5 : 1, fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                    {isRegenerating ? <><Spinner /> Regenerating…</> : regenRemaining <= 0 ? "🔒 Limit reached — upgrade for more" : "🔄 Regenerate Website"}
+                    style={{
+                      width: "100%", padding: "10px",
+                      borderRadius: 8, border: "none",
+                      background: isRegenerating
+                        ? "rgba(99,102,241,0.2)"
+                        : regenRemaining > 0
+                          ? "linear-gradient(135deg, #4f46e5, #7c3aed)"
+                          : "rgba(255,255,255,0.04)",
+                      color: regenRemaining > 0 ? "#fff" : "#52525b",
+                      fontSize: 12, fontWeight: 600,
+                      cursor: (isRegenerating || regenRemaining <= 0) ? "not-allowed" : "pointer",
+                      opacity: (!prompt.trim() || !businessName.trim()) && regenRemaining > 0 ? 0.45 : 1,
+                      fontFamily: "inherit",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      boxShadow: regenRemaining > 0 && !isRegenerating ? "0 2px 12px rgba(99,102,241,0.35)" : "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {isRegenerating
+                      ? <><Spinner size={11} color="#a5b4fc" track="rgba(99,102,241,0.2)" /> Regenerating…</>
+                      : regenRemaining <= 0
+                        ? "🔒 Upgrade to regenerate"
+                        : <><span>✦</span> Regenerate Website</>}
                   </button>
+
+                  {/* Regen progress steps */}
+                  <RegenProgress active={isRegenerating} />
+
                   {regenRemaining <= 0 && (
-                    <a href="/upgrade" style={{ display: "block", textAlign: "center", marginTop: 8, fontSize: 12, color: "#f59e0b", textDecoration: "none", fontWeight: 600 }}>
-                      Upgrade now →
+                    <a href="/upgrade" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                      marginTop: 9, fontSize: 12, color: "#f59e0b",
+                      textDecoration: "none", fontWeight: 600,
+                      padding: "8px", borderRadius: 7,
+                      background: "rgba(245,158,11,0.07)",
+                      border: "1px solid rgba(245,158,11,0.15)",
+                      transition: "all 0.15s",
+                    }}>
+                      Upgrade plan {Icons.chevronRight}
                     </a>
                   )}
                 </div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                {/* Site URL */}
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Site URL</p>
-                  <div style={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 8, padding: "9px 12px", fontSize: 13, color: "#a1a1aa", fontFamily: "monospace" }}>
-                    autopilotai.dev/r/{username}
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7 }}>
+                    Site URL
+                  </p>
+                  <div style={{
+                    background: "#09090b", border: "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: 8, padding: "9px 11px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                  }}>
+                    <span style={{ fontSize: 12, color: "#71717a", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {siteUrl}
+                    </span>
+                    <button
+                      onClick={handleCopyUrl}
+                      title="Copy URL"
+                      style={{
+                        display: "flex", alignItems: "center", gap: 4,
+                        background: "none", border: "none",
+                        color: copiedUrl ? "#34d399" : "#52525b",
+                        cursor: "pointer", flexShrink: 0,
+                        fontSize: 11, fontWeight: 600, fontFamily: "inherit",
+                        transition: "color 0.2s",
+                      }}
+                    >
+                      {copiedUrl ? "✓ Copied" : Icons.copy}
+                    </button>
                   </div>
                 </div>
+
+                {/* Visibility */}
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Visibility</p>
-                  <div style={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 8, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7 }}>
+                    Visibility
+                  </p>
+                  <div style={{
+                    background: "#09090b", border: "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: 8, padding: "11px 13px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#fff" }}>{isPublished ? "Published" : "Draft"}</p>
-                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "#52525b" }}>{isPublished ? "Visible to everyone" : "Only visible to you"}</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#e4e4e7" }}>
+                        {isPublished ? "Published" : "Draft"}
+                      </p>
+                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "#52525b" }}>
+                        {isPublished ? "Visible to everyone" : "Only visible to you"}
+                      </p>
                     </div>
-                    <button onClick={handlePublishToggle} disabled={isPublishing}
-                      style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: isPublished ? "#3f3f46" : "#059669", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                    <button onClick={handlePublishToggle} disabled={isPublishing} style={{
+                      padding: "5px 13px", borderRadius: 6,
+                      border: "none",
+                      background: isPublished ? "#27272a" : "#059669",
+                      color: "#fff", fontSize: 11, fontWeight: 600,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>
                       {isPublished ? "Unpublish" : "Publish"}
                     </button>
                   </div>
                 </div>
+
+                {/* Custom domain */}
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Custom Domain</p>
-                  <a href="/dashboard/domains" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#09090b", border: "1px solid #27272a", borderRadius: 8, padding: "12px 14px", textDecoration: "none", color: "#a1a1aa", fontSize: 13 }}>
-                    <span>{data.custom_domain || "Connect a domain →"}</span>
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7 }}>
+                    Custom Domain
+                  </p>
+                  <a href="/dashboard/domains" className="ap-sidebar-item" style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "#09090b", border: "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: 8, padding: "11px 13px",
+                    textDecoration: "none", color: "#71717a", fontSize: 12,
+                    transition: "background 0.15s",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      {data.custom_domain ? (
+                        <>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: data.domain_verified ? "#34d399" : "#f59e0b", flexShrink: 0 }} />
+                          <span style={{ color: "#e4e4e7" }}>{data.custom_domain}</span>
+                        </>
+                      ) : (
+                        <span>Connect a custom domain</span>
+                      )}
+                    </div>
+                    {Icons.chevronRight}
                   </a>
                 </div>
-                <div style={{ background: canPublish ? "rgba(5,150,105,0.06)" : "rgba(245,158,11,0.06)", border: `1px solid ${canPublish ? "rgba(5,150,105,0.15)" : "rgba(245,158,11,0.15)"}`, borderRadius: 10, padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: canPublish ? "#4ade80" : "#fbbf24" }}>
-                    {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan
+
+                {/* Plan info */}
+                <div style={{
+                  background: canPublish ? "rgba(52,211,153,0.05)" : "rgba(245,158,11,0.05)",
+                  border: `1px solid ${canPublish ? "rgba(52,211,153,0.12)" : "rgba(245,158,11,0.12)"}`,
+                  borderRadius: 10, padding: "12px 13px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: canPublish ? "#34d399" : "#fbbf24" }}>
+                      {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan
+                    </p>
+                    {!canPublish && (
+                      <a href="/upgrade" style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b", textDecoration: "none" }}>
+                        Upgrade →
+                      </a>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: "#71717a", lineHeight: 1.5 }}>
+                    {canPublish
+                      ? "Publishing and custom domains are enabled."
+                      : "Upgrade to Starter ($10/mo) to publish your site."}
                   </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "#71717a" }}>
-                    {canPublish ? "You can publish and use custom domains." : "Upgrade to Starter ($10/mo) to publish."}
-                  </p>
-                  {!canPublish && <a href="/upgrade" style={{ display: "inline-block", marginTop: 8, fontSize: 12, fontWeight: 600, color: "#f59e0b", textDecoration: "none" }}>Upgrade now →</a>}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* IFRAME PREVIEW */}
-        <div style={{ flex: 1, overflow: "hidden", background: "#09090b" }}>
-          <iframe ref={iframeRef} title={`${businessName || username} — editor`}
-            style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
+        {/* Sidebar collapse toggle */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Show panel" : "Hide panel"}
+          style={{
+            position: "absolute", left: sidebarCollapsed ? 0 : 268, top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 10, width: 16, height: 44,
+            background: "#1c1c1f",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderLeft: sidebarCollapsed ? "1px solid rgba(255,255,255,0.07)" : "none",
+            borderRadius: sidebarCollapsed ? "0 5px 5px 0" : "0 5px 5px 0",
+            cursor: "pointer", color: "#52525b",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "left 0.25s ease",
+            fontSize: 9,
+          }}
+        >
+          {sidebarCollapsed ? "›" : "‹"}
+        </button>
+
+        {/* ── PREVIEW AREA ──────────────────────────────────────── */}
+        <div style={{
+          flex: 1, overflow: "hidden",
+          background: "#0a0a0d",
+          display: "flex", flexDirection: "column",
+          alignItems: "center",
+          padding: viewMode === "desktop" ? 0 : "16px 16px 0",
+          transition: "padding 0.2s ease",
+        }}>
+          {/* Viewport label */}
+          {viewMode !== "desktop" && (
+            <div style={{
+              fontSize: 10, fontWeight: 600, color: "#3f3f46",
+              textTransform: "uppercase", letterSpacing: "0.1em",
+              marginBottom: 8, animation: "ap-fade-in 0.2s ease",
+            }}>
+              {VIEW_SIZES[viewMode].label} — {VIEW_SIZES[viewMode].width}
+            </div>
+          )}
+
+          <div style={{
+            width: VIEW_SIZES[viewMode].width,
+            maxWidth: "100%",
+            flex: 1,
+            overflow: "hidden",
+            borderRadius: viewMode === "desktop" ? 0 : "12px 12px 0 0",
+            border: viewMode === "desktop" ? "none" : "1px solid rgba(255,255,255,0.08)",
+            borderBottom: "none",
+            boxShadow: viewMode !== "desktop" ? "0 -8px 32px rgba(0,0,0,0.4)" : "none",
+            transition: "all 0.25s ease",
+          }}>
+            <iframe
+              ref={iframeRef}
+              title={`${businessName || username} — editor`}
+              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            />
+          </div>
         </div>
       </div>
 
-      {/* TOAST */}
+      {/* ── TOAST ─────────────────────────────────────────────────── */}
       {toast && (
-        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 9999, display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600, fontFamily: "inherit", animation: "slideUp 0.25s ease", boxShadow: "0 8px 32px rgba(0,0,0,0.5)", background: toast.type === "success" ? "#052e16" : toast.type === "error" ? "#1c0a0a" : "#0c1a2e", border: `1px solid ${toast.type === "success" ? "#166534" : toast.type === "error" ? "#7f1d1d" : "#1e3a5f"}`, color: toast.type === "success" ? "#4ade80" : toast.type === "error" ? "#f87171" : "#60a5fa", whiteSpace: "nowrap" }}>
-          {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"} {toast.text}
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 9999,
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "10px 18px", borderRadius: 10,
+          fontSize: 12, fontWeight: 600, fontFamily: "inherit",
+          animation: "ap-slide-up 0.22s ease forwards",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          background: toast.type === "success" ? "#052e16" : toast.type === "error" ? "#1c0505" : "#0c1220",
+          border: `1px solid ${toast.type === "success" ? "rgba(52,211,153,0.2)" : toast.type === "error" ? "rgba(248,113,113,0.2)" : "rgba(96,165,250,0.2)"}`,
+          color: toast.type === "success" ? "#4ade80" : toast.type === "error" ? "#f87171" : "#60a5fa",
+          whiteSpace: "nowrap", letterSpacing: "0.01em",
+        }}>
+          <span style={{ fontSize: 14 }}>
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
+          </span>
+          {toast.text}
         </div>
       )}
     </div>
