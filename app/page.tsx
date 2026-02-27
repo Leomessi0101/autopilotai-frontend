@@ -44,6 +44,36 @@ const PROBLEMS = [
   { label: "DIY from scratch", issue: "Nobody has time for that", icon: "😅" },
 ];
 
+const TOOLS = [
+  {
+    icon: "✉️",
+    label: "Email Campaigns",
+    desc: "AI writes cold outreach, newsletters, follow-ups — every tone, every audience. Copy that converts.",
+    color: "#60A5FA",
+    bg: "rgba(96,165,250,0.1)",
+    href: "/dashboard/email",
+    tag: "Email Generator",
+  },
+  {
+    icon: "📣",
+    label: "Ad Copy",
+    desc: "Facebook, Google, Instagram — ready-to-run ad headlines, hooks, and CTAs in seconds.",
+    color: "#F472B6",
+    bg: "rgba(244,114,182,0.1)",
+    href: "/dashboard/ads",
+    tag: "Ads Generator",
+  },
+  {
+    icon: "✍️",
+    label: "Content Generator",
+    desc: "Blog posts, landing page copy, product descriptions, social captions. All on-brand, all instant.",
+    color: "#FB923C",
+    bg: "rgba(251,146,60,0.1)",
+    href: "/dashboard/content",
+    tag: "Content AI",
+  },
+];
+
 export default function HomePage() {
   const [inputVal, setInputVal] = useState("");
   const [activeBiz, setActiveBiz] = useState(0);
@@ -66,11 +96,9 @@ export default function HomePage() {
     setVisible(true);
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll);
-
     const bizInterval = setInterval(() => {
       setActiveBiz((p) => (p + 1) % BUSINESSES.length);
     }, 2600);
-
     return () => {
       window.removeEventListener("scroll", onScroll);
       clearInterval(bizInterval);
@@ -80,7 +108,6 @@ export default function HomePage() {
   useEffect(() => {
     const phrase = phrases[phraseIdx];
     const speed = isDeleting ? 28 : 52;
-
     const timer = setTimeout(() => {
       if (!isDeleting) {
         if (typedText.length < phrase.length) {
@@ -97,7 +124,6 @@ export default function HomePage() {
         }
       }
     }, speed);
-
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, phraseIdx]);
 
@@ -138,18 +164,13 @@ export default function HomePage() {
           overflow-x: hidden;
         }
 
-        /* NOISE TEXTURE */
         .root::before {
           content: '';
-          position: fixed;
-          inset: 0;
+          position: fixed; inset: 0;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-          pointer-events: none;
-          z-index: 0;
-          opacity: 0.4;
+          pointer-events: none; z-index: 0; opacity: 0.4;
         }
 
-        /* ANIMATIONS */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -158,11 +179,11 @@ export default function HomePage() {
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.85); opacity: 0.5; } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes gradShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
         }
+        @keyframes toolFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
 
         .fu1 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
         .fu2 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
@@ -171,7 +192,7 @@ export default function HomePage() {
         .fu5 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.64s both; }
         .hidden { opacity: 0; }
 
-        /* NAV */
+        /* ── NAV ──────────────────────────────────────────────────── */
         .nav {
           position: fixed; top: 0; left: 0; right: 0; z-index: 200;
           height: 62px;
@@ -180,16 +201,13 @@ export default function HomePage() {
           transition: all 0.3s;
         }
         .nav.scrolled {
-          background: rgba(245,240,232,0.92);
+          background: rgba(245,240,232,0.93);
           backdrop-filter: blur(20px);
           border-bottom: 1px solid var(--border);
         }
         .nav-logo {
-          font-family: var(--display);
-          font-size: 26px;
-          letter-spacing: 0.04em;
-          color: var(--ink);
-          text-decoration: none;
+          font-family: var(--display); font-size: 26px;
+          letter-spacing: 0.04em; color: var(--ink); text-decoration: none;
         }
         .nav-logo span { color: var(--sage); }
         .nav-right { display: flex; gap: 10px; align-items: center; }
@@ -207,7 +225,7 @@ export default function HomePage() {
         }
         .nav-pill:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
-        /* HERO */
+        /* ── HERO ─────────────────────────────────────────────────── */
         .hero {
           min-height: 100vh;
           padding: 100px 32px 80px;
@@ -220,26 +238,14 @@ export default function HomePage() {
           gap: 80px; align-items: center;
           position: relative; z-index: 1;
         }
-
-        /* BIG DECORATIVE TEXT */
         .hero-stamp {
           font-family: var(--display);
           font-size: clamp(100px, 14vw, 200px);
-          line-height: 0.88;
-          letter-spacing: -0.01em;
-          color: var(--ink);
-          margin-bottom: 32px;
-          user-select: none;
+          line-height: 0.88; letter-spacing: -0.01em;
+          color: var(--ink); margin-bottom: 32px; user-select: none;
         }
-        .hero-stamp .line2 {
-          -webkit-text-stroke: 2px var(--ink);
-          color: transparent;
-        }
-        .hero-stamp .accent {
-          color: var(--sage);
-          -webkit-text-stroke: 0;
-          display: block;
-        }
+        .hero-stamp .line2 { -webkit-text-stroke: 2px var(--ink); color: transparent; }
+        .hero-stamp .accent { color: var(--sage); -webkit-text-stroke: 0; display: block; }
 
         .hero-sub {
           font-size: 17px; font-weight: 400; color: #555;
@@ -247,20 +253,13 @@ export default function HomePage() {
         }
         .hero-sub strong { color: var(--ink); font-weight: 700; }
 
-        /* INPUT FIELD */
         .build-box {
-          background: white;
-          border: 2px solid var(--ink);
-          border-radius: 20px;
-          overflow: hidden;
+          background: white; border: 2px solid var(--ink);
+          border-radius: 20px; overflow: hidden;
           box-shadow: 6px 6px 0 var(--ink);
-          margin-bottom: 20px;
-          transition: box-shadow 0.2s;
+          margin-bottom: 20px; transition: box-shadow 0.2s;
         }
-        .build-box:focus-within {
-          box-shadow: 6px 6px 0 var(--sage);
-          border-color: var(--sage);
-        }
+        .build-box:focus-within { box-shadow: 6px 6px 0 var(--sage); border-color: var(--sage); }
         .build-input {
           width: 100%; border: none; outline: none;
           font-family: var(--body); font-size: 15px; font-weight: 500;
@@ -304,25 +303,19 @@ export default function HomePage() {
           width: 34px; height: 34px; border-radius: 50%;
           border: 2.5px solid var(--cream);
           display: flex; align-items: center; justify-content: center;
-          font-size: 10px; font-weight: 800; color: white;
-          margin-left: -9px;
+          font-size: 10px; font-weight: 800; color: white; margin-left: -9px;
         }
         .av:first-child { margin-left: 0; }
         .sp-text { font-size: 13px; font-weight: 600; }
         .sp-sub { font-size: 11px; color: #888; }
         .stars { color: #F59E0B; font-size: 11px; }
 
-        /* MOCKUP */
-        .mockup-outer {
-          position: relative;
-        }
+        /* ── MOCKUP ───────────────────────────────────────────────── */
+        .mockup-outer { position: relative; }
         .mockup-screen {
-          background: white;
-          border: 2px solid var(--ink);
-          border-radius: 24px;
-          overflow: hidden;
-          box-shadow: 10px 10px 0 var(--ink);
-          position: relative;
+          background: white; border: 2px solid var(--ink);
+          border-radius: 24px; overflow: hidden;
+          box-shadow: 10px 10px 0 var(--ink); position: relative;
         }
         .screen-top-bar {
           background: #1A1A1A; padding: 12px 16px;
@@ -337,45 +330,31 @@ export default function HomePage() {
           font-family: monospace; overflow: hidden; white-space: nowrap;
         }
         .screen-url-lock { color: var(--sage); font-size: 9px; }
-        .screen-body {
-          height: 340px; position: relative; overflow: hidden;
-        }
+        .screen-body { height: 340px; position: relative; overflow: hidden; }
         .screen-slide {
           position: absolute; inset: 0; padding: 22px;
           transition: opacity 0.5s ease, transform 0.5s ease;
         }
         .slide-header {
-          border-radius: 14px; padding: 20px;
-          margin-bottom: 14px;
+          border-radius: 14px; padding: 20px; margin-bottom: 14px;
         }
         .slide-eyebrow {
           font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
           text-transform: uppercase; margin-bottom: 8px;
         }
         .slide-title {
-          font-family: var(--serif);
-          font-size: 18px; line-height: 1.25; margin-bottom: 10px;
-          letter-spacing: -0.02em;
+          font-family: var(--serif); font-size: 18px; line-height: 1.25;
+          margin-bottom: 10px; letter-spacing: -0.02em;
         }
         .slide-body { font-size: 11px; color: #777; margin-bottom: 13px; line-height: 1.6; }
         .slide-ctas { display: flex; gap: 8px; }
-        .slide-btn-main {
-          padding: 8px 14px; border-radius: 7px;
-          font-size: 11px; font-weight: 800; color: white;
-        }
+        .slide-btn-main { padding: 8px 14px; border-radius: 7px; font-size: 11px; font-weight: 800; color: white; }
         .slide-btn-ghost {
           padding: 8px 14px; border-radius: 7px;
-          font-size: 11px; font-weight: 600; border: 1.5px solid;
-          background: transparent;
+          font-size: 11px; font-weight: 600; border: 1.5px solid; background: transparent;
         }
-        .slide-features {
-          display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
-        }
-        .slide-feat {
-          background: #f8f8f8; border-radius: 9px;
-          padding: 10px 7px; text-align: center;
-        }
-        .slide-feat-icon { font-size: 14px; margin-bottom: 4px; }
+        .slide-features { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .slide-feat { background: #f8f8f8; border-radius: 9px; padding: 10px 7px; text-align: center; }
         .slide-feat-text { font-size: 9px; color: #666; font-weight: 600; }
         .screen-tabs {
           background: #FAFAFA; border-top: 1.5px solid #eee;
@@ -388,44 +367,29 @@ export default function HomePage() {
           font-family: var(--body); transition: all 0.2s;
         }
 
-        /* FLOATING BADGES */
         .float-badge {
-          position: absolute;
-          background: white;
-          border: 1.5px solid var(--border);
-          border-radius: 14px;
-          padding: 10px 14px;
-          box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
+          position: absolute; background: white;
+          border: 1.5px solid var(--border); border-radius: 14px;
+          padding: 10px 14px; box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
           font-size: 12px; font-weight: 700;
           display: flex; align-items: center; gap: 8px;
-          white-space: nowrap;
-          z-index: 10;
+          white-space: nowrap; z-index: 10;
         }
         .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2s ease infinite; }
         .badge-top {
           top: -18px; left: 50%; transform: translateX(-50%);
-          background: var(--ink); color: white; border-color: transparent;
-          font-size: 11px;
+          background: var(--ink); color: white; border-color: transparent; font-size: 11px;
         }
-        .badge-bottom-right {
-          bottom: -18px; right: -10px;
-          animation: float 3.5s ease-in-out infinite;
-        }
-        .badge-bottom-left {
-          bottom: 50px; left: -20px;
-          animation: float 4s ease-in-out 1s infinite;
-        }
+        .badge-bottom-right { bottom: -18px; right: -10px; animation: float 3.5s ease-in-out infinite; }
+        .badge-bottom-left { bottom: 50px; left: -20px; animation: float 4s ease-in-out 1s infinite; }
 
-        /* TICKER */
+        /* ── TICKER ───────────────────────────────────────────────── */
         .ticker-wrap {
           background: var(--ink); overflow: hidden;
           padding: 13px 0; border-top: 1px solid var(--cream);
           border-bottom: 1px solid var(--cream);
         }
-        .ticker-track {
-          display: flex; gap: 0;
-          animation: ticker 28s linear infinite;
-        }
+        .ticker-track { display: flex; animation: ticker 28s linear infinite; }
         .ticker-item {
           padding: 0 32px; font-size: 12px; font-weight: 700;
           color: rgba(255,255,255,0.5); white-space: nowrap;
@@ -435,15 +399,10 @@ export default function HomePage() {
         .ticker-item.bright { color: var(--sage); }
         .ticker-sep { margin-left: 32px; color: rgba(255,255,255,0.2); }
 
-        /* PROBLEM SECTION */
-        .problem {
-          padding: 120px 32px;
-          background: var(--ink);
-          position: relative; overflow: hidden;
-        }
+        /* ── PROBLEM ──────────────────────────────────────────────── */
+        .problem { padding: 120px 32px; background: var(--ink); position: relative; overflow: hidden; }
         .problem-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
         .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-
         .problem-eyebrow {
           font-size: 11px; font-weight: 800; letter-spacing: 0.12em;
           text-transform: uppercase; color: var(--sage); margin-bottom: 20px;
@@ -456,18 +415,13 @@ export default function HomePage() {
         }
         .problem-heading .struck {
           -webkit-text-stroke: 1.5px rgba(255,255,255,0.25);
-          color: transparent;
-          position: relative;
+          color: transparent; position: relative;
         }
         .problem-heading .struck::after {
-          content: '';
-          position: absolute;
-          left: 0; right: 0; top: 50%;
-          height: 2px; background: #ef4444;
-          transform: rotate(-2deg);
+          content: ''; position: absolute; left: 0; right: 0; top: 50%;
+          height: 2px; background: #ef4444; transform: rotate(-2deg);
         }
         .problem-body { font-size: 16px; color: #888; line-height: 1.75; }
-
         .problem-list { display: flex; flex-direction: column; gap: 14px; }
         .problem-item {
           background: rgba(255,255,255,0.04);
@@ -481,20 +435,18 @@ export default function HomePage() {
         .problem-label { font-size: 14px; font-weight: 700; color: white; margin-bottom: 3px; }
         .problem-issue { font-size: 13px; color: #666; }
 
-        /* PROCESS */
+        /* ── PROCESS ──────────────────────────────────────────────── */
         .process { padding: 120px 32px; background: var(--cream); }
         .process-inner { max-width: 1100px; margin: 0 auto; }
         .section-tag {
           display: inline-block;
           font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
-          text-transform: uppercase; color: var(--sage);
-          margin-bottom: 18px;
+          text-transform: uppercase; color: var(--sage); margin-bottom: 18px;
         }
         .section-h {
           font-family: var(--display);
           font-size: clamp(48px, 6vw, 80px);
-          line-height: 0.92; letter-spacing: 0.01em;
-          margin-bottom: 16px;
+          line-height: 0.92; letter-spacing: 0.01em; margin-bottom: 16px;
         }
         .section-sub { font-size: 16px; color: var(--muted); line-height: 1.65; max-width: 460px; }
         .section-center { text-align: center; margin-bottom: 72px; }
@@ -502,8 +454,7 @@ export default function HomePage() {
 
         .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 64px; }
         .step {
-          background: white;
-          border: 2px solid var(--ink);
+          background: white; border: 2px solid var(--ink);
           border-radius: 24px; padding: 40px 32px;
           position: relative; overflow: hidden;
           box-shadow: 5px 5px 0 var(--ink);
@@ -511,11 +462,9 @@ export default function HomePage() {
         }
         .step:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--ink); }
         .step-num {
-          font-family: var(--display);
-          font-size: 90px; line-height: 1;
+          font-family: var(--display); font-size: 90px; line-height: 1;
           position: absolute; top: -18px; right: 16px;
-          opacity: 0.04; user-select: none; color: var(--ink);
-          pointer-events: none;
+          opacity: 0.04; user-select: none; color: var(--ink); pointer-events: none;
         }
         .step-icon-wrap {
           width: 52px; height: 52px; border-radius: 14px;
@@ -527,48 +476,162 @@ export default function HomePage() {
         .step-title { font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 10px; letter-spacing: -0.02em; }
         .step-body { font-size: 14px; color: var(--muted); line-height: 1.75; }
 
-        /* TESTIMONIALS */
+        /* ── TOOLS SECTION (NEW) ──────────────────────────────────── */
+        .tools-section {
+          padding: 0 32px 0;
+          background: var(--cream);
+          position: relative;
+        }
+        .tools-inner {
+          max-width: 1100px; margin: 0 auto;
+          border: 2px solid var(--ink);
+          border-radius: 32px;
+          background: var(--ink);
+          overflow: hidden;
+          box-shadow: 8px 8px 0 var(--sage);
+          position: relative;
+        }
+        .tools-inner::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: radial-gradient(ellipse at 80% 50%, rgba(45,212,191,0.08) 0%, transparent 60%);
+          pointer-events: none;
+        }
+        .tools-header {
+          padding: 52px 56px 40px;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+          display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;
+          flex-wrap: wrap;
+        }
+        .tools-eyebrow {
+          font-size: 11px; font-weight: 800; letter-spacing: 0.12em;
+          text-transform: uppercase; color: var(--sage); margin-bottom: 14px;
+        }
+        .tools-heading {
+          font-family: var(--display);
+          font-size: clamp(40px, 5vw, 64px);
+          line-height: 0.9; color: white; letter-spacing: 0.01em;
+        }
+        .tools-heading em {
+          font-family: var(--serif); font-style: italic;
+          -webkit-text-stroke: 1px rgba(255,255,255,0.5); color: transparent;
+          font-size: clamp(44px, 5.5vw, 70px);
+        }
+        .tools-sub {
+          font-size: 15px; color: #666; line-height: 1.65;
+          max-width: 320px; align-self: flex-end;
+        }
+        .tools-grid {
+          display: grid; grid-template-columns: repeat(3,1fr);
+        }
+        .tool-card {
+          padding: 40px 36px;
+          border-right: 1px solid rgba(255,255,255,0.06);
+          position: relative; overflow: hidden;
+          cursor: pointer; text-decoration: none; display: block;
+          transition: background 0.25s;
+        }
+        .tool-card:last-child { border-right: none; }
+        .tool-card::after {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, var(--tool-color, #fff) 0%, transparent 60%);
+          opacity: 0; transition: opacity 0.3s;
+        }
+        .tool-card:hover { background: rgba(255,255,255,0.04); }
+        .tool-card:hover::after { opacity: 0.04; }
+        .tool-card:hover .tool-icon { animation: toolFloat 2s ease-in-out infinite; }
+        .tool-icon-wrap {
+          width: 56px; height: 56px; border-radius: 16px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 26px; margin-bottom: 24px;
+          border: 1px solid rgba(255,255,255,0.1);
+          position: relative; z-index: 1;
+          transition: transform 0.2s;
+        }
+        .tool-icon { font-size: 26px; }
+        .tool-tag {
+          display: inline-block; font-size: 10px; font-weight: 800;
+          letter-spacing: 0.1em; text-transform: uppercase;
+          padding: 3px 10px; border-radius: 100px;
+          margin-bottom: 14px; position: relative; z-index: 1;
+          border: 1px solid;
+        }
+        .tool-label {
+          font-family: var(--display); font-size: 28px; letter-spacing: 0.02em;
+          color: white; margin-bottom: 12px;
+          position: relative; z-index: 1; line-height: 1;
+        }
+        .tool-desc {
+          font-size: 13px; color: #666; line-height: 1.65;
+          position: relative; z-index: 1;
+        }
+        .tool-arrow {
+          position: absolute; bottom: 32px; right: 32px;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; color: rgba(255,255,255,0.3);
+          transition: all 0.2s; z-index: 1;
+        }
+        .tool-card:hover .tool-arrow {
+          background: var(--tool-color, rgba(255,255,255,0.2));
+          border-color: transparent; color: var(--ink); transform: translate(2px,-2px);
+        }
+        .tools-footer {
+          padding: 20px 56px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          display: flex; align-items: center; justify-content: space-between; gap: 20px;
+          flex-wrap: wrap;
+        }
+        .tools-footer-note {
+          font-size: 13px; color: #444;
+        }
+        .tools-footer-note strong { color: #888; }
+        .tools-cta {
+          font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+          text-transform: uppercase; color: var(--sage);
+          text-decoration: none; display: flex; align-items: center; gap: 6px;
+          transition: gap 0.2s;
+        }
+        .tools-cta:hover { gap: 10px; }
+
+        /* ── TESTIMONIALS ─────────────────────────────────────────── */
         .testimonials { padding: 120px 32px; background: white; border-top: 2px solid var(--ink); }
         .testi-inner { max-width: 1100px; margin: 0 auto; }
         .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 64px; }
         .testi-card {
-          border: 2px solid var(--ink);
-          border-radius: 24px; padding: 34px;
-          box-shadow: 5px 5px 0 var(--ink);
-          transition: transform 0.25s, box-shadow 0.25s;
+          border: 2px solid var(--ink); border-radius: 24px; padding: 34px;
+          box-shadow: 5px 5px 0 var(--ink); transition: transform 0.25s, box-shadow 0.25s;
           position: relative; background: white;
         }
         .testi-card:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--ink); }
         .testi-tag {
-          display: inline-block;
-          font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
-          padding: 4px 12px; border-radius: 100px; margin-bottom: 18px;
-          color: white;
+          display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+          padding: 4px 12px; border-radius: 100px; margin-bottom: 18px; color: white;
         }
         .testi-quote {
           font-family: var(--serif); font-size: 17px;
-          font-style: italic; color: var(--ink);
-          line-height: 1.65; margin-bottom: 26px;
+          font-style: italic; color: var(--ink); line-height: 1.65; margin-bottom: 26px;
         }
         .testi-author { display: flex; align-items: center; gap: 12px; }
         .testi-av {
           width: 42px; height: 42px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 12px; font-weight: 800; color: white;
-          border: 2px solid var(--ink);
+          font-size: 12px; font-weight: 800; color: white; border: 2px solid var(--ink);
         }
         .testi-name { font-size: 14px; font-weight: 700; }
         .testi-biz { font-size: 12px; color: #888; }
 
-        /* FEATURES */
+        /* ── FEATURES ─────────────────────────────────────────────── */
         .features { padding: 120px 32px; background: var(--cream); }
         .features-inner { max-width: 1100px; margin: 0 auto; }
         .features-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
         .feat-list { display: flex; flex-direction: column; gap: 0; margin-top: 44px; }
         .feat-item {
           padding: 22px 0; border-bottom: 1.5px solid var(--border);
-          display: flex; gap: 18px; align-items: flex-start;
-          transition: padding 0.2s;
+          display: flex; gap: 18px; align-items: flex-start; transition: padding 0.2s;
         }
         .feat-item:first-child { border-top: 1.5px solid var(--border); }
         .feat-item:hover { padding-left: 8px; }
@@ -576,8 +639,7 @@ export default function HomePage() {
           width: 42px; height: 42px; border-radius: 11px;
           background: white; border: 1.5px solid var(--border);
           display: flex; align-items: center; justify-content: center;
-          font-size: 18px; flex-shrink: 0;
-          box-shadow: 3px 3px 0 var(--border);
+          font-size: 18px; flex-shrink: 0; box-shadow: 3px 3px 0 var(--border);
         }
         .feat-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
         .feat-body { font-size: 13px; color: #888; line-height: 1.6; }
@@ -585,30 +647,25 @@ export default function HomePage() {
         .metric {
           background: white; border: 2px solid var(--ink);
           border-radius: 20px; padding: 28px 24px;
-          box-shadow: 5px 5px 0 var(--ink);
-          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 5px 5px 0 var(--ink); transition: transform 0.2s, box-shadow 0.2s;
         }
         .metric:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--ink); }
         .metric-val {
-          font-family: var(--display);
-          font-size: 52px; line-height: 1; margin-bottom: 10px;
-          letter-spacing: 0.02em;
+          font-family: var(--display); font-size: 52px; line-height: 1;
+          margin-bottom: 10px; letter-spacing: 0.02em;
         }
         .metric-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-        /* PRICING */
+        /* ── PRICING ──────────────────────────────────────────────── */
         .pricing { padding: 120px 32px; background: white; border-top: 2px solid var(--ink); }
         .pricing-inner { max-width: 800px; margin: 0 auto; }
         .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 64px; }
         .price-card {
-          border: 2px solid var(--ink);
-          border-radius: 24px; padding: 44px 38px;
-          box-shadow: 5px 5px 0 var(--ink);
-          position: relative; background: var(--cream);
+          border: 2px solid var(--ink); border-radius: 24px; padding: 44px 38px;
+          box-shadow: 5px 5px 0 var(--ink); position: relative; background: var(--cream);
         }
         .price-card-dark {
-          background: var(--ink); border-color: var(--ink);
-          box-shadow: 5px 5px 0 var(--sage);
+          background: var(--ink); border-color: var(--ink); box-shadow: 5px 5px 0 var(--sage);
         }
         .price-popular-badge {
           position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
@@ -619,18 +676,12 @@ export default function HomePage() {
         }
         .price-tier { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 18px; }
         .price-tier-dark { color: #555; }
-        .price-amount {
-          font-family: var(--display);
-          font-size: 72px; line-height: 1; margin-bottom: 6px; letter-spacing: 0.02em;
-        }
+        .price-amount { font-family: var(--display); font-size: 72px; line-height: 1; margin-bottom: 6px; letter-spacing: 0.02em; }
         .price-amount-dark { color: white; }
         .price-period { font-size: 14px; color: #888; margin-bottom: 32px; }
         .price-period-dark { color: #555; }
         .price-feats { display: flex; flex-direction: column; gap: 11px; }
-        .pf {
-          display: flex; align-items: center; gap: 12px;
-          font-size: 14px;
-        }
+        .pf { display: flex; align-items: center; gap: 12px; font-size: 14px; }
         .pf-check {
           width: 20px; height: 20px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
@@ -650,7 +701,7 @@ export default function HomePage() {
         .price-cta-solid { background: var(--sage); color: var(--ink); border-color: var(--sage); }
         .price-cta-solid:hover { background: #1fc4b1; border-color: #1fc4b1; transform: translateY(-2px); }
 
-        /* FAQ */
+        /* ── FAQ ──────────────────────────────────────────────────── */
         .faq { padding: 120px 32px; background: var(--cream); }
         .faq-inner { max-width: 680px; margin: 0 auto; }
         .faq-item { border-bottom: 2px solid var(--ink); }
@@ -661,50 +712,34 @@ export default function HomePage() {
           font-size: 16px; font-weight: 700; color: var(--ink);
           font-family: var(--body); gap: 16px;
         }
-        .faq-plus {
-          font-size: 24px; color: var(--sage); font-weight: 300;
-          transition: transform 0.3s; flex-shrink: 0; line-height: 1;
-        }
+        .faq-plus { font-size: 24px; color: var(--sage); font-weight: 300; transition: transform 0.3s; flex-shrink: 0; line-height: 1; }
         .faq-plus.open { transform: rotate(45deg); }
         .faq-body {
           overflow: hidden; max-height: 0; opacity: 0;
           transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s;
-          font-size: 15px; color: var(--muted); line-height: 1.75;
-          padding-bottom: 0;
+          font-size: 15px; color: var(--muted); line-height: 1.75; padding-bottom: 0;
         }
         .faq-body.open { max-height: 220px; opacity: 1; padding-bottom: 24px; }
 
-        /* FINAL CTA */
-        .final {
-          padding: 140px 32px;
-          background: var(--ink); position: relative; overflow: hidden;
-        }
+        /* ── FINAL CTA ────────────────────────────────────────────── */
+        .final { padding: 140px 32px; background: var(--ink); position: relative; overflow: hidden; }
         .final-orb {
-          position: absolute; top: -200px; left: 50%;
-          transform: translateX(-50%);
+          position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
           width: 900px; height: 600px; border-radius: 50%;
           background: radial-gradient(ellipse, rgba(45,212,191,0.18) 0%, transparent 65%);
           pointer-events: none;
         }
-        .final-inner {
-          max-width: 720px; margin: 0 auto;
-          text-align: center; position: relative; z-index: 1;
-        }
+        .final-inner { max-width: 720px; margin: 0 auto; text-align: center; position: relative; z-index: 1; }
         .final-h {
           font-family: var(--display);
           font-size: clamp(52px, 8vw, 110px);
-          line-height: 0.9; letter-spacing: 0.01em;
-          color: white; margin-bottom: 24px;
+          line-height: 0.9; letter-spacing: 0.01em; color: white; margin-bottom: 24px;
         }
-        .final-h .outline {
-          -webkit-text-stroke: 2px white;
-          color: transparent;
-        }
+        .final-h .outline { -webkit-text-stroke: 2px white; color: transparent; }
         .final-h .teal { color: var(--sage); }
         .final-sub { font-size: 17px; color: #666; line-height: 1.7; margin-bottom: 52px; }
         .final-input-row {
-          background: rgba(255,255,255,0.07);
-          border: 1.5px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12);
           border-radius: 18px; padding: 7px;
           display: flex; gap: 8px; max-width: 520px; margin: 0 auto 18px;
         }
@@ -715,8 +750,7 @@ export default function HomePage() {
         }
         .final-input::placeholder { color: #555; }
         .final-btn {
-          background: var(--sage); color: var(--ink);
-          border: none; cursor: pointer;
+          background: var(--sage); color: var(--ink); border: none; cursor: pointer;
           font-family: var(--body); font-size: 13px; font-weight: 800;
           letter-spacing: 0.06em; text-transform: uppercase;
           padding: 13px 22px; border-radius: 12px;
@@ -726,11 +760,8 @@ export default function HomePage() {
         .final-fine { font-size: 12px; color: #555; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
         .final-fine span::before { content: '✓ '; color: var(--sage); }
 
-        /* FOOTER */
-        .footer {
-          background: #080808; border-top: 1px solid #1f1f1f;
-          padding: 36px 32px;
-        }
+        /* ── FOOTER ───────────────────────────────────────────────── */
+        .footer { background: #080808; border-top: 1px solid #1f1f1f; padding: 36px 32px; }
         .footer-inner {
           max-width: 1100px; margin: 0 auto;
           display: flex; justify-content: space-between;
@@ -742,7 +773,7 @@ export default function HomePage() {
         .footer-link { font-size: 13px; color: #444; text-decoration: none; transition: color 0.2s; }
         .footer-link:hover { color: white; }
 
-        /* MOBILE */
+        /* ── MOBILE ───────────────────────────────────────────────── */
         @media (max-width: 960px) {
           .nav { padding: 0 20px; }
           .nav-ghost { display: none; }
@@ -753,6 +784,13 @@ export default function HomePage() {
           .problem-grid { grid-template-columns: 1fr; gap: 48px; }
           .process { padding: 80px 20px; }
           .steps { grid-template-columns: 1fr; gap: 18px; margin-top: 48px; }
+          .tools-section { padding: 0 20px; }
+          .tools-header { padding: 36px 28px 28px; flex-direction: column; align-items: flex-start; }
+          .tools-grid { grid-template-columns: 1fr; }
+          .tool-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+          .tool-card:last-child { border-bottom: none; }
+          .tool-card { padding: 28px 24px; }
+          .tools-footer { padding: 16px 28px; flex-direction: column; align-items: flex-start; }
           .testimonials { padding: 80px 20px; }
           .testi-grid { grid-template-columns: 1fr; gap: 18px; }
           .features { padding: 80px 20px; }
@@ -788,15 +826,12 @@ export default function HomePage() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-layout">
-          {/* Left */}
           <div>
             <div className={visible ? "fu1" : "hidden"}>
               <h1 className="hero-stamp">
                 <span>Your</span>
-                <br />
-                <span className="line2">website</span>
-                <br />
-                <span className="accent">in 60s.</span>
+                <br /><span className="line2">website</span>
+                <br /><span className="accent">in 60s.</span>
               </h1>
             </div>
 
@@ -824,9 +859,7 @@ export default function HomePage() {
                   ) : (
                     <div style={{ flex: 1 }} />
                   )}
-                  <button className="build-btn" onClick={handleBuild}>
-                    Generate site →
-                  </button>
+                  <button className="build-btn" onClick={handleBuild}>Generate site →</button>
                 </div>
               </div>
 
@@ -850,13 +883,12 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Mockup */}
+          {/* Mockup */}
           <div className={`mockup-outer ${visible ? "fu4" : "hidden"}`}>
             <div className="float-badge badge-top">
               <span className="live-dot" />
               AI GENERATING LIVE
             </div>
-
             <div className="mockup-screen">
               <div className="screen-top-bar">
                 <div className="screen-dots">
@@ -871,27 +903,20 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-
               <div className="screen-body">
                 {BUSINESSES.map((b,i) => (
-                  <div
-                    key={i}
-                    className="screen-slide"
-                    style={{
-                      opacity: activeBiz === i ? 1 : 0,
-                      transform: activeBiz === i ? "none" : "scale(0.97)",
-                      pointerEvents: activeBiz === i ? "auto" : "none"
-                    }}
-                  >
+                  <div key={i} className="screen-slide" style={{
+                    opacity: activeBiz === i ? 1 : 0,
+                    transform: activeBiz === i ? "none" : "scale(0.97)",
+                    pointerEvents: activeBiz === i ? "auto" : "none"
+                  }}>
                     <div className="slide-header" style={{ background: `linear-gradient(135deg, ${b.color}20, ${b.color}08)`, borderLeft: `4px solid ${b.color}` }}>
                       <div className="slide-eyebrow" style={{ color: b.color }}>{b.icon} {b.type} · {b.city}</div>
                       <div className="slide-title">
                         The Most Trusted {b.type} in {b.city} —
                         <em style={{ color: b.color }}> Guaranteed.</em>
                       </div>
-                      <div className="slide-body">
-                        Licensed & insured. 5-star rated. Serving {b.city} since 2019.
-                      </div>
+                      <div className="slide-body">Licensed & insured. 5-star rated. Serving {b.city} since 2019.</div>
                       <div className="slide-ctas">
                         <div className="slide-btn-main" style={{ background: b.color }}>Get Free Quote</div>
                         <div className="slide-btn-ghost" style={{ borderColor: `${b.color}50`, color: b.color }}>See Our Work</div>
@@ -899,39 +924,26 @@ export default function HomePage() {
                     </div>
                     <div className="slide-features">
                       {["✅ Licensed","⭐ 5-Star","⚡ Same Day"].map((f,fi)=>(
-                        <div key={fi} className="slide-feat">
-                          <div className="slide-feat-text">{f}</div>
-                        </div>
+                        <div key={fi} className="slide-feat"><div className="slide-feat-text">{f}</div></div>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
-
               <div className="screen-tabs">
                 {BUSINESSES.map((b,i)=>(
-                  <button
-                    key={i}
-                    className="screen-tab"
-                    onClick={()=>setActiveBiz(i)}
-                    style={{
-                      borderColor: activeBiz===i ? b.color : "#ddd",
-                      background: activeBiz===i ? `${b.color}18` : "transparent",
-                      color: activeBiz===i ? b.color : "#999"
-                    }}
-                  >
+                  <button key={i} className="screen-tab" onClick={()=>setActiveBiz(i)} style={{
+                    borderColor: activeBiz===i ? b.color : "#ddd",
+                    background: activeBiz===i ? `${b.color}18` : "transparent",
+                    color: activeBiz===i ? b.color : "#999"
+                  }}>
                     {b.icon} {b.type}
                   </button>
                 ))}
               </div>
             </div>
-
-            <div className="float-badge badge-bottom-right">
-              ⚡ Built in {biz.time}
-            </div>
-            <div className="float-badge badge-bottom-left" style={{ fontSize: 11 }}>
-              🔒 <span style={{ color: "#888" }}>SEO optimized</span>
-            </div>
+            <div className="float-badge badge-bottom-right">⚡ Built in {biz.time}</div>
+            <div className="float-badge badge-bottom-left" style={{ fontSize: 11 }}>🔒 <span style={{ color: "#888" }}>SEO optimized</span></div>
           </div>
         </div>
       </section>
@@ -941,7 +953,8 @@ export default function HomePage() {
         <div style={{ overflow: "hidden" }}>
           <div className="ticker-track">
             {["2,847 websites built","$4.2M+ revenue generated","4.9★ avg rating","No code required","Publish in under 5 minutes","14-day free trial","Cancel anytime",
-              "2,847 websites built","$4.2M+ revenue generated","4.9★ avg rating","No code required","Publish in under 5 minutes","14-day free trial","Cancel anytime"]
+              "AI email campaigns","AI ad copy generator","AI content writer","2,847 websites built","$4.2M+ revenue generated","4.9★ avg rating","No code required","Publish in under 5 minutes","14-day free trial","Cancel anytime",
+              "AI email campaigns","AI ad copy generator","AI content writer"]
               .map((t,i) => (
               <div key={i} className={`ticker-item ${i%4===0?"bright":""}`}>
                 {t}<span className="ticker-sep">◆</span>
@@ -1007,14 +1020,60 @@ export default function HomePage() {
             ].map((s,i)=>(
               <div key={i} className="step">
                 <div className="step-num">{s.n}</div>
-                <div className="step-icon-wrap" style={{ background: s.bg }}>
-                  {s.icon}
-                </div>
+                <div className="step-icon-wrap" style={{ background: s.bg }}>{s.icon}</div>
                 <div className="step-line" style={{ background: s.color }} />
                 <h3 className="step-title">{s.title}</h3>
                 <p className="step-body">{s.body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEW: MORE THAN WEBSITES ────────────────────────────────── */}
+      <section className="tools-section" style={{ paddingBottom: 120 }}>
+        <div className="tools-inner">
+          <div className="tools-header">
+            <div>
+              <div className="tools-eyebrow">Beyond the website</div>
+              <h2 className="tools-heading">
+                MORE THAN<br />
+                <em>a website.</em>
+              </h2>
+            </div>
+            <p className="tools-sub">
+              Once your site is live, keep customers coming. AutopilotAI has AI tools for every part of your marketing — all in one place.
+            </p>
+          </div>
+
+          <div className="tools-grid">
+            {TOOLS.map((tool, i) => (
+              <a
+                key={i}
+                href={tool.href}
+                className="tool-card"
+                style={{ ["--tool-color" as any]: tool.color }}
+              >
+                <div className="tool-icon-wrap" style={{ background: tool.bg }}>
+                  <span className="tool-icon">{tool.icon}</span>
+                </div>
+                <div className="tool-tag" style={{ color: tool.color, borderColor: `${tool.color}30`, background: `${tool.color}10` }}>
+                  {tool.tag}
+                </div>
+                <div className="tool-label">{tool.label.toUpperCase()}</div>
+                <p className="tool-desc">{tool.desc}</p>
+                <div className="tool-arrow">→</div>
+              </a>
+            ))}
+          </div>
+
+          <div className="tools-footer">
+            <p className="tools-footer-note">
+              All tools are <strong>included with your plan.</strong> No extra subscriptions. No add-ons.
+            </p>
+            <a href="/dashboard" className="tools-cta">
+              Go to dashboard <span>→</span>
+            </a>
           </div>
         </div>
       </section>
@@ -1097,7 +1156,6 @@ export default function HomePage() {
             <p className="section-sub">Build and edit everything free. Only pay when you're ready to go live.</p>
           </div>
           <div className="pricing-grid">
-            {/* Free */}
             <div className="price-card">
               <div className="price-tier">Free Forever</div>
               <div className="price-amount">$0</div>
@@ -1120,7 +1178,6 @@ export default function HomePage() {
               <a href="/upgrade" className="price-cta price-cta-ghost">Start building free</a>
             </div>
 
-            {/* Starter */}
             <div className="price-card price-card-dark">
               <div className="price-popular-badge">MOST POPULAR</div>
               <div className="price-tier price-tier-dark">Starter</div>
