@@ -227,7 +227,7 @@ export default function BillingPage() {
                     <p className="font-sans" style={{ fontSize: 12, color: "#555", lineHeight: 1.65 }}>
                       Upgrade to unlock unlimited generations, AI images, and more.
                     </p>
-                    <button className="btn-primary" onClick={() => router.push("/pricing")}>
+                    <button className="btn-primary" onClick={() => router.push("/upgrade")}>
                       <Zap size={14} /> Upgrade Plan
                     </button>
                   </div>
@@ -287,7 +287,7 @@ export default function BillingPage() {
                         <AlertCircle size={13} style={{ color: "#ef4444", flexShrink: 0 }} />
                         <span className="font-sans" style={{ fontSize: 12, color: "#f87171", lineHeight: 1.5 }}>
                           You're running low.{" "}
-                          <button onClick={() => router.push("/pricing")} style={{ color: "#fca5a5", fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
+                          <button onClick={() => router.push("/upgrade")} style={{ color: "#fca5a5", fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
                             Upgrade to get more →
                           </button>
                         </span>
@@ -338,7 +338,7 @@ export default function BillingPage() {
                     <div className="font-sans" style={{ fontSize: 12, color: "#555", lineHeight: 1.65, marginBottom: 12 }}>
                       Upgrade for unlimited generations, AI images, Growth Packs, and priority processing.
                     </div>
-                    <button className="btn-primary" onClick={() => router.push("/pricing")} style={{ fontSize: 13, padding: "10px 18px" }}>
+                    <button className="btn-primary" onClick={() => router.push("/upgrade")} style={{ fontSize: 13, padding: "10px 18px" }}>
                       <Zap size={13} /> View Plans
                     </button>
                   </div>
