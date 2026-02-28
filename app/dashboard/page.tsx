@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -37,6 +37,337 @@ function normalizeSlug(input: string) {
 
 function isValidSlug(slug: string) {
   return /^[a-z0-9-]{3,30}$/.test(slug);
+}
+
+// ─────────────────────────────────────────────
+// GENERATION STEPS
+// ─────────────────────────────────────────────
+const GENERATION_STEPS = [
+  { id: 1, icon: "🔍", label: "Analyzing your business",        sub: "Understanding your industry & goals" },
+  { id: 2, icon: "✍️", label: "Writing your copy",              sub: "Headlines, descriptions, CTAs" },
+  { id: 3, icon: "🎨", label: "Designing the layout",           sub: "Sections, spacing & visual hierarchy" },
+  { id: 4, icon: "📱", label: "Making it responsive",           sub: "Optimizing for all screen sizes" },
+  { id: 5, icon: "⚡", label: "Optimizing for conversions",     sub: "Forms, CTAs & trust signals" },
+  { id: 6, icon: "🌐", label: "Publishing your site",           sub: "Deploying to autopilotai.dev" },
+];
+
+// ─────────────────────────────────────────────
+// GENERATING OVERLAY COMPONENT
+// ─────────────────────────────────────────────
+function GeneratingOverlay({ businessName }: { businessName: string }) {
+  const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [dots, setDots] = useState(".");
+
+  // Animate through steps
+  useEffect(() => {
+    const stepDurations = [1800, 2200, 1900, 1600, 1700, 99999]; // last step holds until done
+    let current = 0;
+
+    function advance() {
+      setCompletedSteps((prev) => [...prev, current]);
+      current += 1;
+      if (current < GENERATION_STEPS.length) {
+        setActiveStep(current);
+        setTimeout(advance, stepDurations[current]);
+      }
+    }
+
+    setActiveStep(0);
+    const timer = setTimeout(advance, stepDurations[0]);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Animated dots
+  useEffect(() => {
+    const id = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? "." : d + "."));
+    }, 400);
+    return () => clearInterval(id);
+  }, []);
+
+  const progress = Math.min(
+    Math.round(((completedSteps.length) / GENERATION_STEPS.length) * 100),
+    95
+  );
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 200,
+        background: "rgba(10,10,10,0.97)",
+        backdropFilter: "blur(12px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 16px",
+      }}
+    >
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -400px 0; }
+          100% { background-position: 400px 0; }
+        }
+        @keyframes stepIn {
+          from { opacity: 0; transform: translateX(-8px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes checkPop {
+          0%   { transform: scale(0.5); opacity: 0; }
+          70%  { transform: scale(1.2); }
+          100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes barGrow {
+          from { width: 0%; }
+        }
+        @keyframes pulseBg {
+          0%, 100% { opacity: 0.06; }
+          50%       { opacity: 0.12; }
+        }
+      `}</style>
+
+      <div style={{ width: "100%", maxWidth: 520, textAlign: "center" }}>
+
+        {/* Glowing orb behind title */}
+        <div
+          style={{
+            position: "relative",
+            marginBottom: 36,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 180,
+              height: 180,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(5,150,105,0.18) 0%, transparent 70%)",
+              animation: "pulseBg 2.5s ease infinite",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
+              width: 64,
+              height: 64,
+              margin: "0 auto 20px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #059669, #0ea5e9)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 40px rgba(5,150,105,0.35)",
+            }}
+          >
+            <Sparkles size={26} color="white" />
+          </div>
+
+          <h2
+            style={{
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontSize: "clamp(24px, 4vw, 32px)",
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              color: "white",
+              marginBottom: 8,
+              lineHeight: 1.1,
+            }}
+          >
+            Building{" "}
+            <em style={{ color: "#059669" }}>
+              {businessName ? businessName : "your website"}
+            </em>
+            {dots}
+          </h2>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14,
+              color: "#555",
+              marginBottom: 0,
+            }}
+          >
+            Hang tight — this only takes about 60 seconds.
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div
+          style={{
+            width: "100%",
+            height: 4,
+            background: "#1a1a1a",
+            borderRadius: 4,
+            overflow: "hidden",
+            marginBottom: 32,
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, #059669, #0ea5e9)",
+              borderRadius: 4,
+              transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* shimmer */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)",
+                backgroundSize: "400px 100%",
+                animation: "shimmer 1.4s linear infinite",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Steps list */}
+        <div
+          style={{
+            background: "#111",
+            border: "1px solid #1e1e1e",
+            borderRadius: 20,
+            padding: "8px 0",
+            overflow: "hidden",
+          }}
+        >
+          {GENERATION_STEPS.map((step, i) => {
+            const isCompleted = completedSteps.includes(i);
+            const isActive = activeStep === i && !isCompleted;
+            const isPending = !isCompleted && !isActive;
+
+            return (
+              <div
+                key={step.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "13px 20px",
+                  borderBottom: i < GENERATION_STEPS.length - 1 ? "1px solid #161616" : "none",
+                  background: isActive ? "rgba(5,150,105,0.05)" : "transparent",
+                  transition: "background 0.3s",
+                  animation: isActive ? "stepIn 0.3s ease forwards" : "none",
+                }}
+              >
+                {/* Step icon / spinner / check */}
+                <div style={{ width: 32, height: 32, flexShrink: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {isCompleted ? (
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: "rgba(5,150,105,0.15)",
+                        border: "1px solid rgba(5,150,105,0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        animation: "checkPop 0.3s ease forwards",
+                      }}
+                    >
+                      <CheckCircle size={14} color="#059669" />
+                    </div>
+                  ) : isActive ? (
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        border: "2px solid #1e1e1e",
+                        borderTop: "2px solid #059669",
+                        animation: "spin 0.7s linear infinite",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: "#0d0d0d",
+                        border: "1px solid #1e1e1e",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        opacity: 0.4,
+                      }}
+                    >
+                      {step.icon}
+                    </div>
+                  )}
+                </div>
+
+                {/* Text */}
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 14,
+                      fontWeight: isActive ? 600 : 500,
+                      color: isCompleted ? "#4ade80" : isActive ? "white" : "#333",
+                      marginBottom: 2,
+                      transition: "color 0.3s",
+                    }}
+                  >
+                    {step.label}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 12,
+                      color: isActive ? "#555" : "#2a2a2a",
+                      transition: "color 0.3s",
+                    }}
+                  >
+                    {step.sub}
+                  </div>
+                </div>
+
+                {/* Active indicator dot */}
+                {isActive && (
+                  <div
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#059669",
+                      animation: "pulse-dot 1.5s ease infinite",
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <p
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 12,
+            color: "#333",
+            marginTop: 20,
+          }}
+        >
+          Don't close this tab — we're generating your site right now.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -122,9 +453,9 @@ export default function DashboardPage() {
       }
     } catch (err: any) {
       showToast("err", err?.response?.data?.detail || err?.message || "Failed to generate website. Try again.");
-    } finally {
-      setCreating(false);
+      setCreating(false); // only reset on error; on success we navigate away
     }
+    // NOTE: don't setCreating(false) on success — we want the overlay to stay until redirect
   }
 
   if (loadingSite) {
@@ -487,6 +818,9 @@ export default function DashboardPage() {
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
       `}</style>
 
+      {/* GENERATION OVERLAY */}
+      {creating && <GeneratingOverlay businessName={businessName} />}
+
       <DashboardNavbar name={initial} subscriptionPlan={subscriptionPlan} />
 
       {/* TOAST */}
@@ -653,7 +987,6 @@ export default function DashboardPage() {
               badge={workCount > 0 ? workCount : undefined}
               onClick={() => router.push("/dashboard/work")}
             />
-            {/* ── NEW: Domains card ── */}
             <ShortcutCard
               icon={<Link size={16} />}
               title="Domains"
@@ -922,7 +1255,6 @@ function ExistingSiteCard({ site, router }: {
             </svg>
             View Live
           </a>
-          {/* ── NEW: Custom Domain button ── */}
           <button
             className="btn-secondary font-sans"
             onClick={() => router.push("/dashboard/domains")}
