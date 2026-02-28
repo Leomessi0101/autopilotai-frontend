@@ -54,7 +54,7 @@ export default function AdsPage() {
   const [product, setProduct]     = useState("");
   const [audience, setAudience]   = useState("");
 
-  // NEW: Image generation (matched to content page)
+  // Image generation
   const [generateImage, setGenerateImage] = useState(false);
   const [imageStyle, setImageStyle]       = useState<StyleValue>("clean");
   const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
@@ -238,7 +238,93 @@ export default function AdsPage() {
           color: #444; margin-bottom: 16px;
         }
 
-        /* Toggle (exact match to content page) */
+        /* ── Platform Buttons ── */
+        .platform-btn {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 16px 12px;
+          background: #0d0d0d;
+          border: 1px solid #232323;
+          border-radius: 16px;
+          cursor: pointer;
+          transition: border-color .2s, background .2s, transform .15s, box-shadow .2s;
+          min-width: 0;
+        }
+        .platform-btn:hover {
+          border-color: #333;
+          background: #141414;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0,0,0,.3);
+        }
+        .platform-btn.active {
+          background: #111;
+          box-shadow: 0 4px 20px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.04);
+        }
+        .platform-btn-icon {
+          width: 32px; height: 32px;
+          border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          background: #1a1a1a;
+          border: 1px solid #252525;
+          transition: background .2s, border-color .2s;
+        }
+        .platform-btn.active .platform-btn-icon {
+          background: rgba(255,255,255,.05);
+        }
+        .platform-btn-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          color: #777;
+          letter-spacing: -.01em;
+          transition: color .2s;
+        }
+        .platform-btn.active .platform-btn-label { color: #eee; }
+        .platform-btn:hover .platform-btn-label  { color: #aaa; }
+        .platform-btn-sub {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px;
+          color: #3a3a3a;
+          font-weight: 500;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          transition: color .2s;
+        }
+        .platform-btn.active .platform-btn-sub { color: #555; }
+
+        /* ── Objective Pills ── */
+        .obj-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 9px 18px;
+          background: #0d0d0d;
+          border: 1px solid #222;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: #555;
+          cursor: pointer;
+          transition: border-color .2s, background .2s, color .2s, transform .15s, box-shadow .2s;
+          white-space: nowrap;
+        }
+        .obj-pill:hover {
+          border-color: #333;
+          color: #999;
+          background: #141414;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0,0,0,.25);
+        }
+
+        /* Toggle */
         .toggle-track {
           width: 44px; height: 24px;
           background: #2a2a2a;
@@ -259,7 +345,7 @@ export default function AdsPage() {
         }
         .toggle-track.on .toggle-thumb { transform: translateX(20px); }
 
-        /* Style pill (exact match to content page) */
+        /* Style pill */
         .style-pill {
           border-radius: 10px;
           border: 1px solid #222;
@@ -274,15 +360,13 @@ export default function AdsPage() {
         .style-pill:hover  { border-color: #333; background: #111; }
         .style-pill.active { border-color: rgba(5,150,105,.5); background: rgba(5,150,105,.07); }
 
-        /* Ad result card (unchanged) */
+        /* Ad result card */
         .ad-card {
           background: #111; border: 1px solid #1e1e1e; border-radius: 18px;
           overflow: hidden; transition: border-color .2s, transform .2s;
         }
         .ad-card:hover { border-color: #2a2a2a; transform: translateY(-2px); }
-        .ad-card-top {
-          height: 3px;
-        }
+        .ad-card-top { height: 3px; }
         .ad-card-body { padding: 22px; }
         .ad-card-footer {
           padding: 14px 22px; border-top: 1px solid #1a1a1a;
@@ -296,7 +380,7 @@ export default function AdsPage() {
           letter-spacing: .03em;
         }
 
-        /* Image preview (matched to content page) */
+        /* Image preview */
         .preview-post {
           background: #111;
           border: 1px solid #1e1e1e;
@@ -307,11 +391,6 @@ export default function AdsPage() {
           padding: 16px 20px;
           border-bottom: 1px solid #1a1a1a;
           display: flex; align-items: center; gap: 12px;
-        }
-        .preview-avatar {
-          width: 38px; height: 38px; border-radius: 50%;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          flex-shrink: 0;
         }
         .preview-body { padding: 20px; }
         .preview-actions {
@@ -390,8 +469,14 @@ export default function AdsPage() {
                       key={p.key}
                       className={`platform-btn ${platform === p.key ? "active" : ""}`}
                       onClick={() => setPlatform(p.key)}
+                      style={platform === p.key ? { borderColor: `${p.color}40` } : {}}
                     >
-                      <span style={{ color: platform === p.key ? p.color : "#444" }}>{p.icon}</span>
+                      <div
+                        className="platform-btn-icon"
+                        style={platform === p.key ? { borderColor: `${p.color}30`, background: `${p.color}12` } : {}}
+                      >
+                        <span style={{ color: platform === p.key ? p.color : "#444" }}>{p.icon}</span>
+                      </div>
                       <span className="platform-btn-label">{p.label}</span>
                       <span className="platform-btn-sub">{p.sub}</span>
                     </button>
@@ -408,9 +493,14 @@ export default function AdsPage() {
                       key={o.key}
                       className={`obj-pill ${objective === o.key ? "active" : ""}`}
                       onClick={() => setObjective(o.key)}
-                      style={objective === o.key ? { borderColor: `${o.color}60`, background: `${o.color}12`, color: "white" } : {}}
+                      style={objective === o.key ? {
+                        borderColor: `${o.color}50`,
+                        background: `${o.color}10`,
+                        color: "white",
+                        boxShadow: `0 0 0 1px ${o.color}20, 0 4px 16px ${o.color}15`,
+                      } : {}}
                     >
-                      <span style={{ color: objective === o.key ? o.color : "#555" }}>{o.icon}</span>
+                      <span style={{ color: objective === o.key ? o.color : "#444" }}>{o.icon}</span>
                       {o.key}
                     </button>
                   ))}
@@ -446,7 +536,7 @@ export default function AdsPage() {
                 </p>
               </div>
 
-              {/* NEW: AI Image Toggle + Styles (exact match to content page) */}
+              {/* AI Image Toggle + Styles */}
               <div style={{ marginBottom: generateImage ? 22 : 32 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
@@ -544,7 +634,7 @@ export default function AdsPage() {
             </div>
           </div>
 
-          {/* RIGHT: SIDEBAR (unchanged) */}
+          {/* RIGHT: SIDEBAR */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Active config summary */}
             <div className="card" style={{ padding: "20px 22px" }}>
@@ -699,7 +789,7 @@ export default function AdsPage() {
               })}
             </div>
 
-            {/* NEW: Image Preview (matched style to content page) */}
+            {/* Image Preview */}
             {(imageUrl || imageError) && (
               <div style={{ marginTop: 40 }}>
                 <div className="section-label" style={{ marginBottom: 12 }}>
