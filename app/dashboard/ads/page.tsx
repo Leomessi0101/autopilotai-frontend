@@ -9,7 +9,7 @@ import {
   Megaphone, Copy, RotateCcw, ChevronRight,
   CheckCircle, AlertCircle, Wand2, Sparkles,
   Facebook, Search, Music, Target, TrendingUp, Globe, Eye,
-  Image as ImageIcon, Lock,
+  Image as ImageIcon, Lock, Download, Save,
 } from "lucide-react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -26,6 +26,16 @@ const OBJECTIVES = [
   { key: "Traffic",        icon: <Globe size={13} />,      color: "#8b5cf6" },
   { key: "Brand Awareness",icon: <Eye size={13} />,        color: "#f59e0b" },
 ];
+
+const IMAGE_STYLES = [
+  { value: "clean",     label: "Clean Corporate",       desc: "Modern SaaS — crisp, premium." },
+  { value: "cinematic", label: "Cinematic",             desc: "Moody, dramatic, high-contrast." },
+  { value: "minimal",   label: "Minimal Illustration",  desc: "Simple shapes, soft composition." },
+  { value: "social",    label: "Social Thumbnail",      desc: "Bold framing, attention-grabbing." },
+  { value: "product",   label: "Product Showcase",      desc: "Hero lighting, premium scene." },
+] as const;
+
+type StyleValue = typeof IMAGE_STYLES[number]["value"];
 
 interface ParsedAd { headline: string; primary: string; cta: string; }
 
@@ -44,21 +54,25 @@ export default function AdsPage() {
   const [product, setProduct]     = useState("");
   const [audience, setAudience]   = useState("");
 
-  // NEW: Image generation toggles
+  // NEW: Image generation (matched to content page)
   const [generateImage, setGenerateImage] = useState(false);
-  const [customVisual, setCustomVisual]   = useState("");
+  const [imageStyle, setImageStyle]       = useState<StyleValue>("clean");
+  const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
 
   // Output
   const [parsedAds, setParsedAds] = useState<ParsedAd[]>([]);
   const [rawResult, setRawResult] = useState("");
-  const [imageUrl, setImageUrl]   = useState<string | null>(null);     // NEW
-  const [imageError, setImageError] = useState<string | null>(null);   // NEW
+  const [imageUrl, setImageUrl]   = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // UI
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [toast, setToast]     = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [copiedIdx, setCopiedIdx] = useState<number | "all" | null>(null);
+  const [copiedImage, setCopiedImage] = useState(false);
+
+  const isPaid = subscriptionPlan?.toLowerCase() !== "free";
 
   // ── Auth ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -101,10 +115,9 @@ export default function AdsPage() {
         prompt: `Generate ad copy for ${platform} with objective ${objective}. Product: ${product}. Audience: ${audience}.`,
       };
 
-      // NEW: Include image params if toggled and user is paid
-      if (generateImage && subscriptionPlan?.toLowerCase() !== "free") {
+      if (generateImage && isPaid) {
         payload.generate_image = true;
-        if (customVisual.trim()) payload.custom_visual = customVisual.trim();
+        payload.image_style = imageStyle;
       }
 
       const res = await api.post("/api/ads/generate", payload);
@@ -112,7 +125,6 @@ export default function AdsPage() {
       setRawResult(output);
       parseAds(output);
 
-      // NEW: Handle image from response
       if (res.data.image) {
         setImageUrl(res.data.image);
       } else if (res.data.error) {
@@ -132,14 +144,29 @@ export default function AdsPage() {
     showToast("ok", idx === "all" ? "All ads copied" : `Ad ${Number(idx) + 1} copied`);
   };
 
+  const copyImageUrl = async () => {
+    if (!imageUrl) return;
+    await navigator.clipboard.writeText(imageUrl);
+    setCopiedImage(true);
+    setTimeout(() => setCopiedImage(false), 1800);
+    showToast("ok", "Image URL copied");
+  };
+
+  const downloadImage = () => {
+    if (!imageUrl) return;
+    const a = document.createElement("a");
+    a.href = imageUrl;
+    a.download = "ad-visual.png";
+    a.click();
+  };
+
   const clearAll = () => {
     setProduct(""); setAudience(""); setParsedAds([]); setRawResult(""); setError("");
-    setGenerateImage(false); setCustomVisual(""); setImageUrl(null); setImageError(null);
+    setGenerateImage(false); setImageStyle("clean"); setImageUrl(null); setImageError(null);
   };
 
   const activePlatform = PLATFORMS.find((p) => p.key === platform)!;
   const canGenerate    = product.trim().length > 0 && audience.trim().length > 0;
-  const isPaid         = subscriptionPlan?.toLowerCase() !== "free";
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -211,7 +238,91 @@ export default function AdsPage() {
           color: #444; margin-bottom: 16px;
         }
 
-        /* ... (rest of your existing styles unchanged) */
+        /* Toggle (exact match to content page) */
+        .toggle-track {
+          width: 44px; height: 24px;
+          background: #2a2a2a;
+          border-radius: 100px;
+          position: relative; cursor: pointer;
+          transition: background .25s;
+          flex-shrink: 0;
+        }
+        .toggle-track.on { background: #059669; }
+        .toggle-thumb {
+          position: absolute;
+          width: 18px; height: 18px;
+          border-radius: 50%;
+          background: white;
+          top: 3px; left: 3px;
+          transition: transform .25s;
+          box-shadow: 0 1px 4px rgba(0,0,0,.4);
+        }
+        .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+
+        /* Style pill (exact match to content page) */
+        .style-pill {
+          border-radius: 10px;
+          border: 1px solid #222;
+          padding: 11px 14px;
+          cursor: pointer;
+          background: transparent;
+          text-align: left;
+          transition: border-color .2s, background .2s;
+          font-family: 'DM Sans', sans-serif;
+          width: 100%;
+        }
+        .style-pill:hover  { border-color: #333; background: #111; }
+        .style-pill.active { border-color: rgba(5,150,105,.5); background: rgba(5,150,105,.07); }
+
+        /* Ad result card (unchanged) */
+        .ad-card {
+          background: #111; border: 1px solid #1e1e1e; border-radius: 18px;
+          overflow: hidden; transition: border-color .2s, transform .2s;
+        }
+        .ad-card:hover { border-color: #2a2a2a; transform: translateY(-2px); }
+        .ad-card-top {
+          height: 3px;
+        }
+        .ad-card-body { padding: 22px; }
+        .ad-card-footer {
+          padding: 14px 22px; border-top: 1px solid #1a1a1a;
+          background: #0d0d0d;
+          display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .ad-cta-pill {
+          flex: 1; padding: 10px; border-radius: 9px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px; font-weight: 800; text-align: center;
+          letter-spacing: .03em;
+        }
+
+        /* Image preview (matched to content page) */
+        .preview-post {
+          background: #111;
+          border: 1px solid #1e1e1e;
+          border-radius: 20px;
+          overflow: hidden;
+        }
+        .preview-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid #1a1a1a;
+          display: flex; align-items: center; gap: 12px;
+        }
+        .preview-avatar {
+          width: 38px; height: 38px; border-radius: 50%;
+          background: linear-gradient(135deg, #059669, #0ea5e9);
+          flex-shrink: 0;
+        }
+        .preview-body { padding: 20px; }
+        .preview-actions {
+          padding: 14px 20px;
+          border-top: 1px solid #1a1a1a;
+          display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
       `}</style>
 
       <DashboardNavbar name={name} subscriptionPlan={subscriptionPlan} />
@@ -335,45 +446,78 @@ export default function AdsPage() {
                 </p>
               </div>
 
-              {/* NEW: Image Generation Options */}
-              <div style={{ marginBottom: 28, padding: "16px 0", borderTop: "1px solid #1a1a1a" }}>
-                <label className="label">AI Visual (Beta)</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={generateImage}
-                      onChange={(e) => setGenerateImage(e.target.checked)}
-                      disabled={!isPaid}
-                      style={{ accentColor: "#059669" }}
-                    />
-                    <span className="font-sans" style={{ fontSize: 14, color: isPaid ? "#ccc" : "#555" }}>
-                      Generate matching AI image {isPaid ? "" : "(Paid feature)"}
-                    </span>
-                  </label>
-
-                  {generateImage && isPaid && (
-                    <div>
-                      <label className="label" style={{ fontSize: 12 }}>Custom visual instructions (optional)</label>
-                      <input
-                        className="field"
-                        value={customVisual}
-                        onChange={(e) => setCustomVisual(e.target.value)}
-                        placeholder="e.g. product on white background, dynamic gym action, no people"
-                      />
-                      <p className="font-sans" style={{ fontSize: 11, color: "#555", marginTop: 6 }}>
-                        Describe style, background, or changes for better results.
-                      </p>
+              {/* NEW: AI Image Toggle + Styles (exact match to content page) */}
+              <div style={{ marginBottom: generateImage ? 22 : 32 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="font-sans" style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 3 }}>
+                      Generate AI Image
                     </div>
-                  )}
-
-                  {!isPaid && generateImage && (
-                    <div className="font-sans" style={{ fontSize: 12, color: "#f87171", display: "flex", alignItems: "center", gap: 6 }}>
-                      <Lock size={14} /> Upgrade to paid plan to unlock AI images.
+                    <div className="font-sans" style={{ fontSize: 12, color: "#555" }}>
+                      {isPaid ? "Paired with your ads" : "Paid feature — upgrade to unlock"}
                     </div>
-                  )}
+                  </div>
+                  <div
+                    className={`toggle-track ${generateImage ? "on" : ""}`}
+                    onClick={() => {
+                      if (!isPaid) { setShowUpgradeNotice(true); return; }
+                      setGenerateImage((p) => !p);
+                    }}
+                  >
+                    <div className="toggle-thumb" />
+                  </div>
                 </div>
+
+                {showUpgradeNotice && !isPaid && (
+                  <div
+                    className="font-sans"
+                    style={{
+                      marginTop: 14,
+                      padding: "14px 16px",
+                      background: "rgba(217,119,6,.06)",
+                      border: "1px solid rgba(217,119,6,.2)",
+                      borderRadius: 12,
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#d97706", marginBottom: 2 }}>Upgrade to unlock images</div>
+                      <div style={{ fontSize: 12, color: "#555" }}>$10/mo gets you 20 images/month</div>
+                    </div>
+                    <button
+                      onClick={() => router.push("/upgrade")}
+                      style={{
+                        background: "#d97706", color: "white", border: "none",
+                        borderRadius: 9, padding: "8px 14px",
+                        fontSize: 12, fontWeight: 700, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+                      }}
+                    >
+                      Upgrade <ChevronRight size={12} />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {generateImage && isPaid && (
+                <div style={{ marginBottom: 28 }}>
+                  <label className="label">Image Style</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {IMAGE_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        className={`style-pill ${imageStyle === s.value ? "active" : ""}`}
+                        onClick={() => setImageStyle(s.value)}
+                      >
+                        <div className="font-sans" style={{ fontSize: 13, fontWeight: 600, color: imageStyle === s.value ? "white" : "#aaa", marginBottom: 3 }}>
+                          {s.label}
+                        </div>
+                        <div className="font-sans" style={{ fontSize: 11, color: "#555" }}>{s.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div style={{ height: 1, background: "#1a1a1a", marginBottom: 28 }} />
 
@@ -402,7 +546,6 @@ export default function AdsPage() {
 
           {/* RIGHT: SIDEBAR (unchanged) */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* ... your existing sidebar code remains exactly the same ... */}
             {/* Active config summary */}
             <div className="card" style={{ padding: "20px 22px" }}>
               <div className="section-label">Current config</div>
@@ -476,7 +619,7 @@ export default function AdsPage() {
           </div>
         </div>
 
-        {/* ── AD RESULTS + NEW IMAGE PREVIEW ── */}
+        {/* ── AD RESULTS + IMAGE PREVIEW ── */}
         {parsedAds.length > 0 && (
           <motion.div
             className="a3"
@@ -507,7 +650,6 @@ export default function AdsPage() {
                   <div key={i} className="ad-card">
                     <div className="ad-card-top" style={{ background: `linear-gradient(90deg, ${activePlatform.color}, ${objColor})` }} />
                     <div className="ad-card-body">
-                      {/* Header */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <div style={{
@@ -535,18 +677,15 @@ export default function AdsPage() {
                         </button>
                       </div>
 
-                      {/* Headline */}
                       <div className="font-display" style={{ fontSize: 18, color: "white", lineHeight: 1.25, marginBottom: 10, letterSpacing: "-0.02em" }}>
                         {ad.headline}
                       </div>
 
-                      {/* Body */}
                       <p className="font-sans" style={{ fontSize: 13, color: "#888", lineHeight: 1.75, marginBottom: 16, whiteSpace: "pre-wrap" }}>
                         {ad.primary}
                       </p>
                     </div>
 
-                    {/* CTA */}
                     <div className="ad-card-footer">
                       <div
                         className="ad-cta-pill font-sans"
@@ -560,7 +699,7 @@ export default function AdsPage() {
               })}
             </div>
 
-            {/* NEW: Generated Image Preview */}
+            {/* NEW: Image Preview (matched style to content page) */}
             {(imageUrl || imageError) && (
               <div style={{ marginTop: 40 }}>
                 <div className="section-label" style={{ marginBottom: 12 }}>
@@ -569,15 +708,31 @@ export default function AdsPage() {
                 </div>
 
                 {imageUrl ? (
-                  <div className="card" style={{ overflow: "hidden", borderRadius: 16 }}>
+                  <div className="preview-post">
+                    <div style={{ height: 3, background: "linear-gradient(90deg, #8b5cf6, #ec4899)" }} />
+                    <div className="preview-header">
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(139,92,246,.15)", border: "1px solid rgba(139,92,246,.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <ImageIcon size={15} style={{ color: "#8b5cf6" }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className="font-sans" style={{ fontSize: 13, fontWeight: 700, color: "white" }}>AI Image</div>
+                        <div className="font-sans" style={{ fontSize: 11, color: "#444" }}>Style: {IMAGE_STYLES.find(s => s.value === imageStyle)?.label}</div>
+                      </div>
+                    </div>
+
                     <img
                       src={imageUrl}
                       alt="Generated ad visual"
-                      style={{ width: "100%", height: "auto", display: "block" }}
-                      onError={() => setImageError("Failed to load image")}
+                      style={{ width: "100%", display: "block", maxHeight: 400, objectFit: "cover" }}
                     />
-                    <div style={{ padding: "12px 16px", background: "#0d0d0d", fontSize: 13, color: "#888" }}>
-                      Matched to your ads • Powered by Nano Banana 2
+
+                    <div className="preview-actions">
+                      <button className="btn-ghost" onClick={downloadImage} style={{ padding: "8px 14px" }}>
+                        <Download size={13} /> Download
+                      </button>
+                      <button className="btn-ghost" onClick={copyImageUrl} style={{ padding: "8px 14px" }}>
+                        {copiedImage ? <><CheckCircle size={13} style={{ color: "#4ade80" }} /> Copied</> : <><Copy size={13} /> Copy URL</>}
+                      </button>
                     </div>
                   </div>
                 ) : imageError ? (
