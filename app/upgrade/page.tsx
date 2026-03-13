@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 export default function PublicUpgradePage() {
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // ── Auth state ──────────────────────────────────────────────────────────
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userInitial, setUserInitial] = useState("U");
@@ -15,21 +15,19 @@ export default function PublicUpgradePage() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    setMounted(true);
     const token =
       localStorage.getItem("autopilot_token") ||
       sessionStorage.getItem("autopilot_token");
 
-    if (!token) {
-      setAuthLoading(false);
-      return;
-    }
+    if (!token) { setAuthLoading(false); return; }
 
     fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://autopilotai-api.onrender.com"}/api/auth/me`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
-      .then((r) => r.json())
-      .then((data) => {
+      .then(r => r.json())
+      .then(data => {
         if (data?.name) {
           setIsLoggedIn(true);
           setUserName(data.name);
@@ -41,16 +39,12 @@ export default function PublicUpgradePage() {
       .finally(() => setAuthLoading(false));
   }, []);
 
-  // ── Subscribe ───────────────────────────────────────────────────────────
   const subscribe = async (plan: "starter" | "pro") => {
     const token =
       localStorage.getItem("autopilot_token") ||
       sessionStorage.getItem("autopilot_token");
 
-    if (!token) {
-      router.push(`/register?plan=${plan}`);
-      return;
-    }
+    if (!token) { router.push(`/register?plan=${plan}`); return; }
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://autopilotai-api.onrender.com"}/api/stripe/create-checkout-session?plan=${plan}`,
@@ -64,490 +58,543 @@ export default function PublicUpgradePage() {
   };
 
   const FAQS = [
-    {
-      q: "Can I try it free first?",
-      a: "Yes. Create your free account, build your website, edit everything — upgrade only when you're ready to publish. No credit card required.",
-    },
-    {
-      q: "Can I cancel anytime?",
-      a: "Absolutely. Cancel from your dashboard anytime, no questions asked. You keep access through the end of your billing period.",
-    },
-    {
-      q: "What happens if I downgrade?",
-      a: "Your website stays live for the current billing period, then returns to draft mode. All your content is saved — nothing is deleted.",
-    },
-    {
-      q: "Do I need to bring my own domain?",
-      a: "No. We help you connect any domain you own, or you can purchase one directly. The Starter plan includes full custom domain support.",
-    },
+    { q: "Can I try it free first?", a: "Yes. Create your free account, build your website, edit everything — upgrade only when you're ready to publish. No credit card required." },
+    { q: "Can I cancel anytime?", a: "Absolutely. Cancel from your dashboard anytime, no questions asked. You keep access through the end of your billing period." },
+    { q: "What happens if I downgrade?", a: "Your website stays live for the current billing period, then returns to draft mode. All your content is saved — nothing is deleted." },
+    { q: "Do I need to bring my own domain?", a: "No. We help you connect any domain you own, or you can purchase one directly. The Starter plan includes full custom domain support." },
   ];
 
-  const isPaidPlan = currentPlan && currentPlan !== "free";
-
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAF8", fontFamily: "'Georgia', serif" }}>
+    <div className="root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&display=swap');
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .font-display { font-family: 'Instrument Serif', Georgia, serif; }
-        .font-sans { font-family: 'DM Sans', system-ui, sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeUp { animation: fadeUp 0.6s ease forwards; }
-        .anim-d1 { animation-delay: 0.05s; }
-        .anim-d2 { animation-delay: 0.15s; }
-        .anim-d3 { animation-delay: 0.25s; }
-
-        .card-free {
-          background: white; border: 1.5px solid #e5e5e5; border-radius: 24px; padding: 40px;
-          transition: border-color .2s, box-shadow .2s;
-        }
-        .card-free:hover { border-color: #ccc; box-shadow: 0 12px 40px rgba(0,0,0,.07); }
-
-        .card-pro {
-          background: white; border: 1.5px solid #e5e5e5; border-radius: 24px; padding: 40px;
-          transition: border-color .2s, box-shadow .2s;
-        }
-        .card-pro:hover { border-color: #ccc; box-shadow: 0 12px 40px rgba(0,0,0,.07); }
-
-        .card-starter {
-          background: #111; border-radius: 24px; padding: 40px; position: relative;
-          box-shadow: 0 24px 80px rgba(0,0,0,.2);
-          transition: transform .2s, box-shadow .2s;
-        }
-        .card-starter:hover { transform: translateY(-4px); box-shadow: 0 32px 100px rgba(0,0,0,.25); }
-        .card-starter::before {
-          content: ''; position: absolute; inset: -2px;
-          background: linear-gradient(135deg, #059669, #0ea5e9, #8b5cf6);
-          border-radius: 26px; z-index: -1;
+        :root {
+          --bg: #060608;
+          --bg2: #0C0C10;
+          --surface: #111116;
+          --surface2: #18181F;
+          --border: rgba(255,255,255,0.07);
+          --border2: rgba(255,255,255,0.12);
+          --text: #F0EEF8;
+          --text2: #8A8899;
+          --text3: #555465;
+          --accent: #6EE7B7;
+          --accent2: #818CF8;
+          --display: 'Fraunces', Georgia, serif;
+          --body: 'DM Sans', sans-serif;
         }
 
-        .btn-ghost {
-          display: block; width: 100%; padding: 14px 0; background: transparent;
-          border: 1.5px solid #222; border-radius: 12px; text-align: center;
-          text-decoration: none; font-size: 14px; font-weight: 600; color: #111;
-          cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s;
-        }
-        .btn-ghost:hover { background: #f5f5f5; }
-
-        .btn-ghost-dark {
-          display: block; width: 100%; padding: 14px 0; background: rgba(255,255,255,.08);
-          border: 1px solid rgba(255,255,255,.15); border-radius: 12px; text-align: center;
-          font-size: 14px; font-weight: 600; color: rgba(255,255,255,.7);
-          cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s; text-decoration: none;
-        }
-        .btn-ghost-dark:hover { background: rgba(255,255,255,.13); }
-
-        .btn-emerald {
-          display: block; width: 100%; padding: 15px 0;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          border: none; border-radius: 12px; text-align: center;
-          font-size: 15px; font-weight: 700; color: white; cursor: pointer;
-          font-family: 'DM Sans', sans-serif; letter-spacing: -.01em; text-decoration: none;
-          transition: filter .2s, transform .2s, box-shadow .2s;
-        }
-        .btn-emerald:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(5,150,105,.35); }
-
-        .check-icon {
-          width: 20px; height: 20px; border-radius: 50%;
-          background: rgba(5,150,105,.12); display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; color: #059669; font-size: 10px; font-weight: 800;
-        }
-        .check-icon-dark {
-          width: 20px; height: 20px; border-radius: 50%;
-          background: rgba(74,222,128,.2); display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; color: #4ade80; font-size: 10px; font-weight: 800;
-        }
-        .cross-icon {
-          width: 20px; height: 20px; border-radius: 50%;
-          background: rgba(0,0,0,.05); display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; color: #ccc; font-size: 10px;
+        .root {
+          min-height: 100vh;
+          background: var(--bg);
+          color: var(--text);
+          font-family: var(--body);
+          overflow-x: hidden;
         }
 
-        .faq-answer { overflow: hidden; transition: max-height .35s ease, opacity .35s ease; }
-
-        .nav-link {
-          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-          color: #555; text-decoration: none; padding: 8px 16px; transition: color .2s;
-        }
-        .nav-link:hover { color: #111; }
-
-        .cta-nav {
-          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
-          color: white; text-decoration: none; background: #111;
-          padding: 9px 20px; border-radius: 10px; transition: transform .2s, box-shadow .2s;
-          display: flex; align-items: center; gap: 7px;
-        }
-        .cta-nav:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
-
-        .badge-pill {
-          display: inline-block;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white; font-family: 'DM Sans', sans-serif;
-          font-size: 11px; font-weight: 700; letter-spacing: .06em;
-          padding: 4px 12px; border-radius: 100px;
+        /* Noise */
+        .root::after {
+          content: '';
+          position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+          opacity: 0.5;
         }
 
-        .popular-label {
-          position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white; font-family: 'DM Sans', sans-serif;
-          font-size: 11px; font-weight: 700; letter-spacing: .08em;
-          padding: 5px 16px; border-radius: 100px; white-space: nowrap;
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+        @keyframes glowPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+        @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+
+        .fu1 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+        .fu2 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+        .fu3 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
+        .fu4 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+        .fu5 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.45s both; }
+        .preinit { opacity: 0; }
+
+        /* ── NAV ── */
+        .nav {
+          position: sticky; top: 0; z-index: 200;
+          height: 60px; padding: 0 40px;
+          display: flex; align-items: center; justify-content: space-between;
+          background: rgba(6,6,8,0.9); backdrop-filter: blur(24px);
+          border-bottom: 1px solid var(--border);
         }
-
-        .current-plan-badge {
-          position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-          background: #059669; color: white;
-          font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;
-          letter-spacing: .08em; padding: 5px 16px; border-radius: 100px; white-space: nowrap;
+        .nav-logo {
+          font-family: var(--display); font-size: 20px; font-weight: 400;
+          color: var(--text); text-decoration: none; font-style: italic;
+          display: flex; align-items: center; gap: 8px;
         }
-
-        .divider { width: 40px; height: 2px; background: #111; margin-bottom: 20px; }
-        .divider-light { width: 40px; height: 2px; background: rgba(255,255,255,.3); margin-bottom: 20px; }
-
-        /* Avatar */
-        .user-avatar {
-          width: 34px; height: 34px; border-radius: 50%;
-          background: linear-gradient(135deg, #059669, #0ea5e9);
-          color: white; font-family: 'DM Sans', sans-serif;
-          font-size: 13px; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
+        .logo-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease infinite; flex-shrink: 0; }
+        .nav-right { display: flex; gap: 8px; align-items: center; }
+        .nav-link { font-size: 13px; font-weight: 500; color: var(--text2); text-decoration: none; padding: 8px 16px; border-radius: 8px; transition: color 0.2s, background 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-cta {
+          font-size: 13px; font-weight: 600; background: var(--accent); color: #060608;
+          padding: 9px 18px; border-radius: 10px; text-decoration: none;
+          transition: filter 0.2s, transform 0.15s; letter-spacing: -0.01em;
+          display: flex; align-items: center; gap: 6px;
         }
+        .nav-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .nav-avatar {
+          width: 32px; height: 32px; border-radius: 50%;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          color: #060608; font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .nav-user { display: flex; align-items: center; gap: 8px; }
+        .nav-username { font-size: 13px; font-weight: 600; color: var(--text); }
+        .nav-plan-badge {
+          font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+          padding: 2px 7px; border-radius: 100px;
+        }
+        .badge-free { background: rgba(255,255,255,0.06); color: var(--text3); }
+        .badge-paid { background: rgba(110,231,183,0.12); color: var(--accent); }
 
-        /* Current plan banner at top */
+        /* ── LOGGED-IN BANNER ── */
         .plan-banner {
-          background: rgba(5,150,105,.07);
-          border-bottom: 1px solid rgba(5,150,105,.12);
+          background: rgba(110,231,183,0.05);
+          border-bottom: 1px solid rgba(110,231,183,0.1);
           padding: 10px 24px;
-          display: flex; align-items: center; justify-content: center; gap: 10px;
-          font-family: 'DM Sans', sans-serif; font-size: 13px; color: #059669;
-          font-weight: 500;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-size: 13px; color: var(--accent); font-weight: 400;
+        }
+        .banner-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease infinite; flex-shrink: 0; }
+
+        /* ── HERO ── */
+        .hero {
+          padding: 88px 40px 72px; text-align: center;
+          position: relative; overflow: hidden;
+        }
+        .hero-glow {
+          position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+          width: 700px; height: 500px; border-radius: 50%;
+          background: radial-gradient(ellipse, rgba(110,231,183,0.07) 0%, transparent 65%);
+          pointer-events: none; animation: glowPulse 4s ease-in-out infinite;
+        }
+        .hero-grid {
+          position: absolute; inset: 0;
+          background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 60% 70% at 50% 30%, black 20%, transparent 100%);
+        }
+        .hero-eyebrow {
+          display: inline-flex; align-items: center; gap: 7px;
+          background: rgba(110,231,183,0.08); border: 1px solid rgba(110,231,183,0.18);
+          border-radius: 100px; padding: 5px 14px;
+          font-size: 11px; font-weight: 600; color: var(--accent);
+          letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 28px;
+          position: relative; z-index: 1;
+        }
+        .eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease infinite; }
+        .hero-h1 {
+          font-family: var(--display); font-size: clamp(44px, 6vw, 80px);
+          font-weight: 300; line-height: 1.0; letter-spacing: -0.03em;
+          color: var(--text); margin-bottom: 20px;
+          position: relative; z-index: 1;
+        }
+        .hero-h1 em { font-style: italic; color: var(--accent); }
+        .hero-sub {
+          font-size: 16px; font-weight: 300; color: var(--text2);
+          line-height: 1.75; max-width: 440px; margin: 0 auto;
+          position: relative; z-index: 1;
         }
 
-        @media (max-width: 768px) {
-          .plans-grid { grid-template-columns: 1fr !important; }
-          .card-starter { order: -1; }
+        /* ── PLANS GRID ── */
+        .plans-section { padding: 0 40px 100px; }
+        .plans-grid {
+          max-width: 1020px; margin: 0 auto;
+          display: grid; grid-template-columns: 1fr 1.06fr 1fr;
+          gap: 16px; align-items: start;
+        }
+
+        /* Free card */
+        .card {
+          border-radius: 24px; padding: 36px;
+          border: 1px solid var(--border);
+          background: var(--surface);
+          position: relative;
+          transition: border-color 0.25s, transform 0.25s;
+        }
+        .card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+        /* Starter card */
+        .card-star {
+          border-radius: 26px; padding: 38px;
+          position: relative;
+          background: var(--surface2);
+          margin-top: -10px; margin-bottom: -10px;
+          transition: transform 0.25s;
+        }
+        .card-star::before {
+          content: '';
+          position: absolute; inset: -1.5px; border-radius: 27px; z-index: -1;
+          background: linear-gradient(135deg, var(--accent), var(--accent2), #F472B6);
+          opacity: 0.6;
+        }
+        .card-star:hover { transform: translateY(-3px); }
+        .card-star::after {
+          content: '';
+          position: absolute; inset: 0; border-radius: 26px; z-index: 0;
+          background: radial-gradient(ellipse at 60% 0%, rgba(110,231,183,0.07) 0%, transparent 60%);
+          pointer-events: none;
+        }
+
+        .card-badge {
+          position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+          font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+          padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+        }
+        .badge-popular { background: var(--accent); color: #060608; }
+        .badge-current { background: rgba(110,231,183,0.15); color: var(--accent); border: 1px solid rgba(110,231,183,0.3); }
+
+        .card-tier { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 18px; }
+        .card-tier-star { color: rgba(255,255,255,0.35); }
+        .card-price {
+          font-family: var(--display); font-size: 58px; font-weight: 300;
+          line-height: 1; letter-spacing: -0.03em; font-style: italic;
+          color: var(--text); margin-bottom: 6px;
+        }
+        .card-price-accent { color: var(--accent); }
+        .card-period { font-size: 13px; font-weight: 300; color: var(--text3); margin-bottom: 28px; }
+
+        .card-highlight {
+          display: inline-block;
+          background: rgba(110,231,183,0.1); color: var(--accent);
+          border: 1px solid rgba(110,231,183,0.2);
+          padding: 3px 10px; border-radius: 100px;
+          font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+          margin-bottom: 26px;
+        }
+
+        .feat-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+        .feat-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 300; }
+        .feat-on { color: var(--text); }
+        .feat-off { color: var(--text3); }
+        .feat-check {
+          width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 9px; font-weight: 800;
+        }
+        .fc-y { background: rgba(110,231,183,0.12); color: var(--accent); }
+        .fc-n { background: rgba(255,255,255,0.04); color: var(--text3); }
+        .fc-y-bright { background: rgba(110,231,183,0.2); color: var(--accent); }
+
+        /* Buttons */
+        .btn {
+          display: block; width: 100%; padding: 14px 0; border-radius: 12px;
+          text-align: center; text-decoration: none; font-family: var(--body);
+          font-size: 13px; font-weight: 700; letter-spacing: 0.01em;
+          cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .btn-outline {
+          background: transparent; color: var(--text2);
+          border: 1px solid var(--border2);
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+        .btn-outline:disabled { opacity: 0.4; cursor: default; }
+        .btn-accent {
+          background: var(--accent); color: #060608;
+          position: relative; z-index: 1;
+        }
+        .btn-accent:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(110,231,183,0.25); }
+        .btn-ghost-muted {
+          background: rgba(255,255,255,0.05); color: var(--text2);
+          border: 1px solid var(--border);
+        }
+        .btn-ghost-muted:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+        /* ── TRUST ── */
+        .trust { padding: 0 40px 80px; }
+        .trust-inner {
+          max-width: 700px; margin: 0 auto;
+          display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+        }
+        .trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 300; color: var(--text3); }
+        .trust-icon { font-size: 15px; }
+
+        /* ── FAQ ── */
+        .faq { padding: 0 40px 120px; }
+        .faq-inner { max-width: 620px; margin: 0 auto; }
+        .faq-header { text-align: center; margin-bottom: 56px; }
+        .faq-h {
+          font-family: var(--display); font-size: clamp(32px, 4vw, 48px);
+          font-weight: 300; font-style: italic; letter-spacing: -0.03em; color: var(--text);
+        }
+        .faq-item { border-bottom: 1px solid var(--border); }
+        .faq-btn {
+          width: 100%; background: none; border: none;
+          padding: 20px 0; display: flex; justify-content: space-between; align-items: center;
+          cursor: pointer; text-align: left; font-size: 14px; font-weight: 500;
+          color: var(--text); font-family: var(--body); gap: 20px; letter-spacing: -0.01em;
+        }
+        .faq-icon { font-size: 18px; color: var(--text3); transition: transform 0.3s, color 0.2s; flex-shrink: 0; line-height: 1; }
+        .faq-icon.open { transform: rotate(45deg); color: var(--accent); }
+        .faq-body {
+          overflow: hidden; max-height: 0; opacity: 0;
+          transition: max-height 0.35s ease, opacity 0.3s, padding 0.3s;
+          font-size: 14px; font-weight: 300; color: var(--text2); line-height: 1.8;
+        }
+        .faq-body.open { max-height: 200px; opacity: 1; padding-bottom: 20px; }
+
+        /* ── FOOTER ── */
+        .footer { background: #030304; border-top: 1px solid var(--border); padding: 32px 40px; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .footer-logo { font-family: var(--display); font-size: 18px; color: var(--text2); text-decoration: none; font-weight: 300; font-style: italic; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-link { font-size: 12px; color: var(--text3); text-decoration: none; font-weight: 300; transition: color 0.2s; }
+        .footer-link:hover { color: var(--text2); }
+
+        /* ── MOBILE ── */
+        @media (max-width: 900px) {
+          .nav { padding: 0 20px; }
+          .hero { padding: 72px 20px 56px; }
+          .plans-section { padding: 0 20px 80px; }
+          .plans-grid { grid-template-columns: 1fr; }
+          .card-star { margin: 0; }
+          .trust { padding: 0 20px 60px; }
+          .trust-inner { gap: 20px; }
+          .faq { padding: 0 20px 80px; }
+          .footer { padding: 24px 20px; }
+          .nav-username { display: none; }
         }
       `}</style>
 
-      {/* ── LOGGED-IN BANNER ─────────────────────────────────────── */}
+      {/* LOGGED-IN BANNER */}
       {isLoggedIn && !authLoading && (
         <div className="plan-banner">
-          <span style={{
-            width: 7, height: 7, borderRadius: "50%",
-            background: "#059669", display: "inline-block", flexShrink: 0,
-          }} />
-          You're signed in as <strong>{userName}</strong>
+          <span className="banner-dot" />
+          Signed in as <strong style={{ fontWeight: 600 }}>{userName}</strong>
           {currentPlan && currentPlan !== "free" && (
-            <> · Current plan: <strong style={{ textTransform: "capitalize" }}>{currentPlan}</strong></>
+            <> · Plan: <strong style={{ fontWeight: 600, textTransform: "capitalize" }}>{currentPlan}</strong></>
           )}
         </div>
       )}
 
-      {/* ── HEADER ───────────────────────────────────────────────── */}
-      <header style={{
-        borderBottom: "1px solid #e5e5e5",
-        background: "rgba(250,250,248,0.95)",
-        backdropFilter: "blur(20px)",
-        position: "sticky", top: 0, zIndex: 50,
-      }}>
-        <div style={{
-          maxWidth: 1200, margin: "0 auto", padding: "0 24px",
-          height: 64, display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <a href="/" className="font-display" style={{ fontSize: 22, fontWeight: 400, letterSpacing: "-0.02em", color: "#111", textDecoration: "none" }}>
-            AutopilotAI
-          </a>
+      {/* NAV */}
+      <nav className="nav">
+        <a href="/" className="nav-logo">
+          <span className="logo-pulse" />
+          AutopilotAI
+        </a>
+        <div className="nav-right">
+          {authLoading ? (
+            <div style={{ width: 100, height: 32, borderRadius: 10, background: "var(--surface2)" }} />
+          ) : isLoggedIn ? (
+            <>
+              <div className="nav-user">
+                <div className="nav-avatar">{userInitial}</div>
+                <span className="nav-username">{userName?.split(" ")[0]}</span>
+                <span className={`nav-plan-badge ${currentPlan && currentPlan !== "free" ? "badge-paid" : "badge-free"}`}>
+                  {currentPlan || "free"}
+                </span>
+              </div>
+              <a href="/dashboard" className="nav-cta">
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Dashboard
+              </a>
+            </>
+          ) : (
+            <>
+              <a href="/login" className="nav-link">Sign in</a>
+              <a href="/register" className="nav-cta">Get started free</a>
+            </>
+          )}
+        </div>
+      </nav>
 
-          {/* Right nav — changes based on auth */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {authLoading ? (
-              // Skeleton while loading
-              <div style={{ width: 120, height: 34, borderRadius: 10, background: "#f0f0ee", animation: "fadeUp 0.3s ease" }} />
-            ) : isLoggedIn ? (
-              // ── Logged in nav ──
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 4 }}>
-                  <div className="user-avatar">{userInitial}</div>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span className="font-sans" style={{ fontSize: 13, fontWeight: 600, color: "#111", lineHeight: 1.2 }}>
-                      {userName?.split(" ")[0]}
-                    </span>
-                    {currentPlan && (
-                      <span className="font-sans" style={{
-                        fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        color: currentPlan !== "free" ? "#059669" : "#aaa",
-                      }}>
-                        {currentPlan}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <a href="/dashboard" className="cta-nav" style={{ background: "#111" }}>
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                  </svg>
-                  Dashboard
-                </a>
-              </>
-            ) : (
-              // ── Logged out nav ──
-              <>
-                <a href="/login" className="nav-link">Sign in</a>
-                <a href="/register" className="cta-nav">Get started free</a>
-              </>
-            )}
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-glow" />
+        <div className="hero-grid" />
+        <div className={mounted ? "fu1" : "preinit"}>
+          <div className="hero-eyebrow">
+            <span className="eyebrow-dot" />
+            {isLoggedIn && currentPlan && currentPlan !== "free" ? "Manage your plan" : "Choose your plan"}
           </div>
         </div>
-      </header>
+        <h1 className={`hero-h1 ${mounted ? "fu2" : "preinit"}`}>
+          {isLoggedIn ? (
+            <>Your plan,<br /><em>your choice.</em></>
+          ) : (
+            <>Start free.<br /><em>Publish when ready.</em></>
+          )}
+        </h1>
+        <p className={`hero-sub ${mounted ? "fu3" : "preinit"}`}>
+          {isLoggedIn
+            ? "Build and edit for free. Upgrade whenever you're ready to go live with your own domain."
+            : "Build and edit your entire website for free. Pay only when you're ready to go live."}
+        </p>
+      </section>
 
-      <main style={{ padding: "0 24px" }}>
-
-        {/* ── HERO ──────────────────────────────────────────────── */}
-        <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "80px 0 64px" }}>
-          <div className="animate-fadeUp anim-d1" style={{ marginBottom: 20 }}>
-            <span className="badge-pill">
-              {isLoggedIn && currentPlan !== "free" ? "Manage Your Plan" : "Choose Your Plan"}
-            </span>
-          </div>
-
-          <h1 className="font-display animate-fadeUp anim-d2" style={{
-            fontSize: "clamp(40px, 5vw, 64px)", fontWeight: 400,
-            letterSpacing: "-0.03em", color: "#111", lineHeight: 1.05, marginBottom: 20,
-          }}>
-            {isLoggedIn ? (
-              <>Your plan,<br /><em style={{ color: "#059669" }}>your choice.</em></>
-            ) : (
-              <>Start free.<br /><em style={{ color: "#059669" }}>Publish when ready.</em></>
-            )}
-          </h1>
-
-          <p className="font-sans animate-fadeUp anim-d3" style={{ fontSize: 17, color: "#666", lineHeight: 1.7, maxWidth: 480, margin: "0 auto" }}>
-            {isLoggedIn
-              ? "Build and edit for free. Upgrade whenever you're ready to go live with your own domain."
-              : "Build and edit your entire website for free. Pay only when you're ready to go live with your own domain."}
-          </p>
-        </div>
-
-        {/* ── PLANS ─────────────────────────────────────────────── */}
-        <div className="plans-grid" style={{
-          display: "grid", gridTemplateColumns: "1fr 1.08fr 1fr",
-          gap: 20, maxWidth: 1000, margin: "0 auto",
-          alignItems: "start", paddingBottom: 120,
-        }}>
+      {/* PLANS */}
+      <section className="plans-section">
+        <div className={`plans-grid ${mounted ? "fu4" : "preinit"}`}>
 
           {/* FREE */}
-          <div className="card-free" style={{ position: "relative" }}>
+          <div className="card" style={{ position: "relative" }}>
             {currentPlan === "free" && isLoggedIn && (
-              <div className="current-plan-badge">✓ Current Plan</div>
+              <div className="card-badge badge-current">✓ Current plan</div>
             )}
-            <div className="divider" />
-            <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#888", textTransform: "uppercase", marginBottom: 16 }}>
-              Free Forever
-            </div>
-            <div className="font-display" style={{ fontSize: 52, fontWeight: 400, color: "#111", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: 6 }}>
-              $0
-            </div>
-            <p className="font-sans" style={{ fontSize: 14, color: "#888", marginBottom: 32 }}>
-              Create and explore, always free
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
-              {[
-                [true, "Build 1 website"],
-                [true, "Unlimited edits"],
-                [true, "10 AI content generations"],
-                [true, "Mobile responsive preview"],
+            <div className="card-tier">Free forever</div>
+            <div className="card-price">$0</div>
+            <div className="card-period">Create and explore — always free</div>
+            <div className="feat-list">
+              {([
+                [true,  "Build 1 website"],
+                [true,  "Unlimited edits"],
+                [true,  "10 AI generations"],
+                [true,  "Mobile responsive preview"],
                 [false, "Publish publicly"],
                 [false, "Custom domain"],
                 [false, "AI image generation"],
-              ].map(([yes, label], i) => (
-                <div key={i} className="font-sans" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: yes ? "#333" : "#bbb" }}>
-                  <div className={yes ? "check-icon" : "cross-icon"}>{yes ? "✓" : "✕"}</div>
-                  {label as string}
+              ] as [boolean,string][]).map(([y,l],i) => (
+                <div key={i} className={`feat-row ${y?"feat-on":"feat-off"}`}>
+                  <div className={`feat-check ${y?"fc-y":"fc-n"}`}>{y?"✓":"✕"}</div>
+                  {l}
                 </div>
               ))}
             </div>
-
             {isLoggedIn ? (
               currentPlan === "free" ? (
-                <a href="/dashboard" className="btn-ghost" style={{ opacity: 0.5, cursor: "default", pointerEvents: "none" }}>
-                  Current plan
-                </a>
+                <button className="btn btn-outline" disabled>Current plan</button>
               ) : (
-                <a href="/dashboard" className="btn-ghost">Back to dashboard</a>
+                <a href="/dashboard" className="btn btn-outline">Back to dashboard</a>
               )
             ) : (
-              <a href="/register" className="btn-ghost">Start building free</a>
+              <a href="/register" className="btn btn-outline">Start building free</a>
             )}
           </div>
 
           {/* STARTER */}
-          <div className="card-starter" style={{ marginTop: -8, marginBottom: -8 }}>
+          <div className="card-star" style={{ position: "relative" }}>
             {currentPlan === "starter" && isLoggedIn ? (
-              <div className="current-plan-badge">✓ Current Plan</div>
+              <div className="card-badge badge-current">✓ Current plan</div>
             ) : (
-              <div className="popular-label">★ MOST POPULAR</div>
+              <div className="card-badge badge-popular">★ Most popular</div>
             )}
-            <div className="divider-light" />
-            <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,.5)", textTransform: "uppercase", marginBottom: 16 }}>
-              Starter
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div className="card-tier card-tier-star">Starter</div>
+              <div className="card-price card-price-accent">
+                $10<span style={{ fontSize: 22, color: "var(--text3)", fontStyle: "normal" }}>/mo</span>
+              </div>
+              <div className="card-period">14-day free trial · cancel anytime</div>
+              <div className="card-highlight">Most businesses pick this</div>
+              <div className="feat-list">
+                {[
+                  "Everything in Free",
+                  "Publish your website",
+                  "Custom domain (yourco.com)",
+                  "Unlimited AI generations",
+                  "20 AI images / month",
+                  "Advanced analytics",
+                  "Priority support",
+                ].map((l,i) => (
+                  <div key={i} className="feat-row feat-on">
+                    <div className="feat-check fc-y-bright">✓</div>
+                    {l}
+                  </div>
+                ))}
+              </div>
+              {currentPlan === "starter" && isLoggedIn ? (
+                <a href="/dashboard" className="btn btn-accent">Go to dashboard →</a>
+              ) : (
+                <button onClick={() => subscribe("starter")} className="btn btn-accent">
+                  {isLoggedIn ? "Upgrade to Starter →" : "Start 14-day free trial →"}
+                </button>
+              )}
+              {!(currentPlan === "starter" && isLoggedIn) && (
+                <p style={{ fontSize: 11, color: "var(--text3)", textAlign: "center", marginTop: 10, fontWeight: 300 }}>
+                  No credit card required
+                </p>
+              )}
             </div>
-            <div className="font-display" style={{ fontSize: 52, fontWeight: 400, color: "white", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: 6 }}>
-              $10
-              <span className="font-sans" style={{ fontSize: 20, color: "rgba(255,255,255,.4)", fontWeight: 400 }}>/mo</span>
-            </div>
-
-            <div className="font-sans" style={{
-              display: "inline-block", background: "rgba(74,222,128,.15)", color: "#4ade80",
-              padding: "3px 12px", borderRadius: 100, fontSize: 11, fontWeight: 700, marginBottom: 28,
-            }}>
-              Most businesses pick this
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
-              {[
-                "Everything in Free",
-                "Publish your website",
-                "Custom domain (yourco.com)",
-                "Unlimited AI content generations",
-                "20 AI images / month",
-                "Advanced analytics",
-                "Priority support",
-              ].map((label, i) => (
-                <div key={i} className="font-sans" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: "rgba(255,255,255,.85)" }}>
-                  <div className="check-icon-dark">✓</div>
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            {currentPlan === "starter" && isLoggedIn ? (
-              <a href="/dashboard" className="btn-emerald" style={{ display: "block", textAlign: "center" }}>
-                Go to dashboard →
-              </a>
-            ) : (
-              <button onClick={() => subscribe("starter")} className="btn-emerald">
-                {isLoggedIn ? "Upgrade to Starter →" : "Start free trial →"}
-              </button>
-            )}
-            <p className="font-sans" style={{ fontSize: 12, color: "rgba(255,255,255,.3)", textAlign: "center", marginTop: 12 }}>
-              {currentPlan === "starter" && isLoggedIn ? "" : "No credit card required"}
-            </p>
           </div>
 
           {/* PRO */}
-          <div className="card-pro" style={{ position: "relative" }}>
+          <div className="card" style={{ position: "relative" }}>
             {currentPlan === "pro" && isLoggedIn && (
-              <div className="current-plan-badge">✓ Current Plan</div>
+              <div className="card-badge badge-current">✓ Current plan</div>
             )}
-            <div className="divider" />
-            <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#888", textTransform: "uppercase", marginBottom: 16 }}>
-              Pro
+            <div className="card-tier">Pro</div>
+            <div className="card-price">
+              $20<span style={{ fontSize: 22, color: "var(--text3)", fontStyle: "normal", fontFamily: "var(--body)", fontWeight: 300 }}>/mo</span>
             </div>
-            <div className="font-display" style={{ fontSize: 52, fontWeight: 400, color: "#111", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: 6 }}>
-              $20
-              <span className="font-sans" style={{ fontSize: 20, color: "#aaa", fontWeight: 400 }}>/mo</span>
-            </div>
-            <p className="font-sans" style={{ fontSize: 14, color: "#888", marginBottom: 32 }}>
-              For power users & agencies
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+            <div className="card-period">For power users & agencies</div>
+            <div className="feat-list">
               {[
                 "Everything in Starter",
                 "3 websites",
                 "50 AI images / month",
                 "White-label option",
                 "Dedicated support",
-                "Early access to new features",
-              ].map((label, i) => (
-                <div key={i} className="font-sans" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: "#333" }}>
-                  <div className="check-icon">✓</div>
-                  {label}
+                "Early access to features",
+              ].map((l,i) => (
+                <div key={i} className="feat-row feat-on">
+                  <div className="feat-check fc-y">✓</div>
+                  {l}
                 </div>
               ))}
             </div>
-
             {currentPlan === "pro" && isLoggedIn ? (
-              <a href="/dashboard" className="btn-ghost">Go to dashboard</a>
+              <a href="/dashboard" className="btn btn-ghost-muted">Go to dashboard</a>
             ) : (
-              <button onClick={() => subscribe("pro")} className="btn-ghost">
+              <button onClick={() => subscribe("pro")} className="btn btn-ghost-muted">
                 {isLoggedIn ? "Upgrade to Pro" : "Get Pro"}
               </button>
             )}
           </div>
         </div>
+      </section>
 
-        {/* ── TRUST STRIP ───────────────────────────────────────── */}
-        <div style={{ maxWidth: 800, margin: "0 auto 80px", display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap" }}>
+      {/* TRUST */}
+      <div className={`trust ${mounted ? "fu5" : "preinit"}`}>
+        <div className="trust-inner">
           {[
             { icon: "🔒", text: "Secure checkout via Stripe" },
-            { icon: "↩️", text: "Cancel anytime" },
+            { icon: "↩️", text: "Cancel anytime, no questions" },
             { icon: "✉️", text: "Support within 24 hours" },
-          ].map((item, i) => (
-            <div key={i} className="font-sans" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#888" }}>
-              <span style={{ fontSize: 16 }}>{item.icon}</span>
+          ].map((item,i) => (
+            <div key={i} className="trust-item">
+              <span className="trust-icon">{item.icon}</span>
               {item.text}
             </div>
           ))}
         </div>
+      </div>
 
-        {/* ── FAQ ───────────────────────────────────────────────── */}
-        <div style={{ maxWidth: 640, margin: "0 auto", paddingBottom: 120 }}>
-          <h2 className="font-display" style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 400, letterSpacing: "-0.03em", color: "#111", marginBottom: 48, textAlign: "center" }}>
-            Common questions
-          </h2>
-
-          {FAQS.map((faq, i) => (
-            <div key={i} style={{ borderBottom: "1px solid #e5e5e5", paddingBottom: openFaq === i ? 20 : 0 }}>
-              <button
-                className="font-sans"
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{
-                  width: "100%", background: "none", border: "none",
-                  padding: "22px 0", display: "flex", justifyContent: "space-between",
-                  alignItems: "center", cursor: "pointer", textAlign: "left",
-                  fontSize: 15, fontWeight: 600, color: "#111", letterSpacing: "-0.01em",
-                }}
-              >
-                {faq.q}
-                <span style={{
-                  fontSize: 20, color: "#888", transition: "transform 0.3s ease",
-                  transform: openFaq === i ? "rotate(45deg)" : "rotate(0deg)",
-                  flexShrink: 0, marginLeft: 16,
-                }}>+</span>
+      {/* FAQ */}
+      <section className="faq">
+        <div className="faq-inner">
+          <div className="faq-header">
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 16 }}>FAQ</div>
+            <h2 className="faq-h">Common questions</h2>
+          </div>
+          {FAQS.map((f,i) => (
+            <div key={i} className="faq-item">
+              <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i?null:i)}>
+                {f.q}
+                <span className={`faq-icon ${openFaq===i?"open":""}`}>+</span>
               </button>
-              <div
-                className="faq-answer font-sans"
-                style={{ maxHeight: openFaq === i ? 200 : 0, opacity: openFaq === i ? 1 : 0, fontSize: 14, color: "#666", lineHeight: 1.7 }}
-              >
-                {faq.a}
-              </div>
+              <div className={`faq-body ${openFaq===i?"open":""}`}>{f.a}</div>
             </div>
           ))}
         </div>
-      </main>
+      </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: "1px solid #e5e5e5", background: "#111", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-          <div className="font-display" style={{ fontSize: 20, color: "white", fontWeight: 400 }}>AutopilotAI</div>
-          <div className="font-sans" style={{ display: "flex", gap: 32, fontSize: 13, color: "#666" }}>
-            {["Terms", "Privacy", "Contact", "Twitter"].map((link) => (
-              <a key={link} href="#" style={{ color: "#666", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}>
-                {link}
-              </a>
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-inner">
+          <a href="/" className="footer-logo">AutopilotAI</a>
+          <div className="footer-links">
+            {["Terms","Privacy","Contact"].map(l => (
+              <a key={l} href="#" className="footer-link">{l}</a>
             ))}
           </div>
         </div>
