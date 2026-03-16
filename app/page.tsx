@@ -72,7 +72,7 @@ export default function HomePage() {
         :root{
           --bg:#060608;--bg2:#0C0C10;--surface:#111116;--surface2:#18181F;
           --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-          --text:#F0EEF8;--text2:#8A8899;--text3:#555465;
+          --text:#F0EEF8;--text2:#8A8899;--text3:#6B6A7A;
           --accent:#6EE7B7;--accent2:#818CF8;--accent3:#F472B6;
           --display:'Fraunces',Georgia,serif;--body:'DM Sans',sans-serif;
         }
@@ -105,7 +105,7 @@ export default function HomePage() {
         .nav-link{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:8px 16px;border-radius:8px;transition:color 0.2s,background 0.2s}
         .nav-link:hover{color:var(--text);background:rgba(255,255,255,0.05)}
         .nav-cta{font-size:13px;font-weight:600;background:var(--accent);color:#060608;padding:9px 20px;border-radius:10px;text-decoration:none;transition:filter 0.2s,transform 0.15s;letter-spacing:-0.01em}
-        .nav-cta:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .nav-cta:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 16px rgba(110,231,183,0.28)}
 
         /* HERO */
         .hero{min-height:100vh;padding:110px 40px 80px;position:relative;display:flex;align-items:center;overflow:hidden}
@@ -116,7 +116,7 @@ export default function HomePage() {
         .eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease infinite}
         .hero-h1{font-family:var(--display);font-size:clamp(52px,6.5vw,96px);font-weight:300;line-height:1.0;letter-spacing:-0.03em;color:var(--text);margin-bottom:28px}
         .hero-h1 em{font-style:italic;color:var(--accent);font-weight:300}
-        .hero-h1 .dim{color:var(--text3)}
+        .hero-h1 .dim{color:#4A4959}
         .hero-sub{font-size:17px;font-weight:300;color:var(--text2);line-height:1.75;max-width:460px;margin-bottom:40px;letter-spacing:-0.01em}
         .hero-sub strong{color:var(--text);font-weight:500}
         .build-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:18px;overflow:hidden;margin-bottom:16px;transition:border-color 0.25s,box-shadow 0.25s}
@@ -127,7 +127,7 @@ export default function HomePage() {
         .build-placeholder{font-size:13px;color:var(--text3);pointer-events:none;font-style:italic}
         .cursor-blink{animation:blink 1s step-end infinite}
         .build-btn{background:var(--accent);color:#060608;border:none;cursor:pointer;font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:0.02em;padding:12px 22px;border-radius:10px;transition:filter 0.2s,transform 0.15s;white-space:nowrap}
-        .build-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .build-btn:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 20px rgba(110,231,183,0.35)}
         .hero-trust{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text3);font-weight:400;margin-bottom:36px}
         .hero-trust span{display:flex;align-items:center;gap:5px}
         .trust-check{color:var(--accent);font-size:11px}
@@ -164,8 +164,8 @@ export default function HomePage() {
         .float-chip{position:absolute;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:9px 14px;font-size:11px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px;box-shadow:0 8px 32px rgba(0,0,0,0.4);white-space:nowrap;z-index:10}
         .chip-live{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite}
         .chip-top{top:-16px;left:50%;transform:translateX(-50%)}
-        .chip-br{bottom:60px;right:-16px;animation:float 3.5s ease-in-out infinite}
-        .chip-bl{bottom:110px;left:-20px;animation:float 4s ease-in-out 1s infinite;font-size:10px}
+        .chip-br{bottom:60px;right:-16px;animation:float 3.5s ease-in-out infinite;will-change:transform}
+        .chip-bl{bottom:110px;left:-20px;animation:float 4s ease-in-out 1s infinite;font-size:10px;will-change:transform}
 
         /* TICKER */
         .ticker{overflow:hidden;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface)}
@@ -183,8 +183,8 @@ export default function HomePage() {
         .section-h em{font-style:italic;color:var(--accent)}
         .section-body{font-size:16px;font-weight:300;color:var(--text2);line-height:1.8;max-width:440px}
         .prob-cards{display:flex;flex-direction:column;gap:12px}
-        .prob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;display:flex;align-items:center;gap:16px;transition:border-color 0.2s,background 0.2s,transform 0.2s}
-        .prob-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px)}
+        .prob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;display:flex;align-items:center;gap:16px;transition:border-color 0.2s,background 0.2s,transform 0.2s,box-shadow 0.2s}
+        .prob-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
         .prob-emoji{font-size:22px;flex-shrink:0}
         .prob-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
         .prob-desc{font-size:12px;color:var(--text3);font-weight:300}
@@ -205,7 +205,7 @@ export default function HomePage() {
         .step-body{font-size:14px;font-weight:300;color:var(--text2);line-height:1.75;position:relative;z-index:1}
         .step-arrow{margin-top:28px;font-size:20px;color:var(--accent);position:relative;z-index:1}
         .step-divider{display:flex;align-items:center;justify-content:center;background:var(--surface);padding:0 4px}
-        .step-divider-icon{font-size:18px;color:var(--text3)}
+        .step-divider-icon{font-size:22px;color:var(--text2)}
 
         /* TOOLS */
         .tools{padding:120px 40px;background:var(--bg)}
@@ -272,8 +272,8 @@ export default function HomePage() {
         .proof-inner{max-width:1100px;margin:0 auto}
         .proof-header{text-align:center;max-width:500px;margin:0 auto 64px}
         .proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-        .proof-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;transition:border-color 0.2s,transform 0.2s}
-        .proof-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+        .proof-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s}
+        .proof-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
         .proof-earned{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:100px;margin-bottom:20px;color:#060608}
         .proof-quote{font-family:var(--display);font-size:15px;font-style:italic;font-weight:300;color:var(--text);line-height:1.7;margin-bottom:24px;letter-spacing:-0.01em}
         .proof-person{display:flex;align-items:center;gap:10px}
@@ -293,8 +293,8 @@ export default function HomePage() {
         .feat-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
         .feat-body{font-size:13px;font-weight:300;color:var(--text3);line-height:1.65}
         .metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-        .metric{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;transition:border-color 0.2s,transform 0.2s}
-        .metric:hover{border-color:var(--border2);transform:translateY(-2px)}
+        .metric{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s}
+        .metric:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.4)}
         .metric-val{font-family:var(--display);font-size:48px;font-weight:300;line-height:1;margin-bottom:10px;letter-spacing:-0.03em;font-style:italic}
         .metric-desc{font-size:12px;font-weight:300;color:var(--text3);line-height:1.5}
 
@@ -304,7 +304,7 @@ export default function HomePage() {
         .pricing-header{text-align:center;margin-bottom:64px}
         .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
         .price-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px 36px;position:relative}
-        .price-card-featured{background:var(--surface2);border-color:rgba(110,231,183,0.3);box-shadow:0 0 0 1px rgba(110,231,183,0.1),0 0 60px rgba(110,231,183,0.05)}
+        .price-card-featured{background:var(--surface2);border-color:rgba(110,231,183,0.3);box-shadow:0 0 0 1px rgba(110,231,183,0.1),0 0 80px rgba(110,231,183,0.1),0 20px 60px rgba(0,0,0,0.4)}
         .price-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#060608;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:4px 16px;border-radius:100px;white-space:nowrap}
         .price-tier{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px}
         .price-amount{font-family:var(--display);font-size:64px;font-weight:300;line-height:1;margin-bottom:6px;font-style:italic;letter-spacing:-0.03em}
@@ -315,11 +315,11 @@ export default function HomePage() {
         .pfc{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
         .pfc-y{background:rgba(110,231,183,0.15);color:var(--accent)}
         .pfc-n{background:var(--surface);color:var(--text3)}
-        .price-cta{display:block;margin-top:36px;padding:14px;border-radius:12px;text-align:center;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;border:1px solid;transition:all 0.2s;font-family:var(--body);cursor:pointer}
+        .price-cta{display:block;margin-top:36px;padding:14px;border-radius:12px;text-align:center;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;border:1px solid;transition:filter 0.2s,transform 0.15s,box-shadow 0.2s,background 0.2s,color 0.2s;font-family:var(--body);cursor:pointer}
         .price-cta-outline{border-color:var(--border2);color:var(--text2);background:transparent}
         .price-cta-outline:hover{background:var(--surface2);color:var(--text)}
         .price-cta-filled{background:var(--accent);color:#060608;border-color:var(--accent)}
-        .price-cta-filled:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .price-cta-filled:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(110,231,183,0.35)}
 
         /* FAQ */
         .faq{padding:120px 40px;background:var(--bg)}
@@ -330,7 +330,7 @@ export default function HomePage() {
         .faq-icon{font-size:20px;color:var(--text3);transition:transform 0.3s;flex-shrink:0;line-height:1}
         .faq-icon.open{transform:rotate(45deg);color:var(--accent)}
         .faq-body{overflow:hidden;max-height:0;opacity:0;transition:max-height 0.35s ease,opacity 0.3s,padding 0.3s;font-size:14px;font-weight:300;color:var(--text2);line-height:1.8}
-        .faq-body.open{max-height:200px;opacity:1;padding-bottom:22px}
+        .faq-body.open{max-height:320px;opacity:1;padding-bottom:22px}
 
         /* FINAL */
         .final{padding:140px 40px;background:var(--bg);position:relative;overflow:hidden;border-top:1px solid var(--border)}
@@ -346,7 +346,7 @@ export default function HomePage() {
         .final-bottom{padding:8px 8px 10px 18px;display:flex;justify-content:space-between;align-items:center}
         .final-hint{font-size:12px;color:var(--text3);font-style:italic}
         .final-btn{background:var(--accent);color:#060608;border:none;cursor:pointer;font-family:var(--body);font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;transition:filter 0.2s,transform 0.15s;white-space:nowrap}
-        .final-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .final-btn:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 16px rgba(110,231,183,0.3)}
         .final-trust{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text3)}
         .final-trust span::before{content:'\\2713 ';color:var(--accent)}
 
@@ -438,7 +438,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="social-text">Trusted by 2,800+ local businesses</div>
-                  <div className="social-stars">★★★★★ <span style={{color:"var(--text3)",fontSize:11}}>4.9 / 5</span></div>
+                  <div className="social-stars">★★★★★ <span style={{color:"var(--text3)",fontSize:11}}>4.9/5</span></div>
                 </div>
               </div>
             </div>
@@ -485,7 +485,7 @@ export default function HomePage() {
         <div style={{overflow:"hidden"}}>
           <div className="ticker-track">
             {["Professional website in 60 seconds","Custom AI-written copy","$10/month to go live","No code required","14-day free trial","SEO-optimized from day one","Mobile perfect always","Cancel anytime","Professional website in 60 seconds","Custom AI-written copy","$10/month to go live","No code required","14-day free trial","SEO-optimized from day one","Mobile perfect always","Cancel anytime"].map((t,i)=>(
-              <div key={i} className={`ticker-item ${i%3===0?"hi":""}`}>{t}<span className="ticker-sep">◆</span></div>
+              <div key={i} className={`ticker-item ${i%4===0?"hi":""}`}>{t}<span className="ticker-sep">◆</span></div>
             ))}
           </div>
         </div>
@@ -526,18 +526,16 @@ export default function HomePage() {
               {n:"01",icon:"✍️",bg:"rgba(110,231,183,0.1)",title:"Tell us about your business",body:"60 seconds of typing. Your business type, your city, your vibe. Our AI figures out the rest — no brief, no call, no back-and-forth."},
               {n:"02",icon:"🤖",bg:"rgba(129,140,248,0.1)",title:"AI builds your whole site",body:"Custom copy written for your industry. Conversion-optimized layout. Professional design. All generated in under a minute, tailored to you."},
               {n:"03",icon:"🚀",bg:"rgba(244,114,182,0.1)",title:"Edit, publish, and grow",body:"Click any element to change it. Hit publish. Your site goes live at your own domain. Real customers start finding you the same day."},
-            ].map((s,i,arr)=>(
-              <>
-                <div key={i} className="step">
-                  <div className="step-num">{s.n}</div>
-                  <div className="step-icon" style={{background:s.bg}}>{s.icon}</div>
-                  <h3 className="step-title">{s.title}</h3>
-                  <p className="step-body">{s.body}</p>
-                  <div className="step-arrow">→</div>
-                </div>
-                {i<arr.length-1&&<div key={`div-${i}`} className="step-divider"><span className="step-divider-icon">›</span></div>}
-              </>
-            ))}
+            ].map((s,i,arr)=>[
+              <div key={i} className="step">
+                <div className="step-num">{s.n}</div>
+                <div className="step-icon" style={{background:s.bg}}>{s.icon}</div>
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-body">{s.body}</p>
+                <div className="step-arrow">→</div>
+              </div>,
+              i<arr.length-1 && <div key={`div-${i}`} className="step-divider"><span className="step-divider-icon">›</span></div>
+            ])}
           </div>
         </div>
       </section>
@@ -791,7 +789,7 @@ export default function HomePage() {
       <footer className="footer">
         <div className="footer-inner">
           <a href="/" className="footer-logo">AutopilotAI</a>
-          <div className="footer-copy">© 2025 AutopilotAI · Built with AutopilotAI</div>
+          <div className="footer-copy">© 2026 AutopilotAI · Built with AutopilotAI</div>
           <div className="footer-links">
             <a href="/privacy" className="footer-link">Privacy</a>
             <a href="/terms" className="footer-link">Terms</a>
