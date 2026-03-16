@@ -425,10 +425,10 @@ export default function HomePage() {
         }
         .process-inner { max-width: 1100px; margin: 0 auto; }
         .process-header { text-align: center; max-width: 560px; margin: 0 auto 80px; }
-        .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+        .steps { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; gap: 0; align-items: stretch; }
         .step {
           background: var(--surface); padding: 48px 36px;
-          position: relative; overflow: hidden;
+          position: relative; overflow: visible;
           transition: background 0.25s;
         }
         .step:first-child { border-radius: 20px 0 0 20px; }
@@ -436,8 +436,9 @@ export default function HomePage() {
         .step:hover { background: var(--surface2); }
         .step-num {
           font-family: var(--display); font-size: 100px; font-weight: 300;
-          position: absolute; top: -24px; right: 20px;
-          opacity: 0.04; color: var(--text); user-select: none; line-height: 1;
+          position: absolute; top: -10px; right: 16px;
+          opacity: 0.06; color: var(--text); user-select: none; line-height: 1;
+          pointer-events: none;
         }
         .step-icon {
           width: 48px; height: 48px; border-radius: 14px;
@@ -724,7 +725,7 @@ export default function HomePage() {
           .problem { padding: 80px 20px; }
           .problem-layout { grid-template-columns: 1fr; gap: 48px; }
           .process { padding: 80px 20px; }
-          .steps { grid-template-columns: 1fr; gap: 2px; }
+          .steps { grid-template-columns: 1fr; }
           .step:first-child { border-radius: 20px 20px 0 0; }
           .step:last-child { border-radius: 0 0 20px 20px; }
           .step-divider { display: none; }
