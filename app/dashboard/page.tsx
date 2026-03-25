@@ -408,7 +408,7 @@ export default function DashboardPage() {
         ]);
         const me = meRes.data;
         if (me?.name) { setInitial(me.name.charAt(0).toUpperCase()); setUserName(me.name); }
-        if (me?.subscription_plan) setSubscriptionPlan(me.subscription_plan);
+        if (me?.subscription) setSubscriptionPlan(me.subscription);
         if (me?.used_generations != null || me?.monthly_limit != null) {
           setUsage({ used: me?.used_generations ?? 0, limit: me?.monthly_limit ?? null });
         }
