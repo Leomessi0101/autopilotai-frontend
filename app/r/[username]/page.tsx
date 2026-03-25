@@ -124,8 +124,8 @@ export default function WebsitePage() {
           if (meRes.ok) {
             const me = await meRes.json();
             plan =
-              me?.data?.subscription_plan ||
-              me?.subscription_plan ||
+              me?.data?.subscription ||
+              me?.subscription ||
               "free";
           }
         } catch {
