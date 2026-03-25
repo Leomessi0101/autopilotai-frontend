@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Clock,
   Link,
+  Plus,
 } from "lucide-react";
 import api from "@/lib/api";
 import DashboardNavbar from "@/components/DashboardNavbar";
@@ -378,7 +379,8 @@ export default function DashboardPage() {
   const [usage, setUsage] = useState<{ used: number; limit: number | null }>({ used: 0, limit: null });
   const [workCount, setWorkCount] = useState(0);
   const [loadingSite, setLoadingSite] = useState(true);
-  const [existingSite, setExistingSite] = useState<null | { username: string; status: "draft" | "published" }>(null);
+  const [websites, setWebsites] = useState<{ username: string; status: "draft" | "published" }[]>([]);
+  const [showBuilder, setShowBuilder] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
@@ -412,11 +414,8 @@ export default function DashboardPage() {
         if (me?.used_generations != null || me?.monthly_limit != null) {
           setUsage({ used: me?.used_generations ?? 0, limit: me?.monthly_limit ?? null });
         }
-        const websites = siteRes.data?.data?.websites || [];
-        if (websites.length > 0) {
-          const site = websites[0];
-          setExistingSite({ username: site.username, status: site.publish_status || "draft" });
-        }
+        const sites = siteRes.data?.data?.websites || [];
+        setWebsites(sites.map((s: any) => ({ username: s.username, status: s.publish_status || "draft" })));
         const workItems = Array.isArray(workRes.data) ? workRes.data : [];
         setWorkCount(workItems.length);
       } catch {
@@ -444,7 +443,8 @@ export default function DashboardPage() {
       });
       if (res.data?.ok) {
         const newUsername = res.data.data?.username || cleanedUsername;
-        setExistingSite({ username: newUsername, status: "draft" });
+        setWebsites(prev => [...prev, { username: newUsername, status: "draft" }]);
+        setShowBuilder(false);
         setBusinessName(""); setBusinessDescription(""); setUsername("");
         showToast("ok", "Website created! Taking you to the editor...", 1500);
         setTimeout(() => router.push(`/r/${newUsername}?edit=1`), 1500);
@@ -472,6 +472,8 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const maxWebsites = subscriptionPlan === "pro" ? 3 : 1;
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "white" }}>
@@ -862,7 +864,7 @@ export default function DashboardPage() {
       <main className="main-wrapper" style={{ maxWidth: 1100, margin: "0 auto" }}>
 
         {/* UPGRADE BANNER */}
-        {subscriptionPlan === "free" && existingSite && (
+        {subscriptionPlan === "free" && websites.length > 0 && (
           <div className="upgrade-banner anim-1">
             <div>
               <div className="font-sans" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#d97706", marginBottom: 6 }}>
@@ -926,10 +928,10 @@ export default function DashboardPage() {
         <div className="anim-2 stats-grid">
           <StatCard
             icon={<Globe size={15} />}
-            label="Website"
-            value={existingSite ? (existingSite.status === "published" ? "Live" : "Draft") : "None"}
-            sub={existingSite ? existingSite.username : "Create one below"}
-            accentColor={existingSite ? (existingSite.status === "published" ? "#059669" : "#0ea5e9") : "#333"}
+            label={websites.length > 1 ? "Websites" : "Website"}
+            value={websites.length === 0 ? "None" : websites.length === 1 ? (websites[0].status === "published" ? "Live" : "Draft") : `${websites.length} / ${maxWebsites}`}
+            sub={websites.length === 0 ? "Create one below" : websites.length === 1 ? websites[0].username : `${websites.filter(s => s.status === "published").length} published`}
+            accentColor={websites.length === 0 ? "#333" : websites.some(s => s.status === "published") ? "#059669" : "#0ea5e9"}
           />
           <StatCard
             icon={<BarChart3 size={15} />}
@@ -999,27 +1001,46 @@ export default function DashboardPage() {
 
         {/* WEBSITE SECTION */}
         <div className="anim-4">
-          <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Sparkles size={11} style={{ color: "#f59e0b" }} />
-            Your Website
+          <div className="section-label" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Sparkles size={11} style={{ color: "#f59e0b" }} />
+              {websites.length > 1 ? "Your Websites" : "Your Website"}
+            </div>
+            {websites.length > 0 && websites.length < maxWebsites && (
+              <span className="font-sans" style={{ fontSize: 11, color: "#555" }}>
+                {websites.length} / {maxWebsites} used
+              </span>
+            )}
           </div>
 
-          {existingSite ? (
-            <ExistingSiteCard site={existingSite} router={router} />
-          ) : (
-            <WebsiteBuilderCard
-              businessName={businessName}
-              businessDescription={businessDescription}
-              username={username}
-              cleanedUsername={cleanedUsername}
-              usernameValid={usernameValid}
-              creating={creating}
-              onBusinessNameChange={setBusinessName}
-              onDescriptionChange={setBusinessDescription}
-              onUsernameChange={setUsername}
-              onGenerate={generateWebsite}
-            />
-          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {websites.map((site) => (
+              <ExistingSiteCard key={site.username} site={site} router={router} />
+            ))}
+
+            {websites.length < maxWebsites && (
+              websites.length === 0 || showBuilder ? (
+                <WebsiteBuilderCard
+                  businessName={businessName}
+                  businessDescription={businessDescription}
+                  username={username}
+                  cleanedUsername={cleanedUsername}
+                  usernameValid={usernameValid}
+                  creating={creating}
+                  onBusinessNameChange={setBusinessName}
+                  onDescriptionChange={setBusinessDescription}
+                  onUsernameChange={setUsername}
+                  onGenerate={generateWebsite}
+                />
+              ) : (
+                <AddSiteCard
+                  slotsUsed={websites.length}
+                  maxSites={maxWebsites}
+                  onClick={() => setShowBuilder(true)}
+                />
+              )
+            )}
+          </div>
         </div>
       </main>
     </div>
@@ -1265,6 +1286,51 @@ function ExistingSiteCard({ site, router }: {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// ADD SITE CARD
+// ─────────────────────────────────────────────
+
+function AddSiteCard({ slotsUsed, maxSites, onClick }: { slotsUsed: number; maxSites: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="font-sans"
+      style={{
+        width: "100%",
+        background: "none",
+        border: "1px dashed #2a2a2a",
+        borderRadius: 18,
+        padding: "28px 32px",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        cursor: "pointer",
+        transition: "border-color 0.2s, background 0.2s",
+        textAlign: "left",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.background = "rgba(5,150,105,0.04)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2a2a2a"; e.currentTarget.style.background = "none"; }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+        background: "rgba(5,150,105,0.08)", border: "1px solid rgba(5,150,105,0.2)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#059669",
+      }}>
+        <Plus size={20} />
+      </div>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "white", marginBottom: 3 }}>
+          Add another website
+        </div>
+        <div style={{ fontSize: 13, color: "#555" }}>
+          {slotsUsed} of {maxSites} websites used · {maxSites - slotsUsed} slot{maxSites - slotsUsed !== 1 ? "s" : ""} remaining
+        </div>
+      </div>
+    </button>
   );
 }
 
