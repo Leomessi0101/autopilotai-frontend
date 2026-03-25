@@ -912,7 +912,7 @@ const s: Record<string, React.CSSProperties> = {
     background: "#0a0a0a",
     color: "#f4f4f5",
     fontFamily: "'DM Sans', system-ui, sans-serif",
-    flexDirection: "column",
+    flexDirection: "row",
   },
   sidebar: {
     width: 240,
