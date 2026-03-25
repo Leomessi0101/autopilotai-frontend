@@ -71,6 +71,7 @@ export default function AdsPage() {
   const [toast, setToast]     = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [copiedIdx, setCopiedIdx] = useState<number | "all" | null>(null);
   const [copiedImage, setCopiedImage] = useState(false);
+  const [savedImage, setSavedImage] = useState(false);
 
   const isPaid = subscriptionPlan?.toLowerCase() !== "free";
 
@@ -103,7 +104,7 @@ export default function AdsPage() {
   }
 
   const handleGenerate = async () => {
-    setError(""); setRawResult(""); setParsedAds([]); setImageUrl(null); setImageError(null);
+    setError(""); setRawResult(""); setParsedAds([]); setImageUrl(null); setImageError(null); setSavedImage(false);
     if (!product.trim() || !audience.trim()) {
       setError("Please fill in both product and audience fields.");
       return;
@@ -160,9 +161,25 @@ export default function AdsPage() {
     a.click();
   };
 
+  const saveImage = async () => {
+    if (!imageUrl) return;
+    try {
+      await api.post("/api/images/save", {
+        image_url: imageUrl,
+        text_content: rawResult.slice(0, 500),
+        image_style: IMAGE_STYLES.find(s => s.value === imageStyle)?.label || imageStyle,
+      });
+      setSavedImage(true);
+      showToast("ok", "Image saved to My Work");
+    } catch {
+      showToast("err", "Failed to save image");
+    }
+  };
+
   const clearAll = () => {
     setProduct(""); setAudience(""); setParsedAds([]); setRawResult(""); setError("");
     setGenerateImage(false); setImageStyle("clean"); setImageUrl(null); setImageError(null);
+    setSavedImage(false);
   };
 
   const activePlatform = PLATFORMS.find((p) => p.key === platform)!;
@@ -822,6 +839,9 @@ export default function AdsPage() {
                       </button>
                       <button className="btn-ghost" onClick={copyImageUrl} style={{ padding: "8px 14px" }}>
                         {copiedImage ? <><CheckCircle size={13} style={{ color: "#4ade80" }} /> Copied</> : <><Copy size={13} /> Copy URL</>}
+                      </button>
+                      <button className="btn-ghost" onClick={saveImage} disabled={savedImage} style={{ padding: "8px 14px" }}>
+                        {savedImage ? <><CheckCircle size={13} style={{ color: "#4ade80" }} /> Saved</> : <><Save size={13} /> Save to My Work</>}
                       </button>
                     </div>
                   </div>
