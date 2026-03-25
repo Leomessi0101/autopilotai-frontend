@@ -150,7 +150,7 @@ export default function FeaturesPage() {
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
             <PrimaryCTA href="/register">Start building</PrimaryCTA>
-            <SecondaryCTA href="/pricing">View pricing</SecondaryCTA>
+            <SecondaryCTA href="/upgrade">View pricing</SecondaryCTA>
           </div>
         </motion.div>
       </section>
@@ -335,7 +335,7 @@ export default function FeaturesPage() {
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
             <PrimaryCTA href="/register">Build your site</PrimaryCTA>
-            <SecondaryCTA href="/pricing">See pricing</SecondaryCTA>
+            <SecondaryCTA href="/upgrade">See pricing</SecondaryCTA>
           </div>
         </motion.div>
       </section>
