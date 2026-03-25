@@ -492,7 +492,7 @@ export default function PublicUpgradePage() {
                   "Publish your website",
                   "Custom domain (yourco.com)",
                   "Unlimited AI generations",
-                  "20 AI images / month",
+                  "AI image generation",
                   "Advanced analytics",
                   "Priority support",
                 ].map((l,i) => (
@@ -531,8 +531,7 @@ export default function PublicUpgradePage() {
               {[
                 "Everything in Starter",
                 "3 websites",
-                "50 AI images / month",
-                "White-label option",
+                "Extended AI image quota",
                 "Dedicated support",
                 "Early access to features",
               ].map((l,i) => (

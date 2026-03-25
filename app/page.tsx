@@ -734,7 +734,7 @@ export default function HomePage() {
               <div className="price-amount" style={{color:"var(--accent)"}}>$10<span style={{fontSize:20,color:"var(--text3)"}}>/mo</span></div>
               <div className="price-sub">14-day free trial — cancel anytime</div>
               <div className="price-feats">
-                {["Publish your website","Custom domain included","Unlimited AI generations","20 AI images/month (Nano Banana Pro)","5 image styles included","Analytics dashboard","Priority support"].map((l,i)=>(
+                {["Publish your website","Custom domain included","Unlimited AI generations","AI image generation (5 styles)","Analytics dashboard","Priority support"].map((l,i)=>(
                   <div key={i} className="pf pf-on"><div className="pfc pfc-y">✓</div>{l}</div>
                 ))}
               </div>
