@@ -32,7 +32,7 @@ export default function PublicUpgradePage() {
           setIsLoggedIn(true);
           setUserName(data.name);
           setUserInitial(data.name.charAt(0).toUpperCase());
-          setCurrentPlan((data.subscription_plan || "free").toLowerCase());
+          setCurrentPlan((data.subscription || "free").toLowerCase());
         }
       })
       .catch(() => {})
