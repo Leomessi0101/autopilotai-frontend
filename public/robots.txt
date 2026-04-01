@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Block private routes from crawlers
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /billing
+Disallow: /billing/
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /r/
+
+Sitemap: https://autopilotai.dev/sitemap.xml

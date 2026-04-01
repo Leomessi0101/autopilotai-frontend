@@ -38,6 +38,7 @@ export default function RegisterPage() {
 
       const urlParams    = new URLSearchParams(window.location.search);
       const selectedPlan = urlParams.get("plan");
+      const prompt       = urlParams.get("prompt");
       if (selectedPlan === "starter" || selectedPlan === "pro") {
         try {
           const stripeRes = await api.post(`/api/stripe/create-checkout-session?plan=${selectedPlan}`);
@@ -45,7 +46,8 @@ export default function RegisterPage() {
           return;
         } catch { /* fall through */ }
       }
-      router.push("/dashboard");
+      const dest = prompt ? `/dashboard?prompt=${encodeURIComponent(prompt)}` : "/dashboard";
+      router.push(dest);
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       setError(typeof detail === "string" ? detail : "Registration failed. Please try again.");
@@ -128,13 +130,26 @@ export default function RegisterPage() {
           </div>
 
           {/* Perks */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 22, padding: "10px 12px", borderRadius: 12, background: "rgba(5,150,105,.05)", border: "1px solid rgba(5,150,105,.12)", flexWrap: "wrap", justifyContent: "center" }}>
-            {["Free forever", "No credit card", "Instant access"].map((p) => (
+          <div style={{ display: "flex", gap: 12, marginBottom: 20, padding: "10px 12px", borderRadius: 12, background: "rgba(5,150,105,.05)", border: "1px solid rgba(5,150,105,.12)", flexWrap: "wrap", justifyContent: "center" }}>
+            {["Free forever", "No credit card", "Website in 60 seconds"].map((p) => (
               <div key={p} className="perk">
                 <CheckCircle size={11} style={{ color: "#059669", flexShrink: 0 }} />
                 <span>{p}</span>
               </div>
             ))}
+          </div>
+
+          {/* Social proof */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #1a1a1a" }}>
+            <div style={{ display: "flex" }}>
+              {[["LM","#6EE7B7"],["DK","#818CF8"],["RS","#F472B6"],["JP","#FB923C"]].map(([i,c],idx)=>(
+                <div key={idx} style={{ width:24,height:24,borderRadius:"50%",background:c,border:"2px solid #111",marginLeft:idx===0?0:-6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:700,color:"#060608",fontFamily:"DM Sans,sans-serif" }}>{i}</div>
+              ))}
+            </div>
+            <div style={{ fontFamily:"DM Sans,sans-serif",fontSize:12,color:"#555",lineHeight:1.4 }}>
+              <span style={{ color:"#888",fontWeight:600 }}>2,800+</span> local businesses already online
+              <div style={{ color:"#F59E0B",fontSize:10,marginTop:1 }}>★★★★★ <span style={{ color:"#555" }}>4.9/5</span></div>
+            </div>
           </div>
 
           {/* Error */}

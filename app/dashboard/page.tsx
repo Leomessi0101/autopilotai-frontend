@@ -383,7 +383,14 @@ export default function DashboardPage() {
   const [showBuilder, setShowBuilder] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
-  const [businessDescription, setBusinessDescription] = useState("");
+  const [businessDescription, setBusinessDescription] = useState(() => {
+    // Pre-fill from homepage CTA if user came via ?prompt=
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("prompt");
+      return p ? decodeURIComponent(p) : "";
+    }
+    return "";
+  });
   const [username, setUsername] = useState("");
   const [creating, setCreating] = useState(false);
 
