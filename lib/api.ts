@@ -1,8 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://autopilotai-api.onrender.com";
-
-console.log("API BASE URL:", BASE_URL);
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://autopilotai-api.onrender.com";
 
 const api = axios.create({
   baseURL: BASE_URL,

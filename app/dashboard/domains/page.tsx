@@ -43,7 +43,7 @@ interface SearchResult {
 // API
 // ─────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://autopilotai-api.onrender.com";
 
 async function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem("autopilot_token");
