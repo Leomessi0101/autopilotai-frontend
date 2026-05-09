@@ -378,7 +378,6 @@ export default function HomePage() {
           <h1 className="hero-h">
             Your business.<br/>
             <em>Online today.</em><br/>
-            <span className="dim">$10 a month.</span>
           </h1>
         </div>
 
